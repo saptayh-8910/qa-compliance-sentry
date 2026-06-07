@@ -1,0 +1,30 @@
+# Python & Virtual Environment 
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.egg-info/
+dist/
+build/
+
+# Environment & Secrets 
+.env
+.env.*
+
+# Local Data & Databases
+bugs.json
+db/*.db
+*.sqlite3
+
+# Test Reports & Logs
+reports/
+!reports/.gitkeep
+*.html
+*.log
+
+# OS & System Files
+.DS_Store
+.vscode/
+.idea/

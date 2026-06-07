@@ -1,0 +1,129 @@
+# Autonomous QA & Compliance Sentry
+
+**Stage 1 — Code & Testing Foundation**
+
+A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
+
+## Project preview
+
+| Component | Description |
+|-----------|-------------|
+| **Bug Tracker CLI** | Python CLI with JSON persistence — add, update status, search, list |
+| **E2E Framework** | Playwright + pytest Page Object Model (login → cart → checkout) |
+| **API validation** | HTTP contract checks via a thin `requests` client |
+| **DB validation** | Seeded SQLite DB + SQL scripts for duplicates, orphans, API↔DB alignment |
+
+```mermaid
+flowchart LR
+  CLI[BugTrackerCLI] --> Repo[GitHub Repo]
+  PW[Playwright POM] --> Sauce[Sauce Demo]
+  API[REST Client] --> JSON[JSONPlaceholder API]
+  DB[SQLite Validator] --> Seed[Seed DB]
+  PW --> Repo
+  API --> Repo
+  DB --> Repo
+```
+
+## Goals (Stage 1)
+
+**Learning:** Python, Git, Playwright, pytest, REST APIs, SQL consistency patterns.
+
+**Portfolio:** One repo with README, HTML reports, failure screenshots, runnable validation script, and a short demo video.
+
+**Career path:** Foundation for QA Automation / SDET roles before Stages 2–4 (CI/CD, AI RAG, LLM evaluation).
+
+## Quick start
+
+### Prerequisites
+
+- Python 3.11+
+- Network access (Sauce Demo + API tests)
+
+### Setup
+
+```bash
+git clone <your-repo-url> qa-compliance-sentry
+cd qa-compliance-sentry
+make install
+cp .env.example .env   # optional — defaults work for Sauce Demo
+```
+
+### Bug Tracker CLI (Milestone 1A)
+
+```bash
+.venv/bin/bug-tracker add "Cart total incorrect" --severity high
+.venv/bin/bug-tracker list
+.venv/bin/bug-tracker search cart
+.venv/bin/bug-tracker update <BUG_ID> --status in_progress
+```
+
+Data is stored in `data/bugs.json` by default.
+
+### Run tests
+
+```bash
+make test-unit    # CLI unit tests
+make test-api     # REST API tests
+make test-db      # SQLite validation tests
+make test-e2e     # Sauce Demo smoke (Playwright)
+make test         # unit + api + db + e2e smoke
+make validate     # standalone SQL validation script
+make report       # full suite + HTML report in reports/
+```
+
+### E2E with HTML report
+
+```bash
+.venv/bin/pytest tests/e2e -m smoke \
+  --html=reports/e2e-report.html --self-contained-html
+```
+
+Failure screenshots are saved under `reports/`.
+
+## Test strategy
+
+| Layer | Tool | Target |
+|-------|------|--------|
+| Unit | pytest | Bug tracker storage/CRUD |
+| API | pytest + requests | REST shape & status (JSONPlaceholder stand-in) |
+| DB | pytest + sqlite3 | Seed DB duplicates, FK integrity, API↔DB mapping |
+| E2E | pytest-playwright | Sauce Demo checkout happy path |
+
+**Markers:** `smoke`, `regression`, `api`, `db`
+
+Sauce Demo has no public candidate API/DB. The SQLite seed DB demonstrates the **data validation pattern** from the roadmap; swap in a real API+DB later without changing the POM structure.
+
+## Repository layout
+
+```
+qa-compliance-sentry/
+├── bug_tracker/          # CLI + JSON storage
+├── api/                  # HTTP client
+├── db/                   # schema, seed, validation.py
+├── tests/
+│   ├── unit/
+│   ├── api/
+│   ├── db/
+│   └── e2e/pages/        # Page Object Model
+├── scripts/run_validations.py
+└── reports/              # HTML + screenshots (gitignored)
+```
+
+
+
+## Roadmap alignment
+
+| Stage | This repo |
+|-------|-----------|
+| **Stage 1 (current)** | CLI + Playwright + API/DB validation |
+| Stage 2 | Docker, GitHub Actions, log analyzer, queue runner |
+| Stage 3 | RAG chatbot for QA docs |
+| Stage 4 | DeepEval / Ragas AI evaluation dashboard |
+
+Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
+
+See [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) for a timed recording script.
+
+## License
+
+MIT — portfolio use.
