@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Iterable
 
 from bug_tracker.models import Bug, BugStatus
@@ -26,9 +27,23 @@ class BugStorage:
     def save_all(self, bugs: Iterable[Bug]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         payload = [bug.to_dict() for bug in bugs]
-        self.path.write_text(
-            json.dumps(payload, indent=2) + "\n", encoding="utf-8"
-        )
+        temporary_path: Path | None = None
+        try:
+            with NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=self.path.parent,
+                prefix=f".{self.path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as temporary:
+                temporary_path = Path(temporary.name)
+                json.dump(payload, temporary, indent=2)
+                temporary.write("\n")
+            temporary_path.replace(self.path)
+        finally:
+            if temporary_path is not None and temporary_path.exists():
+                temporary_path.unlink()
 
     def add(self, bug: Bug) -> Bug:
         bugs = self.load_all()

@@ -4,6 +4,15 @@
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 
+## Why this project exists
+
+This project turns a Manual→AI Tester learning roadmap into one evolving,
+runnable portfolio instead of a collection of disconnected tutorials. Stage 1
+builds the Python, browser automation, API testing, pytest, and SQL foundation
+expected for QA Automation and SDET roles. Later stages can add CI/CD,
+reliability tooling, retrieval-augmented generation, and AI evaluation without
+discarding the earlier work.
+
 ## Project preview
 
 | Component | Description |
@@ -62,12 +71,13 @@ Data is stored in `data/bugs.json` by default.
 ### Run tests
 
 ```bash
-make test-unit    # CLI unit tests
+make test-unit    # deterministic component/unit tests
 make test-api     # REST API tests
 make test-db      # SQLite validation tests
 make test-e2e     # Sauce Demo smoke (Playwright)
+make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
-make validate     # standalone SQL validation script
+make validate     # seed the demo DB, then run read-only SQL checks
 make report       # full suite + HTML report in reports/
 ```
 
@@ -84,12 +94,16 @@ Failure screenshots are saved under `reports/`.
 
 | Layer | Tool | Target |
 |-------|------|--------|
-| Unit | pytest | Bug tracker storage/CRUD |
+| Unit | pytest | Bug tracker CLI/storage + isolated API client |
 | API | pytest + requests | REST shape & status (JSONPlaceholder stand-in) |
 | DB | pytest + sqlite3 | Seed DB duplicates, FK integrity, API↔DB mapping |
 | E2E | pytest-playwright | Sauce Demo checkout happy path |
 
-**Markers:** `smoke`, `regression`, `api`, `db`
+**Markers:** `smoke`, `regression`, `api`, `db`, `external`
+
+Tests marked `external` require public network access. Database tests use local
+fixtures only, and `DataValidator` opens its target in read-only mode so a
+validation run cannot silently create or repair the database under inspection.
 
 Sauce Demo has no public candidate API/DB. The SQLite seed DB demonstrates the **data validation pattern** from the roadmap; swap in a real API+DB later without changing the POM structure.
 

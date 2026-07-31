@@ -8,6 +8,8 @@ from tests.e2e.pages.checkout_page import CheckoutPage
 from tests.e2e.pages.inventory_page import InventoryPage
 from tests.e2e.pages.login_page import LoginPage
 
+pytestmark = pytest.mark.external
+
 
 @pytest.mark.smoke
 def test_checkout_happy_path(

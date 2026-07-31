@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import requests
@@ -17,9 +17,10 @@ class SauceDemoClient:
 
     base_url: str = "https://jsonplaceholder.typicode.com"
     timeout: int = 15
+    session: requests.Session = field(default_factory=requests.Session, repr=False)
 
     def get_posts(self) -> list[dict[str, Any]]:
-        response = requests.get(f"{self.base_url}/posts", timeout=self.timeout)
+        response = self.session.get(f"{self.base_url}/posts", timeout=self.timeout)
         response.raise_for_status()
         data = response.json()
         if not isinstance(data, list):
@@ -27,11 +28,14 @@ class SauceDemoClient:
         return data
 
     def get_post(self, post_id: int) -> dict[str, Any]:
-        response = requests.get(
+        response = self.session.get(
             f"{self.base_url}/posts/{post_id}", timeout=self.timeout
         )
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        if not isinstance(data, dict):
+            raise ValueError("Expected a post object")
+        return data
 
     def assert_post_shape(self, post: dict[str, Any]) -> None:
         required = {"userId", "id", "title", "body"}

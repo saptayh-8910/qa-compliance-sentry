@@ -29,6 +29,7 @@ def init_db(db_path: Path = DEFAULT_DB, *, reset: bool = False) -> Path:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     try:
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
         if _is_seeded(conn):
             return db_path
@@ -51,5 +52,14 @@ def init_db(db_path: Path = DEFAULT_DB, *, reset: bool = False) -> Path:
 
 
 def _is_seeded(conn: sqlite3.Connection) -> bool:
-    row = conn.execute("SELECT COUNT(*) FROM users").fetchone()
-    return bool(row and row[0] > 0)
+    counts = [
+        conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        for table in ("users", "products", "orders")
+    ]
+    if all(count > 0 for count in counts):
+        return True
+    if any(count > 0 for count in counts):
+        raise RuntimeError(
+            "Database is partially seeded; rerun init_db(..., reset=True)"
+        )
+    return False

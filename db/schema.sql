@@ -8,15 +8,16 @@ CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY,
     sku TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
-    price REAL NOT NULL
+    price REAL NOT NULL CHECK (price >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL DEFAULT 1,
-    status TEXT NOT NULL DEFAULT 'pending',
+    quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'completed', 'cancelled')),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
