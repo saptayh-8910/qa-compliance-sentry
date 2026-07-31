@@ -4,8 +4,10 @@ import os
 from pathlib import Path
 
 import pytest
+from dotenv import load_dotenv
 
 REPORTS_DIR = Path("reports")
+load_dotenv()
 
 
 @pytest.fixture(scope="session")

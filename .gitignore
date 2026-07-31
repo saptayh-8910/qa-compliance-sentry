@@ -12,6 +12,7 @@ build/
 # Environment & Secrets 
 .env
 .env.*
+!.env.example
 
 # Local Data & Databases
 bugs.json

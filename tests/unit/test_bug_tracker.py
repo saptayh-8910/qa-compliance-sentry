@@ -1,7 +1,9 @@
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from bug_tracker.cli import app
 from bug_tracker.models import Bug, BugSeverity, BugStatus
 from bug_tracker.storage import BugStorage
 
@@ -45,3 +47,27 @@ def test_persistence_roundtrip(storage: BugStorage) -> None:
     storage.add(Bug(title="Flaky test on CI"))
     reloaded = BugStorage(storage.path)
     assert len(reloaded.load_all()) == 1
+
+
+def test_cli_add_and_list(tmp_path: Path) -> None:
+    db_path = tmp_path / "cli-bugs.json"
+    runner = CliRunner()
+
+    added = runner.invoke(
+        app,
+        [
+            "add",
+            "Checkout total mismatch",
+            "--severity",
+            "high",
+            "--db",
+            str(db_path),
+        ],
+    )
+    assert added.exit_code == 0
+    assert "Created bug" in added.stdout
+
+    listed = runner.invoke(app, ["list", "--db", str(db_path)])
+    assert listed.exit_code == 0
+    assert "Checkout total mismatch" in listed.stdout
+    assert "high" in listed.stdout

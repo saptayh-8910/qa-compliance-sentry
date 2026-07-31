@@ -2,8 +2,9 @@ import pytest
 
 from api.sauce_client import SauceDemoClient
 
+pytestmark = [pytest.mark.api, pytest.mark.external]
 
-@pytest.mark.api
+
 def test_get_posts_returns_list() -> None:
     client = SauceDemoClient()
     posts = client.get_posts()
@@ -11,7 +12,6 @@ def test_get_posts_returns_list() -> None:
     client.assert_post_shape(posts[0])
 
 
-@pytest.mark.api
 def test_get_single_post() -> None:
     client = SauceDemoClient()
     post = client.get_post(1)

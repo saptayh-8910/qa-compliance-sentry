@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from db.seed import DEFAULT_DB, init_db
+from db.seed import DEFAULT_DB
 
 
 @dataclass
@@ -20,10 +20,13 @@ class DataValidator:
 
     def __init__(self, db_path: Path = DEFAULT_DB) -> None:
         self.db_path = db_path
-        init_db(db_path)
+        if not db_path.is_file():
+            raise FileNotFoundError(f"Database not found: {db_path}")
 
     def _conn(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
+        uri = f"{self.db_path.resolve().as_uri()}?mode=ro"
+        conn = sqlite3.connect(uri, uri=True)
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.row_factory = sqlite3.Row
         return conn
 
@@ -69,6 +72,43 @@ class DataValidator:
         detail = "All orders have valid users" if passed else f"Orphans: {rows}"
         return ValidationResult("orders_valid_users", passed, detail)
 
+    def check_orders_reference_valid_products(self) -> ValidationResult:
+        with self._conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT o.id
+                FROM orders o
+                LEFT JOIN products p ON o.product_id = p.id
+                WHERE p.id IS NULL
+                """
+            ).fetchall()
+        passed = len(rows) == 0
+        detail = "All orders have valid products" if passed else f"Orphans: {rows}"
+        return ValidationResult("orders_valid_products", passed, detail)
+
+    def check_product_prices(self) -> ValidationResult:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT id, price FROM products WHERE price < 0"
+            ).fetchall()
+        passed = len(rows) == 0
+        detail = "All product prices are non-negative" if passed else f"Invalid: {rows}"
+        return ValidationResult("product_prices", passed, detail)
+
+    def check_order_values(self) -> ValidationResult:
+        with self._conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT id, quantity, status
+                FROM orders
+                WHERE quantity <= 0
+                   OR status NOT IN ('pending', 'completed', 'cancelled')
+                """
+            ).fetchall()
+        passed = len(rows) == 0
+        detail = "All order values are valid" if passed else f"Invalid: {rows}"
+        return ValidationResult("order_values", passed, detail)
+
     def check_expected_order_exists(
         self, user_id: int, product_id: int, status: str
     ) -> ValidationResult:
@@ -91,19 +131,29 @@ class DataValidator:
     def api_post_matches_catalog(
         self, api_post: dict[str, Any], product_id: int
     ) -> ValidationResult:
-        """Cross-check API payload userId maps to a seeded user and product exists."""
+        """Treat the stand-in post ID as a product and verify a matching order."""
+        api_user_id = api_post.get("userId")
+        api_post_id = api_post.get("id")
         with self._conn() as conn:
-            user = conn.execute(
-                "SELECT id FROM users WHERE id = ?", (api_post.get("userId"),)
+            order = conn.execute(
+                """
+                SELECT o.id
+                FROM orders o
+                JOIN users u ON u.id = o.user_id
+                JOIN products p ON p.id = o.product_id
+                WHERE o.user_id = ? AND o.product_id = ?
+                """,
+                (api_user_id, product_id),
             ).fetchone()
-            product = conn.execute(
-                "SELECT id, name FROM products WHERE id = ?", (product_id,)
-            ).fetchone()
-        passed = user is not None and product is not None
+        passed = api_post_id == product_id and order is not None
         detail = (
-            f"API userId {api_post.get('userId')} and product {product_id} align with DB"
+            f"API post {api_post_id} maps to product {product_id} "
+            f"ordered by user {api_user_id}"
             if passed
-            else "API/DB mismatch"
+            else (
+                f"No order mapping for API user={api_user_id}, "
+                f"post={api_post_id}, product={product_id}"
+            )
         )
         return ValidationResult("api_db_consistency", passed, detail)
 
@@ -112,5 +162,8 @@ class DataValidator:
             self.check_no_duplicate_usernames(),
             self.check_no_duplicate_skus(),
             self.check_orders_reference_valid_users(),
+            self.check_orders_reference_valid_products(),
+            self.check_product_prices(),
+            self.check_order_values(),
             self.check_expected_order_exists(1, 1, "completed"),
         ]
