@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
 
-class BugStatus(str, Enum):
+class BugStatus(StrEnum):
     OPEN = "open"
     IN_PROGRESS = "in_progress"
     RESOLVED = "resolved"
     CLOSED = "closed"
 
 
-class BugSeverity(str, Enum):
+class BugSeverity(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -28,9 +28,7 @@ class Bug:
     status: BugStatus = BugStatus.OPEN
     severity: BugSeverity = BugSeverity.MEDIUM
     id: str = field(default_factory=lambda: str(uuid4()))
-    created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     updated_at: str | None = None
 
     def to_dict(self) -> dict[str, Any]:

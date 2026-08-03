@@ -42,7 +42,9 @@ def init_db(db_path: Path = DEFAULT_DB, *, reset: bool = False) -> Path:
             SEED_PRODUCTS,
         )
         conn.executemany(
-            "INSERT INTO orders (user_id, product_id, quantity, status) VALUES (?, ?, ?, ?)",
+            "INSERT INTO orders "
+            "(user_id, product_id, quantity, status) "
+            "VALUES (?, ?, ?, ?)",
             SEED_ORDERS,
         )
         conn.commit()

@@ -1,6 +1,8 @@
 # Autonomous QA & Compliance Sentry
 
-**Stage 1 — Code & Testing Foundation**
+[![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
+
+**Stage 2A — Continuous Integration & Quality Gates**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 
@@ -21,6 +23,7 @@ discarding the earlier work.
 | **E2E Framework** | Playwright + pytest Page Object Model (login → cart → checkout) |
 | **API validation** | HTTP contract checks via a thin `requests` client |
 | **DB validation** | Seeded SQLite DB + SQL scripts for duplicates, orphans, API↔DB alignment |
+| **Continuous integration** | Ruff, coverage gates, Python compatibility, reports, scheduled external tests |
 
 ```mermaid
 flowchart LR
@@ -77,6 +80,7 @@ make test-db      # SQLite validation tests
 make test-e2e     # Sauce Demo smoke (Playwright)
 make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
+make quality      # lint + format check + coverage gate
 make validate     # seed the demo DB, then run read-only SQL checks
 make report       # full suite + HTML report in reports/
 ```
@@ -105,6 +109,16 @@ Tests marked `external` require public network access. Database tests use local
 fixtures only, and `DataValidator` opens its target in read-only mode so a
 validation run cannot silently create or repair the database under inspection.
 
+## Continuous integration
+
+The deterministic workflow runs Ruff, enforces at least 85% branch-aware test
+coverage, and tests supported Python versions on pull requests and updates to
+`main`. It uploads HTML, XML, and JUnit reports for inspection.
+
+Public API and Playwright checks run in a separate workflow every Monday at
+03:00 UTC or on demand from the GitHub Actions page. Keeping that workflow
+separate prevents temporary public-service failures from blocking code changes.
+
 Sauce Demo has no public candidate API/DB. The SQLite seed DB demonstrates the **data validation pattern** from the roadmap; swap in a real API+DB later without changing the POM structure.
 
 ## Repository layout
@@ -129,8 +143,8 @@ qa-compliance-sentry/
 
 | Stage | This repo |
 |-------|-----------|
-| **Stage 1 (current)** | CLI + Playwright + API/DB validation |
-| Stage 2 | Docker, GitHub Actions, log analyzer, queue runner |
+| **Stage 1 (complete)** | CLI + Playwright + API/DB validation |
+| **Stage 2 (in progress)** | GitHub Actions quality gates; Docker and log analyzer next |
 | Stage 3 | RAG chatbot for QA docs |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
 
