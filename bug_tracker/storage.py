@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Iterable
 
 from bug_tracker.models import Bug, BugStatus
 
@@ -59,9 +60,7 @@ class BugStorage:
         for bug in bugs:
             if bug.id == bug_id:
                 bug.status = status
-                from datetime import datetime, timezone
-
-                bug.updated_at = datetime.now(timezone.utc).isoformat()
+                bug.updated_at = datetime.now(UTC).isoformat()
                 self.save_all(bugs)
                 return bug
         raise KeyError(f"Bug not found: {bug_id}")

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from db.seed import init_db
+from db.seed import SCHEMA_PATH, init_db
 from db.validation import DataValidator
 
 
@@ -60,9 +60,29 @@ def test_detects_invalid_prices_and_order_values(
     with sqlite3.connect(validator.db_path) as conn:
         conn.execute("PRAGMA ignore_check_constraints = ON")
         conn.execute("UPDATE products SET price = -1 WHERE id = 1")
-        conn.execute(
-            "UPDATE orders SET quantity = 0, status = 'unknown' WHERE id = 1"
-        )
+        conn.execute("UPDATE orders SET quantity = 0, status = 'unknown' WHERE id = 1")
 
     assert not validator.check_product_prices().passed
     assert not validator.check_order_values().passed
+
+
+@pytest.mark.db
+def test_init_db_reuses_complete_seed(tmp_path: Path) -> None:
+    db_path = tmp_path / "complete.db"
+    init_db(db_path)
+
+    assert init_db(db_path) == db_path
+
+
+@pytest.mark.db
+def test_init_db_rejects_partial_seed(tmp_path: Path) -> None:
+    db_path = tmp_path / "partial.db"
+    with sqlite3.connect(db_path) as conn:
+        conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+        conn.execute(
+            "INSERT INTO users (id, username, full_name) VALUES (?, ?, ?)",
+            (1, "partial_user", "Partial User"),
+        )
+
+    with pytest.raises(RuntimeError, match="partially seeded"):
+        init_db(db_path)

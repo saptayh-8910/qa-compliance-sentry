@@ -71,3 +71,38 @@ def test_cli_add_and_list(tmp_path: Path) -> None:
     assert listed.exit_code == 0
     assert "Checkout total mismatch" in listed.stdout
     assert "high" in listed.stdout
+
+    bug_id = BugStorage(db_path).load_all()[0].id
+    updated = runner.invoke(
+        app,
+        [
+            "update",
+            bug_id,
+            "--status",
+            "in_progress",
+            "--db",
+            str(db_path),
+        ],
+    )
+    assert updated.exit_code == 0
+    assert "in_progress" in updated.stdout
+
+    searched = runner.invoke(app, ["search", "in_progress", "--db", str(db_path)])
+    assert searched.exit_code == 0
+    assert "Checkout total mismatch" in searched.stdout
+
+
+def test_cli_handles_empty_and_missing_records(tmp_path: Path) -> None:
+    db_path = tmp_path / "empty-bugs.json"
+    runner = CliRunner()
+
+    listed = runner.invoke(app, ["list", "--db", str(db_path)])
+    assert listed.exit_code == 0
+    assert "No bugs recorded" in listed.stdout
+
+    updated = runner.invoke(
+        app,
+        ["update", "missing", "--status", "closed", "--db", str(db_path)],
+    )
+    assert updated.exit_code == 1
+    assert "Bug not found" in updated.stderr

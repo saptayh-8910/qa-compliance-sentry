@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 
@@ -15,7 +14,7 @@ app = typer.Typer(
 DEFAULT_DB = Path("data/bugs.json")
 
 
-def _storage(path: Optional[Path]) -> BugStorage:
+def _storage(path: Path | None) -> BugStorage:
     return BugStorage(path or DEFAULT_DB)
 
 
@@ -24,7 +23,7 @@ def add_bug(
     title: str = typer.Argument(..., help="Short bug title"),
     description: str = typer.Option("", "--description", "-d"),
     severity: BugSeverity = typer.Option(BugSeverity.MEDIUM, "--severity", "-s"),
-    db: Optional[Path] = typer.Option(None, "--db", help="JSON file path"),
+    db: Path | None = typer.Option(None, "--db", help="JSON file path"),
 ) -> None:
     """Add a new bug."""
     bug = Bug(title=title, description=description, severity=severity)
@@ -36,7 +35,7 @@ def add_bug(
 def update_bug(
     bug_id: str = typer.Argument(..., help="Bug UUID"),
     status: BugStatus = typer.Option(..., "--status"),
-    db: Optional[Path] = typer.Option(None, "--db"),
+    db: Path | None = typer.Option(None, "--db"),
 ) -> None:
     """Update bug status."""
     try:
@@ -49,8 +48,10 @@ def update_bug(
 
 @app.command("search")
 def search_bugs(
-    query: str = typer.Argument(..., help="Search title, description, status, severity"),
-    db: Optional[Path] = typer.Option(None, "--db"),
+    query: str = typer.Argument(
+        ..., help="Search title, description, status, severity"
+    ),
+    db: Path | None = typer.Option(None, "--db"),
 ) -> None:
     """Search bugs by keyword."""
     results = _storage(db).search(query)
@@ -65,7 +66,7 @@ def search_bugs(
 
 @app.command("list")
 def list_bugs(
-    db: Optional[Path] = typer.Option(None, "--db"),
+    db: Path | None = typer.Option(None, "--db"),
 ) -> None:
     """List all bugs."""
     bugs = _storage(db).load_all()
