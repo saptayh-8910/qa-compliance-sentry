@@ -1,5 +1,11 @@
 .PHONY: install test test-local test-unit test-api test-db test-e2e validate report \
-	lint format format-check coverage quality
+	lint format format-check coverage quality docker-build docker-test \
+	docker-quality docker-external
+
+DOCKER_IMAGE ?= qa-compliance-sentry:0.3.0
+DOCKER_RUN = docker run --rm --init --ipc=host
+DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
+DOCKER_ENV_ARGS ?=
 
 install:
 	python3 -m venv .venv
@@ -46,6 +52,31 @@ coverage:
 		--junitxml=reports/local-junit.xml
 
 quality: lint format-check coverage
+
+docker-build:
+	docker build --pull -t $(DOCKER_IMAGE) .
+
+docker-test: docker-build
+	$(DOCKER_RUN) $(DOCKER_IMAGE)
+
+docker-quality: docker-build
+	mkdir -p reports
+	$(DOCKER_RUN) $(DOCKER_REPORTS) $(DOCKER_IMAGE) /bin/bash -lc \
+		'ruff check . && ruff format --check . && \
+		python -m pytest tests/unit tests/db -v \
+		--cov=api --cov=bug_tracker --cov=db \
+		--cov-report=term-missing \
+		--cov-report=xml:reports/coverage.xml \
+		--cov-report=html:reports/coverage \
+		--html=reports/docker-local-report.html --self-contained-html \
+		--junitxml=reports/docker-local-junit.xml'
+
+docker-external: docker-build
+	mkdir -p reports
+	$(DOCKER_RUN) $(DOCKER_REPORTS) $(DOCKER_ENV_ARGS) $(DOCKER_IMAGE) \
+		python -m pytest tests/api tests/e2e -m external -v \
+		--html=reports/docker-external-report.html --self-contained-html \
+		--junitxml=reports/docker-external-junit.xml
 
 validate:
 	.venv/bin/python scripts/run_validations.py
