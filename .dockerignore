@@ -1,0 +1,16 @@
+.coverage
+.coverage.*
+.DS_Store
+.env
+.env.*
+.git
+.github
+.pytest_cache
+.ruff_cache
+.venv
+*.egg-info
+**/__pycache__
+*.py[cod]
+data
+db/*.db
+reports

@@ -2,7 +2,7 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 2A — Continuous Integration & Quality Gates**
+**Stage 2 — CI & Containerized Testing**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 
@@ -24,6 +24,7 @@ discarding the earlier work.
 | **API validation** | HTTP contract checks via a thin `requests` client |
 | **DB validation** | Seeded SQLite DB + SQL scripts for duplicates, orphans, API↔DB alignment |
 | **Continuous integration** | Ruff, coverage gates, Python compatibility, reports, scheduled external tests |
+| **Containerized testing** | Pinned Playwright image, non-root execution, reproducible local/CI commands |
 
 ```mermaid
 flowchart LR
@@ -49,6 +50,7 @@ flowchart LR
 ### Prerequisites
 
 - Python 3.11+
+- Docker Desktop or Docker Engine (for container commands)
 - Network access (Sauce Demo + API tests)
 
 ### Setup
@@ -85,6 +87,25 @@ make validate     # seed the demo DB, then run read-only SQL checks
 make report       # full suite + HTML report in reports/
 ```
 
+### Run with Docker
+
+```bash
+make docker-test      # build image + deterministic tests
+make docker-quality   # Ruff + coverage gate + reports
+make docker-external  # public API + Playwright tests
+```
+
+The image pins Playwright 1.61.0 in both Python and the official Noble-based
+browser image. Containers run as the unprivileged `pwuser` account. Chromium
+runs use Docker's recommended `--init` and `--ipc=host` options, and generated
+evidence is written to the local `reports/` directory.
+
+To load custom Sauce Demo settings from `.env`, pass Docker arguments explicitly:
+
+```bash
+make docker-external DOCKER_ENV_ARGS="--env-file .env"
+```
+
 ### E2E with HTML report
 
 ```bash
@@ -113,7 +134,9 @@ validation run cannot silently create or repair the database under inspection.
 
 The deterministic workflow runs Ruff, enforces at least 85% branch-aware test
 coverage, and tests supported Python versions on pull requests and updates to
-`main`. It uploads HTML, XML, and JUnit reports for inspection.
+`main`. It also builds the Docker image, verifies that it runs as a non-root
+user, and executes the deterministic suite inside the container. HTML, XML,
+and JUnit reports are uploaded for inspection.
 
 Public API and Playwright checks run in a separate workflow every Monday at
 03:00 UTC or on demand from the GitHub Actions page. Keeping that workflow
@@ -144,7 +167,7 @@ qa-compliance-sentry/
 | Stage | This repo |
 |-------|-----------|
 | **Stage 1 (complete)** | CLI + Playwright + API/DB validation |
-| **Stage 2 (in progress)** | GitHub Actions quality gates; Docker and log analyzer next |
+| **Stage 2 (in progress)** | GitHub Actions and Docker complete; log analyzer next |
 | Stage 3 | RAG chatbot for QA docs |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
 
