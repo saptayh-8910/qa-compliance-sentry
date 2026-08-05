@@ -2,7 +2,7 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 2 — CI & Containerized Testing**
+**Stage 2 — CI, Containers & Failure Intelligence**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 
@@ -25,6 +25,8 @@ discarding the earlier work.
 | **DB validation** | Seeded SQLite DB + SQL scripts for duplicates, orphans, API↔DB alignment |
 | **Continuous integration** | Ruff, coverage gates, Python compatibility, reports, scheduled external tests |
 | **Containerized testing** | Pinned Playwright image, non-root execution, reproducible local/CI commands |
+| **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
+| **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 
 ```mermaid
 flowchart LR
@@ -32,6 +34,8 @@ flowchart LR
   PW[Playwright POM] --> Sauce[Sauce Demo]
   API[REST Client] --> JSON[JSONPlaceholder API]
   DB[SQLite Validator] --> Seed[Seed DB]
+  LOG[Log Analyzer] --> Evidence[Failure Evidence]
+  PIPE[Pipeline Validator] --> Repo
   PW --> Repo
   API --> Repo
   DB --> Repo
@@ -77,6 +81,7 @@ Data is stored in `data/bugs.json` by default.
 
 ```bash
 make test-unit    # deterministic component/unit tests
+make test-algorithms # interview algorithms mapped to QA features
 make test-api     # REST API tests
 make test-db      # SQLite validation tests
 make test-e2e     # Sauce Demo smoke (Playwright)
@@ -84,8 +89,39 @@ make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
 make quality      # lint + format check + coverage gate
 make validate     # seed the demo DB, then run read-only SQL checks
+make validate-pipeline # detect circular CI job dependencies
 make report       # full suite + HTML report in reports/
 ```
+
+### Analyze QA logs
+
+```bash
+make analyze-sample
+
+# Or analyze another newline-delimited JSON file:
+.venv/bin/log-analyzer analyze path/to/test-run.jsonl \
+  --top 5 --incident-gap-seconds 300 \
+  --output reports/log-analysis.json
+```
+
+Each input line contains an ISO-8601 `timestamp`, `level`, and `message`, with
+an optional `test_name`. The analyzer ranks exact recurring failure signatures
+and merges nearby failures into incident windows. See
+[the algorithm learning track](docs/ALGORITHM_LEARNING.md) for the interview
+problems, complexity analysis, and practical tradeoffs behind this feature.
+
+### Validate CI dependencies
+
+```bash
+make validate-pipeline
+
+# Or validate another pipeline definition:
+.venv/bin/pipeline-validator validate path/to/pipeline.json
+```
+
+Pipeline JSON declares a list of unique job names and dependency pairs in
+`[job, prerequisite]` order. The validator uses topological sorting to confirm
+that every job can run without a circular dependency.
 
 ### Run with Docker
 
@@ -120,6 +156,7 @@ Failure screenshots are saved under `reports/`.
 | Layer | Tool | Target |
 |-------|------|--------|
 | Unit | pytest | Bug tracker CLI/storage + isolated API client |
+| Algorithms | pytest | Interview fundamentals reused by QA features |
 | API | pytest + requests | REST shape & status (JSONPlaceholder stand-in) |
 | DB | pytest + sqlite3 | Seed DB duplicates, FK integrity, API↔DB mapping |
 | E2E | pytest-playwright | Sauce Demo checkout happy path |
@@ -151,8 +188,12 @@ qa-compliance-sentry/
 ├── bug_tracker/          # CLI + JSON storage
 ├── api/                  # HTTP client
 ├── db/                   # schema, seed, validation.py
+├── log_analyzer/         # JSONL parsing, failure ranking, incident grouping
+├── pipeline_validator/   # CI dependency graph and cycle validation
+├── examples/             # runnable sample QA logs
 ├── tests/
 │   ├── unit/
+│   ├── algorithms/
 │   ├── api/
 │   ├── db/
 │   └── e2e/pages/        # Page Object Model
@@ -167,7 +208,7 @@ qa-compliance-sentry/
 | Stage | This repo |
 |-------|-----------|
 | **Stage 1 (complete)** | CLI + Playwright + API/DB validation |
-| **Stage 2 (in progress)** | GitHub Actions and Docker complete; log analyzer next |
+| **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | Stage 3 | RAG chatbot for QA docs |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
 

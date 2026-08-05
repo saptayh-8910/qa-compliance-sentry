@@ -42,8 +42,9 @@ jobs:
       - name: Run deterministic tests with coverage
         run: |
           mkdir -p reports
-          pytest tests/unit tests/db -v \
-            --cov=api --cov=bug_tracker --cov=db \
+          pytest tests/unit tests/algorithms tests/db -v \
+            --cov=api --cov=bug_tracker --cov=db --cov=log_analyzer \
+            --cov=pipeline_validator \
             --cov-report=term-missing \
             --cov-report=xml:reports/coverage.xml \
             --cov-report=html:reports/coverage \
@@ -83,7 +84,7 @@ jobs:
         run: python -m pip install -e .
 
       - name: Run deterministic tests
-        run: pytest tests/unit tests/db -v
+        run: pytest tests/unit tests/algorithms tests/db -v
 
   container:
     name: Container smoke test

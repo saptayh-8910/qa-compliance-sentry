@@ -1,0 +1,7 @@
+{"timestamp":"2026-08-04T03:00:00Z","level":"INFO","message":"test run started"}
+{"timestamp":"2026-08-04T03:00:10Z","level":"ERROR","message":"checkout button not visible","test_name":"test_checkout_happy_path"}
+{"timestamp":"2026-08-04T03:01:20Z","level":"ERROR","message":"API returned 503","test_name":"test_get_posts_returns_list"}
+{"timestamp":"2026-08-04T03:02:30Z","level":"ERROR","message":"checkout button not visible","test_name":"test_checkout_happy_path"}
+{"timestamp":"2026-08-04T03:20:00Z","level":"CRITICAL","message":"database validation failed","test_name":"test_all_seed_validations_pass"}
+{"timestamp":"2026-08-04T03:20:30Z","level":"ERROR","message":"checkout button not visible","test_name":"test_add_multiple_products_to_cart"}
+{"timestamp":"2026-08-04T03:21:00Z","level":"INFO","message":"test run finished"}
