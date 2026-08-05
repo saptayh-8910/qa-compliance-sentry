@@ -4,6 +4,57 @@ This repository connects interview fundamentals to features in the QA and AI
 quality roadmap. Each problem is implemented independently, tested with Pytest,
 and then reused in a practical component.
 
+## Stage 1 foundation lab
+
+### Two Sum
+
+- Reference: [LeetCode 1](https://leetcode.com/problems/two-sum/)
+- QA connection: find two measurements, prices, or durations that reconcile to
+  a target total.
+- Simple approach: compare every pair, which costs O(n²) time.
+- Implemented approach: store each visited value in a hash map and look for the
+  required complement. This costs O(n) time and O(n) space.
+- Project decision: return `None` when no pair exists instead of assuming the
+  input always contains exactly one solution.
+
+Questions to practice explaining:
+
+1. Why must the lookup happen before storing the current value?
+2. How does the approach handle two equal values such as `[3, 3]`?
+3. What contract should production code use when no pair exists?
+
+### Contains Duplicate
+
+- Reference: [LeetCode 217](https://leetcode.com/problems/contains-duplicate/)
+- QA connection: detect repeated test-case or external record identifiers.
+- Simple approach: compare every pair or sort the input first.
+- Implemented approach: add identifiers to a set and stop at the first repeat.
+  This gives O(n) expected time and O(n) space and supports streamed iterables.
+- Production boundary: database uniqueness constraints are stronger when IDs
+  are stored persistently or written concurrently.
+
+Questions to practice explaining:
+
+1. Why is a set appropriate when counts are not needed?
+2. What are the time and memory tradeoffs versus sorting?
+3. Why is application-level checking insufficient for concurrent DB writes?
+
+### Binary Search
+
+- Reference: [LeetCode 704](https://leetcode.com/problems/binary-search/)
+- QA connection: locate a known test or bug ID in a sorted collection.
+- Simple approach: scan from the beginning in O(n) time.
+- Implemented approach: repeatedly discard half the remaining search range,
+  giving O(log n) time and O(1) additional space.
+- Production decision: sorted input is a documented precondition. Checking the
+  order inside the function would itself cost O(n) and remove the key benefit.
+
+Questions to practice explaining:
+
+1. What loop invariant do `left` and `right` maintain?
+2. Why does the loop use `left <= right`?
+3. What can go wrong if the collection is not sorted?
+
 ## Current Stage 2 lessons
 
 ### Top K Frequent Elements
@@ -67,9 +118,9 @@ Questions to practice explaining:
 
 | Stage | Problem | Practical connection | Status |
 |---|---|---|---|
-| 1 | [1. Two Sum](https://leetcode.com/problems/two-sum/) | Data reconciliation | Planned foundation lab |
-| 1 | [217. Contains Duplicate](https://leetcode.com/problems/contains-duplicate/) | Duplicate test-data detection | Planned foundation lab |
-| 1 | [704. Binary Search](https://leetcode.com/problems/binary-search/) | Efficient sorted-record lookup | Planned foundation lab |
+| 1 | [1. Two Sum](https://leetcode.com/problems/two-sum/) | Data reconciliation | Implemented |
+| 1 | [217. Contains Duplicate](https://leetcode.com/problems/contains-duplicate/) | Duplicate test-data detection | Implemented |
+| 1 | [704. Binary Search](https://leetcode.com/problems/binary-search/) | Efficient sorted-record lookup | Implemented |
 | 2 | [347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/) | Failure ranking | Implemented |
 | 2 | [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/) | Incident consolidation | Implemented |
 | 2 | [207. Course Schedule](https://leetcode.com/problems/course-schedule/) | Pipeline dependency validation | Implemented |

@@ -27,6 +27,7 @@ discarding the earlier work.
 | **Containerized testing** | Pinned Playwright image, non-root execution, reproducible local/CI commands |
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
+| **Algorithm foundations** | Stage-aligned interview labs with canonical and QA-oriented tests |
 
 ```mermaid
 flowchart LR
@@ -76,6 +77,24 @@ cp .env.example .env   # optional — defaults work for Sauce Demo
 ```
 
 Data is stored in `data/bugs.json` by default.
+
+### Stage 1 algorithm foundations
+
+The retrospective foundation lab covers three common interview patterns:
+
+- **Two Sum:** hash-map complement lookup, applied to paired test metrics.
+- **Contains Duplicate:** set-based duplicate test-case ID detection.
+- **Binary Search:** logarithmic lookup in sorted bug or test identifiers.
+
+Run all implemented algorithm lessons with:
+
+```bash
+make test-algorithms
+```
+
+These implementations teach the underlying data structures. Production code
+should still use database uniqueness constraints, Python built-ins, or indexed
+queries when those tools better fit the requirement.
 
 ### Run tests
 
@@ -189,6 +208,7 @@ qa-compliance-sentry/
 ├── api/                  # HTTP client
 ├── db/                   # schema, seed, validation.py
 ├── log_analyzer/         # JSONL parsing, failure ranking, incident grouping
+├── learning_algorithms/  # Interview labs mapped to project stages
 ├── pipeline_validator/   # CI dependency graph and cycle validation
 ├── examples/             # runnable sample QA logs
 ├── tests/
@@ -207,7 +227,7 @@ qa-compliance-sentry/
 
 | Stage | This repo |
 |-------|-----------|
-| **Stage 1 (complete)** | CLI + Playwright + API/DB validation |
+| **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | Stage 3 | RAG chatbot for QA docs |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
