@@ -44,6 +44,7 @@ jobs:
           mkdir -p reports
           pytest tests/unit tests/algorithms tests/db -v \
             --cov=api --cov=bug_tracker --cov=db --cov=log_analyzer \
+            --cov=learning_algorithms \
             --cov=pipeline_validator \
             --cov-report=term-missing \
             --cov-report=xml:reports/coverage.xml \

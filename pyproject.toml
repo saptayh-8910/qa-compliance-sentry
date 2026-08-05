@@ -1,6 +1,6 @@
 [project]
 name = "qa-compliance-sentry"
-version = "0.4.0"
+version = "0.4.1"
 description = "Autonomous QA & Compliance Sentry — Stage 2 reliability intelligence"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -36,6 +36,7 @@ include = [
     "api*",
     "db*",
     "log_analyzer*",
+    "learning_algorithms*",
     "pipeline_validator*",
 ]
 
@@ -53,7 +54,14 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.coverage.run]
 branch = true
-source = ["api", "bug_tracker", "db", "log_analyzer", "pipeline_validator"]
+source = [
+    "api",
+    "bug_tracker",
+    "db",
+    "learning_algorithms",
+    "log_analyzer",
+    "pipeline_validator",
+]
 
 [tool.coverage.report]
 fail_under = 85

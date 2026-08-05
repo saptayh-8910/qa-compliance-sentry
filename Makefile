@@ -3,7 +3,7 @@
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.4.0
+DOCKER_IMAGE ?= qa-compliance-sentry:0.4.1
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -49,6 +49,7 @@ format-check:
 coverage:
 	.venv/bin/pytest tests/unit tests/algorithms tests/db -v \
 		--cov=api --cov=bug_tracker --cov=db --cov=log_analyzer \
+		--cov=learning_algorithms \
 		--cov=pipeline_validator \
 		--cov-report=term-missing \
 		--cov-report=xml:reports/coverage.xml \
@@ -70,6 +71,7 @@ docker-quality: docker-build
 		'ruff check . && ruff format --check . && \
 		python -m pytest tests/unit tests/algorithms tests/db -v \
 		--cov=api --cov=bug_tracker --cov=db --cov=log_analyzer \
+		--cov=learning_algorithms \
 		--cov=pipeline_validator \
 		--cov-report=term-missing \
 		--cov-report=xml:reports/coverage.xml \
