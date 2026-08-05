@@ -21,4 +21,4 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 USER pwuser
 
-CMD ["python", "-m", "pytest", "tests/unit", "tests/db", "-v"]
+CMD ["python", "-m", "pytest", "tests/unit", "tests/algorithms", "tests/db", "-v"]

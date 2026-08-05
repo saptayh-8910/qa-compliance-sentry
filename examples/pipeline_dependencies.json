@@ -1,0 +1,13 @@
+{
+  "jobs": [
+    "quality",
+    "unit-tests",
+    "container-smoke",
+    "external-tests"
+  ],
+  "dependencies": [
+    ["unit-tests", "quality"],
+    ["container-smoke", "unit-tests"],
+    ["external-tests", "container-smoke"]
+  ]
+}

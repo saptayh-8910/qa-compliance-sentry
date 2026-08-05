@@ -1,7 +1,7 @@
 [project]
 name = "qa-compliance-sentry"
-version = "0.3.0"
-description = "Autonomous QA & Compliance Sentry — Stage 2 container foundation"
+version = "0.4.0"
+description = "Autonomous QA & Compliance Sentry — Stage 2 reliability intelligence"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -23,13 +23,21 @@ dev = [
 
 [project.scripts]
 bug-tracker = "bug_tracker.cli:app"
+log-analyzer = "log_analyzer.cli:app"
+pipeline-validator = "pipeline_validator.cli:app"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["bug_tracker*", "api*", "db*"]
+include = [
+    "bug_tracker*",
+    "api*",
+    "db*",
+    "log_analyzer*",
+    "pipeline_validator*",
+]
 
 [tool.ruff]
 target-version = "py311"
@@ -40,10 +48,12 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "bug_tracker/cli.py" = ["B008"]
+"log_analyzer/cli.py" = ["B008"]
+"pipeline_validator/cli.py" = ["B008"]
 
 [tool.coverage.run]
 branch = true
-source = ["api", "bug_tracker", "db"]
+source = ["api", "bug_tracker", "db", "log_analyzer", "pipeline_validator"]
 
 [tool.coverage.report]
 fail_under = 85
