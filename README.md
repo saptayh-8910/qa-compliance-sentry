@@ -15,6 +15,10 @@ expected for QA Automation and SDET roles. Later stages can add CI/CD,
 reliability tooling, retrieval-augmented generation, and AI evaluation without
 discarding the earlier work.
 
+The repository's evolution is recorded in [CHANGELOG.md](CHANGELOG.md) and the
+detailed [project history](docs/PROJECT_HISTORY.md), including milestone pull
+requests, merge commits, test growth, coverage, and the planned release tags.
+
 ## Project preview
 
 | Component | Description |
