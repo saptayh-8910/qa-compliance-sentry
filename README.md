@@ -2,9 +2,12 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 2 — CI, Containers & Failure Intelligence**
+**Stage 3 — Citation-Aware RAG Foundation**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
+Stage 2 makes those checks reproducible in CI and Docker while adding failure
+intelligence. Stage 3 begins with deterministic document retrieval and citations
+before connecting an LLM generator.
 
 ## Why this project exists
 
@@ -32,6 +35,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Stage-aligned interview labs with canonical and QA-oriented tests |
+| **QA document retrieval** | Heading-aware ingestion, BM25-style ranking, bounded context, and citations |
 
 ```mermaid
 flowchart LR
@@ -41,6 +45,8 @@ flowchart LR
   DB[SQLite Validator] --> Seed[Seed DB]
   LOG[Log Analyzer] --> Evidence[Failure Evidence]
   PIPE[Pipeline Validator] --> Repo
+  DOCS[QA Documentation] --> RAG[Lexical Retriever]
+  RAG --> CTX[Cited Context]
   PW --> Repo
   API --> Repo
   DB --> Repo
@@ -99,6 +105,27 @@ make test-algorithms
 These implementations teach the underlying data structures. Production code
 should still use database uniqueness constraints, Python built-ins, or indexed
 queries when those tools better fit the requirement.
+
+### Retrieve QA documentation
+
+Stage 3 starts with an offline retrieval boundary that can be tested without an
+API key:
+
+```bash
+make retrieve-docs
+
+# Or query selected Markdown/text sources:
+.venv/bin/qa-assistant retrieve \
+  "Why separate scheduled external checks from merge-blocking tests?" \
+  --source docs --top 3
+```
+
+The command discovers `.md` and `.txt` files, splits Markdown at real headings,
+ranks chunks with deterministic BM25-style lexical scoring, and prints bounded
+context labelled with source and heading citations. It does **not** generate an
+LLM answer yet; keeping retrieval separate makes ranking and citation failures
+observable before model behavior is introduced. See
+[the Stage 3 RAG architecture](docs/RAG_ARCHITECTURE.md).
 
 ### Run tests
 
@@ -178,7 +205,7 @@ Failure screenshots are saved under `reports/`.
 
 | Layer | Tool | Target |
 |-------|------|--------|
-| Unit | pytest | Bug tracker CLI/storage + isolated API client |
+| Unit | pytest | Components, isolated API client, ingestion, retrieval, and citations |
 | Algorithms | pytest | Interview fundamentals reused by QA features |
 | API | pytest + requests | REST shape & status (JSONPlaceholder stand-in) |
 | DB | pytest + sqlite3 | Seed DB duplicates, FK integrity, API↔DB mapping |
@@ -214,6 +241,7 @@ qa-compliance-sentry/
 ├── log_analyzer/         # JSONL parsing, failure ranking, incident grouping
 ├── learning_algorithms/  # Interview labs mapped to project stages
 ├── pipeline_validator/   # CI dependency graph and cycle validation
+├── qa_assistant/         # Document ingestion + deterministic cited retrieval
 ├── examples/             # runnable sample QA logs
 ├── tests/
 │   ├── unit/
@@ -233,7 +261,7 @@ qa-compliance-sentry/
 |-------|-----------|
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
-| Stage 3 | RAG chatbot for QA docs |
+| **Stage 3 (in progress)** | Deterministic retrieval/citations complete; LLM answer generation next |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.

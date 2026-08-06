@@ -1,9 +1,9 @@
 .PHONY: install test test-local test-unit test-algorithms test-api test-db \
-	test-e2e validate validate-pipeline report analyze-sample \
+	test-e2e validate validate-pipeline retrieve-docs report analyze-sample \
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.4.1
+DOCKER_IMAGE ?= qa-compliance-sentry:0.5.0
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -51,6 +51,7 @@ coverage:
 		--cov=api --cov=bug_tracker --cov=db --cov=log_analyzer \
 		--cov=learning_algorithms \
 		--cov=pipeline_validator \
+		--cov=qa_assistant \
 		--cov-report=term-missing \
 		--cov-report=xml:reports/coverage.xml \
 		--cov-report=html:reports/coverage \
@@ -73,6 +74,7 @@ docker-quality: docker-build
 		--cov=api --cov=bug_tracker --cov=db --cov=log_analyzer \
 		--cov=learning_algorithms \
 		--cov=pipeline_validator \
+		--cov=qa_assistant \
 		--cov-report=term-missing \
 		--cov-report=xml:reports/coverage.xml \
 		--cov-report=html:reports/coverage \
@@ -92,6 +94,11 @@ analyze-sample:
 
 validate-pipeline:
 	.venv/bin/pipeline-validator validate examples/pipeline_dependencies.json
+
+retrieve-docs:
+	.venv/bin/qa-assistant retrieve \
+		"Why separate scheduled external checks from merge-blocking tests?" \
+		--source docs --top 3
 
 validate:
 	.venv/bin/python scripts/run_validations.py

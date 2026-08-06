@@ -11,6 +11,13 @@ and the project uses semantic versioning for milestone tags.
 ### Added
 
 - Permanent changelog and project-history documentation.
+- Stage 3 document ingestion for local Markdown and text sources.
+- Heading-aware chunking that ignores heading-like lines inside fenced code.
+- Deterministic BM25-style lexical retrieval with stable tie-breaking.
+- Bounded, numbered source-and-heading citation context.
+- Installed `qa-assistant retrieve` command and runnable `make retrieve-docs`
+  example.
+- Twenty-six focused ingestion, retrieval, service, and CLI tests.
 
 ## [0.4.1] - 2026-08-05
 
