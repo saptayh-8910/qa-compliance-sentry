@@ -1,0 +1,119 @@
+# Changelog
+
+All notable project changes are recorded here. Dates use UTC and each released
+milestone links to the pull request that introduced it.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and the project uses semantic versioning for milestone tags.
+
+## [Unreleased]
+
+### Added
+
+- Permanent changelog and project-history documentation.
+
+## [0.4.1] - 2026-08-05
+
+### Added
+
+- Stage 1 learning implementations for Two Sum, Contains Duplicate, and Binary
+  Search.
+- Sixteen canonical and QA-oriented foundation test cases.
+- Complexity notes, interview prompts, and guidance about when production code
+  should prefer database constraints, built-ins, or indexed queries.
+
+### Changed
+
+- Expanded deterministic quality coverage to 84 tests and 95.73% branch-aware
+  coverage.
+- Included `learning_algorithms` in packaging, CI, and Docker quality gates.
+
+Merged in [PR #5](https://github.com/saptayh-8910/qa-compliance-sentry/pull/5)
+at commit `0cbf054`.
+
+## [0.4.0] - 2026-08-05
+
+### Added
+
+- JSONL log analyzer for recurring-failure ranking and incident grouping.
+- Named CI pipeline validator for circular dependency detection.
+- Stage 2 implementations of Top K Frequent Elements, Merge Intervals, and
+  Course Schedule.
+- Installed `log-analyzer` and `pipeline-validator` commands with runnable
+  examples.
+- Twelve-problem, three-per-stage algorithm learning roadmap.
+
+### Changed
+
+- Expanded deterministic quality coverage to 68 tests and 95.41% branch-aware
+  coverage.
+
+Merged in [PR #4](https://github.com/saptayh-8910/qa-compliance-sentry/pull/4)
+at commit `cfc9e8c`.
+
+## [0.3.0] - 2026-08-04
+
+### Added
+
+- Pinned Playwright 1.61.0 Docker environment.
+- Non-root container execution using `pwuser`.
+- Docker targets for deterministic, quality, and external test runs.
+- Container smoke test in GitHub Actions.
+- Host-mounted HTML, XML, JUnit, coverage, and browser-test evidence.
+
+### Verified
+
+- Twenty deterministic tests and five external API/Chromium tests passed in
+  Docker at 95.88% coverage.
+
+Merged in [PR #3](https://github.com/saptayh-8910/qa-compliance-sentry/pull/3)
+at commit `8e7222e`.
+
+## [0.2.0] - 2026-08-03
+
+### Added
+
+- GitHub Actions quality gates for pull requests and `main`.
+- Python 3.11–3.14 compatibility matrix.
+- Ruff lint and formatting checks plus an 85% branch-aware coverage gate.
+- Scheduled and manually triggered external API/Playwright workflow.
+- Uploaded HTML, XML, JUnit, and failure artifacts.
+
+### Changed
+
+- Increased the full suite to 25 tests and the deterministic suite to 20 tests
+  at 95.88% coverage.
+
+Merged in [PR #2](https://github.com/saptayh-8910/qa-compliance-sentry/pull/2)
+at commit `a5e8512`.
+
+## [0.1.0] - 2026-07-31
+
+### Added
+
+- Environment-based test configuration.
+- Read-only SQLite validation separated from database seeding.
+- Negative database, CLI, and isolated API-client tests.
+- Deterministic offline test target and explicit external-test marker.
+- Atomic JSON persistence for the bug tracker.
+- Project motivation and test-strategy documentation.
+
+### Changed
+
+- Hardened Stage 1 so validation detects bad data instead of only proving that
+  known-good seed data passes.
+
+### Verified
+
+- Nineteen full-suite tests, fourteen deterministic tests, and seven database
+  validation checks passed.
+
+Merged in [PR #1](https://github.com/saptayh-8910/qa-compliance-sentry/pull/1)
+at commit `ed550d7`.
+
+[Unreleased]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/saptayh-8910/qa-compliance-sentry/releases/tag/v0.1.0
