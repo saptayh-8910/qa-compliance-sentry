@@ -46,6 +46,7 @@ jobs:
             --cov=api --cov=bug_tracker --cov=db --cov=log_analyzer \
             --cov=learning_algorithms \
             --cov=pipeline_validator \
+            --cov=qa_assistant \
             --cov-report=term-missing \
             --cov-report=xml:reports/coverage.xml \
             --cov-report=html:reports/coverage \

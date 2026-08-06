@@ -1,7 +1,7 @@
 [project]
 name = "qa-compliance-sentry"
-version = "0.4.1"
-description = "Autonomous QA & Compliance Sentry — Stage 2 reliability intelligence"
+version = "0.5.0"
+description = "Autonomous QA & Compliance Sentry — Stage 3 RAG foundation"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -25,6 +25,7 @@ dev = [
 bug-tracker = "bug_tracker.cli:app"
 log-analyzer = "log_analyzer.cli:app"
 pipeline-validator = "pipeline_validator.cli:app"
+qa-assistant = "qa_assistant.cli:app"
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -38,6 +39,7 @@ include = [
     "log_analyzer*",
     "learning_algorithms*",
     "pipeline_validator*",
+    "qa_assistant*",
 ]
 
 [tool.ruff]
@@ -51,6 +53,7 @@ select = ["E", "F", "I", "B", "UP"]
 "bug_tracker/cli.py" = ["B008"]
 "log_analyzer/cli.py" = ["B008"]
 "pipeline_validator/cli.py" = ["B008"]
+"qa_assistant/cli.py" = ["B008"]
 
 [tool.coverage.run]
 branch = true
@@ -61,6 +64,7 @@ source = [
     "learning_algorithms",
     "log_analyzer",
     "pipeline_validator",
+    "qa_assistant",
 ]
 
 [tool.coverage.report]
