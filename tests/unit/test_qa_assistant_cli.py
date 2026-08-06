@@ -56,3 +56,35 @@ def test_cli_returns_error_for_missing_source(tmp_path: Path) -> None:
 
     assert result.exit_code == 1
     assert "does not exist" in result.output
+
+
+def test_cli_answers_with_verified_source_list(tmp_path: Path) -> None:
+    guide = tmp_path / "guide.md"
+    guide.write_text(
+        "# Quality gates\n\nRuff and coverage run before merge.", encoding="utf-8"
+    )
+
+    result = runner.invoke(
+        app,
+        ["answer", "Ruff coverage", "--source", str(guide)],
+    )
+
+    assert result.exit_code == 0
+    assert "Based on the retrieved documentation:" in result.stdout
+    assert "Sources:" in result.stdout
+    assert "[1]" in result.stdout
+    assert "guide.md :: Quality gates" in result.stdout
+
+
+def test_cli_answer_abstains_when_evidence_is_missing(tmp_path: Path) -> None:
+    guide = tmp_path / "guide.md"
+    guide.write_text("# CI\n\nDeterministic tests", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["answer", "unrelated vocabulary", "--source", str(guide)],
+    )
+
+    assert result.exit_code == 0
+    assert "could not find enough evidence" in result.stdout
+    assert "Sources:" not in result.stdout

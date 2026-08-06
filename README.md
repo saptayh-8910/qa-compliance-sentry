@@ -2,12 +2,12 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 3 — Citation-Aware RAG Foundation**
+**Stage 3 — Grounded, Citation-Aware RAG Assistant**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
-intelligence. Stage 3 begins with deterministic document retrieval and citations
-before connecting an LLM generator.
+intelligence. Stage 3 now connects deterministic document retrieval to a
+provider-neutral grounded-answer boundary with fail-closed citation validation.
 
 ## Why this project exists
 
@@ -35,7 +35,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA document retrieval** | Heading-aware ingestion, BM25-style ranking, bounded context, and citations |
+| **QA documentation assistant** | Deterministic retrieval, grounded offline answers, abstention, and verified citations |
 
 ```mermaid
 flowchart LR
@@ -47,6 +47,8 @@ flowchart LR
   PIPE[Pipeline Validator] --> Repo
   DOCS[QA Documentation] --> RAG[Lexical Retriever]
   RAG --> CTX[Cited Context]
+  CTX --> GEN[Answer Generator]
+  GEN --> VERIFY[Citation Validator]
   PW --> Repo
   API --> Repo
   DB --> Repo
@@ -126,6 +128,21 @@ context labelled with source and heading citations. It does **not** generate an
 LLM answer yet; keeping retrieval separate makes ranking and citation failures
 observable before model behavior is introduced. See
 [the Stage 3 RAG architecture](docs/RAG_ARCHITECTURE.md).
+
+Run the complete offline question-answer flow with:
+
+```bash
+make answer-docs
+
+.venv/bin/qa-assistant answer \
+  "Why separate scheduled external checks from merge-blocking tests?" \
+  --source docs --top 3
+```
+
+The current extractive generator returns bounded text from the best retrieved
+passage and a verified source list. It is deliberately simple: the same
+provider-neutral request and citation contracts will be used by a future
+external model adapter, while deterministic CI continues to run without secrets.
 
 ### Run tests
 
@@ -261,7 +278,7 @@ qa-compliance-sentry/
 |-------|-----------|
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
-| **Stage 3 (in progress)** | Deterministic retrieval/citations complete; LLM answer generation next |
+| **Stage 3 (in progress)** | Retrieval and grounded answer contracts complete; external model adapter next |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.

@@ -42,3 +42,39 @@ class RetrievalContext:
     query: str
     results: tuple[SearchResult, ...]
     text: str
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationRequest:
+    """Separated instructions, question, and untrusted retrieved evidence."""
+
+    instructions: str
+    question: str
+    context: RetrievalContext
+
+
+@dataclass(frozen=True, slots=True)
+class AnswerCitation:
+    """One validated citation used by a grounded answer."""
+
+    identifier: int
+    source: str
+    heading: str
+
+    @property
+    def label(self) -> str:
+        return f"[{self.identifier}] {self.source} :: {self.heading}"
+
+
+@dataclass(frozen=True, slots=True)
+class GroundedAnswer:
+    """A generated or abstaining answer with verified source references."""
+
+    question: str
+    text: str
+    citations: tuple[AnswerCitation, ...]
+    context: RetrievalContext
+
+    @property
+    def is_supported(self) -> bool:
+        return bool(self.citations)

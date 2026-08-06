@@ -1,9 +1,16 @@
 # Stage 3 RAG architecture
 
 Stage 3 turns the repository's QA documentation into a citation-aware assistant.
-The first milestone deliberately implements retrieval before answer generation,
-so search quality can be tested without network access, API credentials, or
-non-deterministic model output.
+The retrieval milestone established deterministic evidence selection. The
+second milestone adds a provider-neutral generator contract, an offline
+extractive baseline, abstention, and fail-closed citation validation. Real model
+execution remains external so deterministic CI needs no API credentials.
+
+The grounding contract follows OpenAI's current
+[GPT-5.6 prompting guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6.md):
+state the desired outcome, treat retrieved content as evidence rather than
+instructions, cite only retrieved sources, and narrow or abstain when evidence
+is missing.
 
 ## Current flow
 
@@ -16,13 +23,19 @@ flowchart LR
   INDEX --> RANK
   RANK --> LIMIT["Apply top-k and context-size limits"]
   LIMIT --> CTX["Numbered context with source and heading citations"]
-  CTX -. "next milestone" .-> GEN["LLM answer generator"]
+  CTX --> REQUEST["Separate instructions, question, and untrusted context"]
+  REQUEST --> GEN["Provider-neutral answer generator"]
+  GEN --> VALIDATE["Validate every numeric citation ID"]
+  VALIDATE --> ANSWER["Grounded answer and verified source list"]
+  MODEL["External model adapter"] -. "future provider" .-> GEN
 ```
 
 The public `QAKnowledgeBase` boundary accepts document paths and exposes
-`search()` for ranked chunks and `context()` for generator-ready context. The
-CLI uses the same boundary, so tests exercise the production path instead of a
-separate demo implementation.
+`search()` for ranked chunks and `context()` for generator-ready context.
+`QAAssistant` retrieves evidence, abstains on no match, passes a separated
+`GenerationRequest` to an `AnswerGenerator`, validates the returned numeric IDs,
+and maps them back to source paths and headings. The CLI uses these same
+boundaries, so tests exercise the production path instead of a separate demo.
 
 ## Why lexical retrieval first
 
@@ -56,31 +69,41 @@ Every chunk retains:
 - its position in the source document;
 - its normalized section text.
 
-Retrieved context labels each passage as `[n] path :: heading`. A future
-generator will be instructed to cite these identifiers, and Stage 4 evaluation
-will verify that cited passages actually support the answer.
+Retrieved context labels each passage as `[n] path :: heading`. Generators are
+required to cite these identifiers, and Stage 4 evaluation will verify that
+cited passages actually support the answer.
+
+The current generator is an offline extractive baseline. It returns a bounded
+passage from the top-ranked result with `[1]`. This proves the orchestration and
+user entry point without claiming model-level synthesis. Any future model
+adapter must implement the same small `AnswerGenerator.generate()` contract.
+
+Citation validation currently guarantees that an answer is non-empty, contains
+at least one citation, and references only identifiers present in the retrieved
+context. It does not yet prove that every claim is semantically entailed by the
+cited passage; that becomes an evaluation target in Stage 4.
 
 ## Testing strategy
 
 | Level | What this milestone tests | Why it belongs there |
 |---|---|---|
-| Unit | tokenization, path discovery, heading parsing, chunk limits, ranking, ties, and context budgets | Each rule is deterministic and isolated. |
-| Integration | source paths → loaded documents → chunks → ranked cited context | Verifies the ingestion and retrieval components agree on their contracts. |
-| CLI component | repeated source arguments, successful retrieval, no-match behavior, and missing sources | Exercises the user entry point without an external model or network. |
-| E2E | Deferred until answer generation exists | A real user journey needs both retrieval and a generator. |
+| Unit | tokenization, chunking, ranking, generator requests, citation validation, and abstention | Each rule is deterministic and isolated. |
+| Integration | source paths → chunks → context → generator → verified answer | Verifies that retrieval and generation agree on citation contracts. |
+| CLI component | retrieval, supported answers, source lists, no-match behavior, and missing sources | Exercises the user entry point without an external model or network. |
+| E2E | Deferred until a real model adapter exists | The offline flow is covered; model behavior needs a separate external journey. |
 
 This follows the testing pyramid: many fast unit cases, fewer boundary tests,
 and eventually a small number of end-to-end assistant journeys.
 
 ## Stage 3 boundaries and next milestones
 
-This milestone retrieves evidence; it does not claim to answer questions. The
-remaining Stage 3 work is:
+This milestone proves grounded answer orchestration with a deliberately simple
+offline generator. The remaining Stage 3 work is:
 
-1. Add a generator interface, deterministic fake generator tests, and an
-   explicitly external real-model adapter.
-2. Require answers to reference retrieved citation identifiers and add
-   prompt-injection and unsupported-answer checks.
+1. Configure credentials securely and add an explicitly external OpenAI
+   Responses API adapter, then compare its behavior on representative questions.
+2. Add semantic support checks, prompt-injection cases, and unsupported-answer
+   evaluation beyond numeric citation validity.
 3. Implement the three planned Stage 3 algorithm lessons: Valid Parentheses for
    structured-output validation, LRU Cache for retrieval caching, and Trie for
    document-prefix indexing.

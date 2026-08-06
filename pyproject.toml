@@ -1,7 +1,7 @@
 [project]
 name = "qa-compliance-sentry"
-version = "0.5.0"
-description = "Autonomous QA & Compliance Sentry — Stage 3 RAG foundation"
+version = "0.5.1"
+description = "Autonomous QA & Compliance Sentry — Stage 3 grounded RAG assistant"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

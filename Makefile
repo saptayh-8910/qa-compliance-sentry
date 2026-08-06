@@ -1,9 +1,10 @@
 .PHONY: install test test-local test-unit test-algorithms test-api test-db \
-	test-e2e validate validate-pipeline retrieve-docs report analyze-sample \
+	test-e2e validate validate-pipeline retrieve-docs answer-docs report \
+	analyze-sample \
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.5.0
+DOCKER_IMAGE ?= qa-compliance-sentry:0.5.1
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -97,6 +98,11 @@ validate-pipeline:
 
 retrieve-docs:
 	.venv/bin/qa-assistant retrieve \
+		"Why separate scheduled external checks from merge-blocking tests?" \
+		--source docs --top 3
+
+answer-docs:
+	.venv/bin/qa-assistant answer \
 		"Why separate scheduled external checks from merge-blocking tests?" \
 		--source docs --top 3
 
