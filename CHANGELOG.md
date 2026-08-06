@@ -18,6 +18,12 @@ and the project uses semantic versioning for milestone tags.
 - Installed `qa-assistant retrieve` command and runnable `make retrieve-docs`
   example.
 - Twenty-six focused ingestion, retrieval, service, and CLI tests.
+- Provider-neutral answer-generator request contract with grounding instructions.
+- Offline extractive answer baseline for end-to-end local demonstrations.
+- Fail-closed citation validation and source mapping for generated answers.
+- Evidence-first abstention that skips generation when retrieval has no match.
+- Installed `qa-assistant answer` command and runnable `make answer-docs` example.
+- Fifteen focused generation, validation, orchestration, and answer-CLI tests.
 
 ## [0.4.1] - 2026-08-05
 
