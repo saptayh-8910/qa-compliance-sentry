@@ -2,9 +2,10 @@
 
 Stage 3 turns the repository's QA documentation into a citation-aware assistant.
 The retrieval milestone established deterministic evidence selection. The
-second milestone adds a provider-neutral generator contract, an offline
-extractive baseline, abstention, and fail-closed citation validation. Real model
-execution remains external so deterministic CI needs no API credentials.
+second milestone added a provider-neutral generator contract, an offline
+extractive baseline, abstention, and fail-closed citation validation. The third
+milestone adds an explicit OpenAI Responses API adapter while keeping real model
+execution outside deterministic CI.
 
 The grounding contract follows OpenAI's current
 [GPT-5.6 prompting guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6.md):
@@ -27,7 +28,8 @@ flowchart LR
   REQUEST --> GEN["Provider-neutral answer generator"]
   GEN --> VALIDATE["Validate every numeric citation ID"]
   VALIDATE --> ANSWER["Grounded answer and verified source list"]
-  MODEL["External model adapter"] -. "future provider" .-> GEN
+  OFFLINE["Offline extractive baseline"] --> GEN
+  OPENAI["OpenAI Responses API adapter"] --> GEN
 ```
 
 The public `QAKnowledgeBase` boundary accepts document paths and exposes
@@ -73,10 +75,13 @@ Retrieved context labels each passage as `[n] path :: heading`. Generators are
 required to cite these identifiers, and Stage 4 evaluation will verify that
 cited passages actually support the answer.
 
-The current generator is an offline extractive baseline. It returns a bounded
-passage from the top-ranked result with `[1]`. This proves the orchestration and
-user entry point without claiming model-level synthesis. Any future model
-adapter must implement the same small `AnswerGenerator.generate()` contract.
+The default generator is an offline extractive baseline. It returns a bounded
+passage from the top-ranked result with `[1]`. The OpenAI adapter implements the
+same `AnswerGenerator.generate()` contract, receives instructions separately
+from the user question and delimited untrusted context, bounds output tokens,
+sets reasoning effort explicitly, and uses `store=False`. Selecting it requires
+`--provider openai`, so ordinary local use and deterministic CI cannot make an
+accidental paid request.
 
 Citation validation currently guarantees that an answer is non-empty, contains
 at least one citation, and references only identifiers present in the retrieved
@@ -87,21 +92,22 @@ cited passage; that becomes an evaluation target in Stage 4.
 
 | Level | What this milestone tests | Why it belongs there |
 |---|---|---|
-| Unit | tokenization, chunking, ranking, generator requests, citation validation, and abstention | Each rule is deterministic and isolated. |
+| Unit | tokenization, chunking, ranking, generator requests, OpenAI request mapping, citation validation, and abstention | Each rule is deterministic and isolated; the SDK client is replaced by a recording fake. |
 | Integration | source paths → chunks → context → generator → verified answer | Verifies that retrieval and generation agree on citation contracts. |
-| CLI component | retrieval, supported answers, source lists, no-match behavior, and missing sources | Exercises the user entry point without an external model or network. |
-| E2E | Deferred until a real model adapter exists | The offline flow is covered; model behavior needs a separate external journey. |
+| CLI component | retrieval, provider selection, supported answers, source lists, no-match behavior, and missing sources | Exercises the user entry point without a real external request. |
+| External E2E | identical source and question → Sol/Medium and Luna/High → citation and fact checks | Opt-in only through `RUN_OPENAI_LIVE_TESTS=1`; two paid calls produce HTML/JUnit comparison evidence and remain excluded from deterministic CI. |
 
 This follows the testing pyramid: many fast unit cases, fewer boundary tests,
 and eventually a small number of end-to-end assistant journeys.
 
 ## Stage 3 boundaries and next milestones
 
-This milestone proves grounded answer orchestration with a deliberately simple
-offline generator. The remaining Stage 3 work is:
+This milestone proves grounded answer orchestration with both a deliberately
+simple offline generator and a secure external provider boundary. The remaining
+Stage 3 work is:
 
-1. Configure credentials securely and add an explicitly external OpenAI
-   Responses API adapter, then compare its behavior on representative questions.
+1. Run and review the controlled Sol/Medium versus Luna/High comparison, then
+   expand it with representative unsupported questions.
 2. Add semantic support checks, prompt-injection cases, and unsupported-answer
    evaluation beyond numeric citation validity.
 3. Implement the three planned Stage 3 algorithm lessons: Valid Parentheses for

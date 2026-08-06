@@ -24,6 +24,17 @@ and the project uses semantic versioning for milestone tags.
 - Evidence-first abstention that skips generation when retrieval has no match.
 - Installed `qa-assistant answer` command and runnable `make answer-docs` example.
 - Fifteen focused generation, validation, orchestration, and answer-CLI tests.
+- OpenAI Responses API answer adapter with separated instructions and retrieved
+  evidence, disabled response storage, bounded output, and configurable model.
+- Explicit `--provider openai` CLI path while keeping offline extraction as the
+  zero-cost default.
+- Mocked adapter and CLI contract tests plus an opt-in paid external smoke test.
+- Local `.env` credential loading with a tracked, secret-free example.
+- Explicit GPT-5.6 reasoning-effort configuration and a controlled, two-call
+  Sol/Medium versus Luna/High external comparison with retained test evidence.
+- First controlled model-comparison result: both configurations returned the
+  same correct citation-grounded answer; Luna/High was faster in this single
+  run, without treating one observation as a general performance conclusion.
 
 ## [0.4.1] - 2026-08-05
 

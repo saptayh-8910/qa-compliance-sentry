@@ -1,10 +1,11 @@
 .PHONY: install test test-local test-unit test-algorithms test-api test-db \
-	test-e2e validate validate-pipeline retrieve-docs answer-docs report \
+	test-e2e test-ai-external validate validate-pipeline retrieve-docs \
+	answer-docs answer-docs-openai report \
 	analyze-sample \
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.5.1
+DOCKER_IMAGE ?= qa-compliance-sentry:0.5.2
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -29,6 +30,15 @@ test-db:
 
 test-e2e:
 	.venv/bin/pytest tests/e2e -v -m smoke
+
+test-ai-external:
+	mkdir -p reports
+	RUN_OPENAI_LIVE_TESTS=1 .venv/bin/pytest \
+		tests/api/test_openai_responses.py -m "external and ai" -v \
+		--durations=0 \
+		-o junit_family=legacy \
+		--html=reports/openai-model-comparison.html --self-contained-html \
+		--junitxml=reports/openai-model-comparison.xml
 
 test:
 	.venv/bin/pytest tests/unit tests/algorithms tests/api tests/db -v
@@ -105,6 +115,12 @@ answer-docs:
 	.venv/bin/qa-assistant answer \
 		"Why separate scheduled external checks from merge-blocking tests?" \
 		--source docs --top 3
+
+# Explicitly makes a paid OpenAI API request.
+answer-docs-openai:
+	.venv/bin/qa-assistant answer \
+		"Why separate scheduled external checks from merge-blocking tests?" \
+		--source docs --top 3 --provider openai
 
 validate:
 	.venv/bin/python scripts/run_validations.py

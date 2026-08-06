@@ -139,10 +139,47 @@ make answer-docs
   --source docs --top 3
 ```
 
-The current extractive generator returns bounded text from the best retrieved
-passage and a verified source list. It is deliberately simple: the same
-provider-neutral request and citation contracts will be used by a future
-external model adapter, while deterministic CI continues to run without secrets.
+The default extractive generator returns bounded text from the best retrieved
+passage and a verified source list. It remains the fast, zero-cost CI baseline.
+The OpenAI adapter implements the same provider-neutral contract through the
+Responses API and is enabled only when explicitly selected.
+
+To use the external provider, put your API key in the ignored local `.env` file:
+
+```dotenv
+OPENAI_API_KEY=your-key-here
+OPENAI_MODEL=gpt-5.6-sol
+OPENAI_REASONING_EFFORT=medium
+```
+
+Then run:
+
+```bash
+.venv/bin/qa-assistant answer \
+  "Why separate scheduled external checks from merge-blocking tests?" \
+  --source docs --top 3 --provider openai
+```
+
+This command makes a paid external API request. The adapter sends grounding
+instructions separately from the question and retrieved evidence, requests no
+response storage, limits output size, and passes the result through the same
+numeric citation validator as the offline generator.
+
+The model and reasoning effort can be changed independently. For example, this
+runs the same answer flow with Luna at high reasoning:
+
+```bash
+.venv/bin/qa-assistant answer \
+  "Why separate scheduled external checks from merge-blocking tests?" \
+  --source docs --provider openai \
+  --model gpt-5.6-luna --reasoning-effort high
+```
+
+`make test-ai-external` performs a controlled comparison of Sol/Medium and
+Luna/High. It makes exactly two paid API calls, holds the question and evidence
+constant, validates required citations and facts, and writes retained HTML and
+JUnit evidence under `reports/`. The experiment design, first result, and its
+limitations are recorded in [docs/MODEL_COMPARISON.md](docs/MODEL_COMPARISON.md).
 
 ### Run tests
 
@@ -152,6 +189,7 @@ make test-algorithms # interview algorithms mapped to QA features
 make test-api     # REST API tests
 make test-db      # SQLite validation tests
 make test-e2e     # Sauce Demo smoke (Playwright)
+make test-ai-external # opt-in two-call Sol/Medium vs Luna/High comparison
 make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
 make quality      # lint + format check + coverage gate
@@ -278,7 +316,7 @@ qa-compliance-sentry/
 |-------|-----------|
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
-| **Stage 3 (in progress)** | Retrieval and grounded answer contracts complete; external model adapter next |
+| **Stage 3 (in progress)** | Retrieval, grounded answer contracts, and explicit OpenAI adapter complete; semantic evaluation next |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
