@@ -1,7 +1,9 @@
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
+import qa_assistant.cli as cli
 from qa_assistant.cli import app
 
 runner = CliRunner()
@@ -88,3 +90,78 @@ def test_cli_answer_abstains_when_evidence_is_missing(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "could not find enough evidence" in result.stdout
     assert "Sources:" not in result.stdout
+
+
+def test_cli_openai_provider_is_explicit_and_passes_model_configuration(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guide = tmp_path / "guide.md"
+    guide.write_text(
+        "# Quality gates\n\nRuff and coverage run before merge.", encoding="utf-8"
+    )
+    configuration: dict[str, object] = {}
+
+    class FakeOpenAIGenerator:
+        def __init__(self, **kwargs: object) -> None:
+            configuration.update(kwargs)
+
+        def generate(self, request: object) -> str:
+            return "Ruff and coverage run before merge [1]."
+
+    monkeypatch.setattr(cli, "OpenAIResponsesGenerator", FakeOpenAIGenerator)
+
+    result = runner.invoke(
+        app,
+        [
+            "answer",
+            "Ruff coverage",
+            "--source",
+            str(guide),
+            "--provider",
+            "openai",
+            "--model",
+            "test-model",
+            "--reasoning-effort",
+            "high",
+            "--max-output-tokens",
+            "123",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Ruff and coverage run before merge [1]." in result.stdout
+    assert configuration == {
+        "model": "test-model",
+        "reasoning_effort": "high",
+        "max_output_tokens": 123,
+    }
+
+
+def test_cli_reports_openai_configuration_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guide = tmp_path / "guide.md"
+    guide.write_text("# Quality gates\n\nCoverage runs before merge.", encoding="utf-8")
+
+    class FailingOpenAIGenerator:
+        def __init__(self, **kwargs: object) -> None:
+            raise cli.OpenAIAdapterError("OpenAI is unavailable")
+
+    monkeypatch.setattr(cli, "OpenAIResponsesGenerator", FailingOpenAIGenerator)
+
+    result = runner.invoke(
+        app,
+        [
+            "answer",
+            "coverage",
+            "--source",
+            str(guide),
+            "--provider",
+            "openai",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "OpenAI is unavailable" in result.output
