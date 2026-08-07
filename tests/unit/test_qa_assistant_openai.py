@@ -20,6 +20,7 @@ from qa_assistant.openai_generator import (
     OpenAIResponseError,
     OpenAIResponsesGenerator,
     ReasoningEffort,
+    ResponseUsage,
 )
 
 
@@ -88,6 +89,41 @@ def test_openai_generator_sends_separated_grounded_request() -> None:
             "store": False,
         }
     ]
+
+
+def test_openai_generator_records_response_usage() -> None:
+    responses = FakeResponses()
+    generator = OpenAIResponsesGenerator(client=FakeClient(responses))
+    responses.create = lambda **kwargs: SimpleNamespace(  # type: ignore[method-assign]
+        output_text="Supported [1].",
+        usage=SimpleNamespace(
+            input_tokens=80,
+            output_tokens=20,
+            total_tokens=100,
+            output_tokens_details=SimpleNamespace(reasoning_tokens=7),
+        ),
+    )
+
+    generator.generate(_request())
+
+    assert generator.last_usage == ResponseUsage(80, 20, 100, 7)
+
+
+def test_openai_generator_tolerates_missing_or_partial_usage() -> None:
+    generator = OpenAIResponsesGenerator(client=FakeClient(FakeResponses()))
+
+    generator.generate(_request())
+    assert generator.last_usage is None
+
+    responses = FakeResponses()
+    responses.create = lambda **kwargs: SimpleNamespace(  # type: ignore[method-assign]
+        output_text="Supported [1].",
+        usage={"input_tokens": 80},
+    )
+    generator = OpenAIResponsesGenerator(client=FakeClient(responses))
+    generator.generate(_request())
+
+    assert generator.last_usage is None
 
 
 def test_openai_generator_uses_current_default_model() -> None:

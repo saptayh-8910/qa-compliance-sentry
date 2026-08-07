@@ -35,6 +35,18 @@ and the project uses semantic versioning for milestone tags.
 - First controlled model-comparison result: both configurations returned the
   same correct citation-grounded answer; Luna/High was faster in this single
   run, without treating one observation as a general performance conclusion.
+- Exact generator abstention contract for incomplete or unresolved conflicting
+  evidence, without weakening citation requirements for factual answers.
+- Four-case grounding evaluation dataset covering supported answers, retrieval
+  misses, conflicting evidence, and prompt injection in untrusted documents.
+- Explainable checks for expected behavior, required and forbidden terms, and
+  exact citation sources, exercised with deterministic fake generators.
+- Human-labelled relevant chunks with context precision/recall, Hit@K, mean
+  reciprocal rank, citation precision/recall, and aggregate pass-rate metrics.
+- Deterministic grading documentation that separates retrieval, generation,
+  citation, and safety failures without relying on an unvalidated LLM judge.
+- Opt-in Sol/Medium versus Luna/High adversarial matrix designed for exactly six
+  paid calls, with latency and API token usage retained in HTML/JUnit evidence.
 
 ## [0.4.1] - 2026-08-05
 

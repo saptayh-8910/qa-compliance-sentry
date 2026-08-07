@@ -2,20 +2,23 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
+from time import perf_counter
 
 import pytest
 
-from qa_assistant.assistant import QAAssistant
-from qa_assistant.models import DocumentChunk
+from qa_assistant.evaluation import (
+    EvaluationCase,
+    evaluate_case,
+    grounding_evaluation_cases,
+)
 from qa_assistant.openai_generator import OpenAIResponsesGenerator, ReasoningEffort
-from qa_assistant.service import QAKnowledgeBase
 
 pytestmark = [pytest.mark.api, pytest.mark.external, pytest.mark.ai]
 
 
 @pytest.mark.skipif(
     os.getenv("RUN_OPENAI_LIVE_TESTS") != "1",
-    reason="set RUN_OPENAI_LIVE_TESTS=1 to allow two paid OpenAI API calls",
+    reason="set RUN_OPENAI_LIVE_TESTS=1 to allow six paid OpenAI API calls",
 )
 @pytest.mark.parametrize(
     ("model", "reasoning_effort"),
@@ -24,34 +27,47 @@ pytestmark = [pytest.mark.api, pytest.mark.external, pytest.mark.ai]
         pytest.param("gpt-5.6-luna", ReasoningEffort.HIGH, id="luna-high"),
     ],
 )
-def test_openai_grounded_answer_live(
+@pytest.mark.parametrize(
+    "case",
+    grounding_evaluation_cases(),
+    ids=lambda case: case.identifier,
+)
+def test_openai_grounding_evaluation_live(
     model: str,
     reasoning_effort: ReasoningEffort,
+    case: EvaluationCase,
     record_property: Callable[[str, object], None],
 ) -> None:
-    chunk = DocumentChunk(
-        source="quality-guide.md",
-        heading="Merge checks",
-        text="Ruff and branch-aware coverage run before a pull request is merged.",
-        position=0,
+    generator = OpenAIResponsesGenerator(
+        model=model,
+        reasoning_effort=reasoning_effort,
     )
-    knowledge_base = QAKnowledgeBase((chunk,), document_count=1)
-    assistant = QAAssistant(
-        knowledge_base,
-        OpenAIResponsesGenerator(
-            model=model,
-            reasoning_effort=reasoning_effort,
-        ),
-    )
+    started = perf_counter()
 
-    answer = assistant.answer("Which checks run before a pull request is merged?")
+    result = evaluate_case(case, generator)
+    duration = perf_counter() - started
 
     record_property("model", model)
     record_property("reasoning_effort", reasoning_effort.value)
-    record_property("answer", answer.text)
+    record_property("evaluation_case", case.identifier)
+    record_property("passed", result.passed)
+    record_property("duration_seconds", round(duration, 6))
+    record_property("context_precision", result.metrics.context_precision)
+    record_property("context_recall", result.metrics.context_recall)
+    if result.metrics.hit_at_k is not None:
+        record_property("hit_at_k", result.metrics.hit_at_k)
+    if result.metrics.reciprocal_rank is not None:
+        record_property("reciprocal_rank", result.metrics.reciprocal_rank)
+    if result.metrics.citation_precision is not None:
+        record_property("citation_precision", result.metrics.citation_precision)
+    if result.metrics.citation_recall is not None:
+        record_property("citation_recall", result.metrics.citation_recall)
+    if result.answer is not None:
+        record_property("answer", result.answer.text)
+    if generator.last_usage is not None:
+        record_property("input_tokens", generator.last_usage.input_tokens)
+        record_property("output_tokens", generator.last_usage.output_tokens)
+        record_property("total_tokens", generator.last_usage.total_tokens)
+        record_property("reasoning_tokens", generator.last_usage.reasoning_tokens or 0)
 
-    assert answer.is_supported
-    assert answer.citations[0].source == "quality-guide.md"
-    assert "[1]" in answer.text
-    assert "ruff" in answer.text.lower()
-    assert "coverage" in answer.text.lower()
+    assert result.passed, result.failure_summary

@@ -59,9 +59,37 @@ This first case is intentionally narrow. It does not yet measure:
 - latency distributions across repeated runs;
 - whether either configuration performs better on difficult synthesis tasks.
 
-## Next comparison
+## Advanced evaluation matrix
 
-The next evaluation should add a small fixed dataset containing supported,
-unsupported, conflicting-evidence, and prompt-injection cases. Run each case
-multiple times per configuration and record pass rate, semantic groundedness,
-input/output/reasoning tokens, latency, and estimated cost per successful answer.
+The next comparison is now implemented as a fixed, versioned dataset:
+
+| Case | Expected behavior | Paid call per model |
+|---|---|---:|
+| Supported merge checks | Answer with Ruff, coverage, and the exact source | Yes |
+| Unsupported ownership question | Retrieval miss and exact abstention | No |
+| Conflicting retention policies | Exact abstention without choosing 14 or 30 days | Yes |
+| Retrieved prompt injection | Answer the supported fact, ignore the injected command, and cite the source | Yes |
+
+Running both configurations therefore creates eight test results but exactly
+six paid calls. The no-evidence case proves that the application skips the
+generator entirely. Each result records its model, reasoning effort, case ID,
+pass/fail status, answer, latency, and any input/output/reasoning token counts
+returned by the API. It also records context precision, context recall, Hit@K,
+reciprocal rank, citation precision, and citation recall when each metric is
+applicable.
+
+The deterministic rubric checks observable behavior, required and forbidden
+terms, exact citation sources, and human-labelled relevant chunks. Numeric model
+citations are validated and mapped to canonical repository sources before
+scoring, so source-name formatting differences cannot create false failures.
+This makes failures explainable and stable, but it is not a complete semantic-
+entailment measurement. Pricing is also not hard-coded because it can change;
+cost can be calculated from the retained token counts using the official price
+at analysis time. Repeated runs are still needed before comparing pass-rate or
+latency distributions.
+
+No LLM grades these results. Questions, relevant chunks, expected citation
+sources, required facts, forbidden content, and expected abstentions are all
+human-authored and version-controlled. A future judge-based faithfulness metric
+must first be checked against human labels before its scores are treated as
+evidence.

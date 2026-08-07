@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol, cast
 
@@ -41,6 +42,16 @@ class OpenAIResponseError(OpenAIAdapterError):
     """Raised when the Responses API returns no usable answer text."""
 
 
+@dataclass(frozen=True, slots=True)
+class ResponseUsage:
+    """Token counts returned by the Responses API when available."""
+
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    reasoning_tokens: int | None = None
+
+
 class _ResponsesEndpoint(Protocol):
     def create(self, **kwargs: object) -> object:
         """Create one model response."""
@@ -75,6 +86,7 @@ class OpenAIResponsesGenerator:
         self.reasoning_effort = selected_effort
         self.max_output_tokens = max_output_tokens
         self.client = client or self._default_client()
+        self.last_usage: ResponseUsage | None = None
 
     @staticmethod
     def _default_client() -> _OpenAIClient:
@@ -102,10 +114,47 @@ class OpenAIResponsesGenerator:
             "</retrieved_context>"
         )
 
+    @staticmethod
+    def _field(value: object, name: str) -> object | None:
+        if isinstance(value, dict):
+            return value.get(name)
+        return getattr(value, name, None)
+
+    @classmethod
+    def _response_usage(cls, response: object) -> ResponseUsage | None:
+        usage = cls._field(response, "usage")
+        if usage is None:
+            return None
+
+        input_tokens = cls._field(usage, "input_tokens")
+        output_tokens = cls._field(usage, "output_tokens")
+        total_tokens = cls._field(usage, "total_tokens")
+        if not all(
+            isinstance(value, int)
+            for value in (input_tokens, output_tokens, total_tokens)
+        ):
+            return None
+
+        output_details = cls._field(usage, "output_tokens_details")
+        reasoning_tokens = (
+            cls._field(output_details, "reasoning_tokens")
+            if output_details is not None
+            else None
+        )
+        return ResponseUsage(
+            input_tokens=cast(int, input_tokens),
+            output_tokens=cast(int, output_tokens),
+            total_tokens=cast(int, total_tokens),
+            reasoning_tokens=(
+                reasoning_tokens if isinstance(reasoning_tokens, int) else None
+            ),
+        )
+
     def generate(self, request: GenerationRequest) -> str:
         if not request.context.results:
             raise ValueError("generation requires retrieved context")
 
+        self.last_usage = None
         try:
             response = self.client.responses.create(
                 model=self.model,
@@ -121,4 +170,5 @@ class OpenAIResponsesGenerator:
         output_text = getattr(response, "output_text", None)
         if not isinstance(output_text, str) or not output_text.strip():
             raise OpenAIResponseError("OpenAI response did not contain answer text")
+        self.last_usage = self._response_usage(response)
         return output_text.strip()

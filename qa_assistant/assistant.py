@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from qa_assistant.generation import GROUNDING_INSTRUCTIONS, AnswerGenerator
+from qa_assistant.generation import (
+    GROUNDING_INSTRUCTIONS,
+    INSUFFICIENT_EVIDENCE,
+    AnswerGenerator,
+)
 from qa_assistant.models import (
     AnswerCitation,
     GenerationRequest,
@@ -10,10 +14,6 @@ from qa_assistant.models import (
 )
 from qa_assistant.service import QAKnowledgeBase
 from qa_assistant.validation import validate_citations
-
-INSUFFICIENT_EVIDENCE = (
-    "I could not find enough evidence in the indexed documentation to answer that."
-)
 
 
 class QAAssistant:
@@ -53,6 +53,14 @@ class QAAssistant:
             context=context,
         )
         generated = self.generator.generate(request).strip()
+        if generated == INSUFFICIENT_EVIDENCE:
+            return GroundedAnswer(
+                question=question,
+                text=generated,
+                citations=(),
+                context=context,
+            )
+
         identifiers = validate_citations(generated, context)
         citations = tuple(
             AnswerCitation(

@@ -5,7 +5,7 @@
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.5.2
+DOCKER_IMAGE ?= qa-compliance-sentry:0.5.3
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -33,6 +33,7 @@ test-e2e:
 
 test-ai-external:
 	mkdir -p reports
+	# Four cases x two models; no-evidence cases skip generation = six paid calls.
 	RUN_OPENAI_LIVE_TESTS=1 .venv/bin/pytest \
 		tests/api/test_openai_responses.py -m "external and ai" -v \
 		--durations=0 \
