@@ -92,6 +92,80 @@ def test_cli_answer_abstains_when_evidence_is_missing(tmp_path: Path) -> None:
     assert "Sources:" not in result.stdout
 
 
+def test_cli_chat_handles_supported_and_unsupported_turns(tmp_path: Path) -> None:
+    guide = tmp_path / "guide.md"
+    guide.write_text(
+        "# Quality gates\n\nRuff and coverage run before merge.", encoding="utf-8"
+    )
+
+    result = runner.invoke(
+        app,
+        ["chat", "--source", str(guide), "--top", "1"],
+        input="\nWhat runs before merge?\nphotosynthesis dinosaurs\nquit\n",
+    )
+
+    assert result.exit_code == 0
+    assert "Chat ready: indexed 1 documents into 1 chunks." in result.stdout
+    assert "Please enter a question." in result.stdout
+    assert "Based on the retrieved documentation:" in result.stdout
+    assert "guide.md :: Quality gates" in result.stdout
+    assert "could not find enough evidence" in result.stdout
+    assert result.stdout.count("Sources:") == 1
+    assert result.stdout.count("Assistant:") == 2
+    assert "Chat ended." in result.stdout
+
+
+def test_cli_chat_returns_error_for_missing_source(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app,
+        ["chat", "--source", str(tmp_path / "missing")],
+    )
+
+    assert result.exit_code == 1
+    assert "does not exist" in result.output
+
+
+def test_cli_chat_ends_cleanly_on_end_of_input(tmp_path: Path) -> None:
+    guide = tmp_path / "guide.md"
+    guide.write_text("# CI\n\nCoverage runs before merge.", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["chat", "--source", str(guide)],
+        input=None,
+    )
+
+    assert result.exit_code == 0
+    assert "Chat ended." in result.stdout
+
+
+def test_cli_chat_reports_invalid_answer_and_keeps_session_open(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    guide = tmp_path / "guide.md"
+    guide.write_text("# CI\n\nCoverage runs before merge.", encoding="utf-8")
+
+    class InvalidGenerator:
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def generate(self, request: object) -> str:
+            return "An answer without a citation."
+
+    monkeypatch.setattr(cli, "ExtractiveGenerator", InvalidGenerator)
+
+    result = runner.invoke(
+        app,
+        ["chat", "--source", str(guide)],
+        input="coverage\nquit\n",
+    )
+
+    assert result.exit_code == 0
+    assert "Unable to answer: generated answer must include a citation" in result.output
+    assert "Chat ended." in result.stdout
+
+
 def test_cli_openai_provider_is_explicit_and_passes_model_configuration(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

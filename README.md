@@ -2,12 +2,13 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 3 — Grounded, Citation-Aware RAG Assistant**
+**Stage 3 complete — Grounded, Citation-Aware RAG Assistant**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
 intelligence. Stage 3 now connects deterministic document retrieval to a
-provider-neutral grounded-answer boundary with fail-closed citation validation.
+provider-neutral grounded-answer boundary with fail-closed citation validation,
+an interactive terminal chatbot, and retained end-to-end test evidence.
 
 ## Why this project exists
 
@@ -35,7 +36,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA documentation assistant** | Deterministic retrieval, grounded answers, verified citations, and adversarial evaluation |
+| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, and adversarial evaluation |
 
 ```mermaid
 flowchart LR
@@ -46,6 +47,7 @@ flowchart LR
   LOG[Log Analyzer] --> Evidence[Failure Evidence]
   PIPE[Pipeline Validator] --> Repo
   DOCS[QA Documentation] --> RAG[Lexical Retriever]
+  CHAT[Terminal Chat] --> RAG
   RAG --> CTX[Cited Context]
   CTX --> GEN[Answer Generator]
   GEN --> VERIFY[Citation Validator]
@@ -184,6 +186,20 @@ passage and a verified source list. It remains the fast, zero-cost CI baseline.
 The OpenAI adapter implements the same provider-neutral contract through the
 Responses API and is enabled only when explicitly selected.
 
+Run a multi-question terminal session over one reusable index with:
+
+```bash
+make chat-docs
+
+# Equivalent direct command:
+.venv/bin/qa-assistant chat --source docs --top 3
+```
+
+Type `exit` or `quit` to end the session. Chat uses the deterministic extractive
+provider by default, so the local demonstration and merge-blocking E2E journey
+make no network requests. Selecting `--provider openai` is explicit and makes a
+paid request for every supported question in the session.
+
 To use the external provider, put your API key in the ignored local `.env` file:
 
 ```dotenv
@@ -317,9 +333,10 @@ Failure screenshots are saved under `reports/`.
 | API | pytest + requests | REST shape & status (JSONPlaceholder stand-in) |
 | DB | pytest + sqlite3 | Seed DB duplicates, FK integrity, API↔DB mapping |
 | E2E | pytest-playwright | Sauce Demo checkout happy path |
-| AI E2E | pytest + OpenAI Responses API | Opt-in grounding and prompt-injection model comparison |
+| Chatbot E2E | pytest + subprocess | Offline supported-answer → abstention → exit journey |
+| External AI E2E | pytest + OpenAI Responses API | Opt-in grounding and prompt-injection model comparison |
 
-**Markers:** `smoke`, `regression`, `api`, `db`, `external`, `ai`
+**Markers:** `smoke`, `regression`, `api`, `db`, `chatbot`, `external`, `ai`
 
 Tests marked `external` require public network access. Database tests use local
 fixtures only, and `DataValidator` opens its target in read-only mode so a
@@ -331,7 +348,8 @@ The deterministic workflow runs Ruff, enforces at least 85% branch-aware test
 coverage, and tests supported Python versions on pull requests and updates to
 `main`. It also builds the Docker image, verifies that it runs as a non-root
 user, and executes the deterministic suite inside the container. HTML, XML,
-and JUnit reports are uploaded for inspection.
+and JUnit reports are uploaded for inspection. The chatbot journey has dedicated
+HTML and JUnit evidence retained with each quality run.
 
 Public API and Playwright checks run in a separate workflow every Monday at
 03:00 UTC or on demand from the GitHub Actions page. Keeping that workflow
@@ -369,8 +387,8 @@ qa-compliance-sentry/
 |-------|-----------|
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
-| **Stage 3 (in progress)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, and algorithm foundations complete; chatbot E2E next |
-| Stage 4 | DeepEval / Ragas AI evaluation dashboard |
+| **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
+| **Stage 4 (next)** | DeepEval / Ragas AI evaluation dashboard |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
 
