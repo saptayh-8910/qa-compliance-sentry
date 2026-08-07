@@ -35,7 +35,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA documentation assistant** | Deterministic retrieval, grounded offline answers, abstention, and verified citations |
+| **QA documentation assistant** | Deterministic retrieval, grounded answers, verified citations, and adversarial evaluation |
 
 ```mermaid
 flowchart LR
@@ -176,10 +176,22 @@ runs the same answer flow with Luna at high reasoning:
 ```
 
 `make test-ai-external` performs a controlled comparison of Sol/Medium and
-Luna/High. It makes exactly two paid API calls, holds the question and evidence
-constant, validates required citations and facts, and writes retained HTML and
-JUnit evidence under `reports/`. The experiment design, first result, and its
-limitations are recorded in [docs/MODEL_COMPARISON.md](docs/MODEL_COMPARISON.md).
+Luna/High across a fixed four-case dataset: supported evidence, no evidence,
+conflicting evidence, and prompt injection inside a retrieved document. The
+no-evidence path must skip generation, so the matrix makes exactly six paid API
+calls rather than eight. It checks required and forbidden terms, expected
+behavior, and exact citation sources. Human-labelled relevant chunks also
+produce context precision/recall, Hit@K, reciprocal rank, and citation
+precision/recall. Each live result records those metrics plus latency and API
+token usage in HTML and JUnit evidence under `reports/`. The experiment design,
+first baseline result, and remaining limitations are recorded in
+[docs/MODEL_COMPARISON.md](docs/MODEL_COMPARISON.md).
+
+The same evaluation runner is covered by deterministic fake-model tests in
+ordinary CI. This is a transparent rule-based rubric, not an LLM-as-judge or a
+claim that keyword checks prove full semantic entailment. It can aggregate case
+pass rate and the applicable retrieval and citation metrics while leaving
+no-answer metrics explicitly not applicable.
 
 ### Run tests
 
@@ -189,7 +201,7 @@ make test-algorithms # interview algorithms mapped to QA features
 make test-api     # REST API tests
 make test-db      # SQLite validation tests
 make test-e2e     # Sauce Demo smoke (Playwright)
-make test-ai-external # opt-in two-call Sol/Medium vs Luna/High comparison
+make test-ai-external # opt-in six-call adversarial Sol/Luna comparison
 make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
 make quality      # lint + format check + coverage gate
@@ -260,13 +272,14 @@ Failure screenshots are saved under `reports/`.
 
 | Layer | Tool | Target |
 |-------|------|--------|
-| Unit | pytest | Components, isolated API client, ingestion, retrieval, and citations |
+| Unit | pytest | Components, isolated API client, ingestion, retrieval, citations, and evaluation rubrics |
 | Algorithms | pytest | Interview fundamentals reused by QA features |
 | API | pytest + requests | REST shape & status (JSONPlaceholder stand-in) |
 | DB | pytest + sqlite3 | Seed DB duplicates, FK integrity, API↔DB mapping |
 | E2E | pytest-playwright | Sauce Demo checkout happy path |
+| AI E2E | pytest + OpenAI Responses API | Opt-in grounding and prompt-injection model comparison |
 
-**Markers:** `smoke`, `regression`, `api`, `db`, `external`
+**Markers:** `smoke`, `regression`, `api`, `db`, `external`, `ai`
 
 Tests marked `external` require public network access. Database tests use local
 fixtures only, and `DataValidator` opens its target in read-only mode so a
@@ -296,7 +309,7 @@ qa-compliance-sentry/
 ├── log_analyzer/         # JSONL parsing, failure ranking, incident grouping
 ├── learning_algorithms/  # Interview labs mapped to project stages
 ├── pipeline_validator/   # CI dependency graph and cycle validation
-├── qa_assistant/         # Document ingestion + deterministic cited retrieval
+├── qa_assistant/         # Retrieval, grounded answers, and evaluation rubrics
 ├── examples/             # runnable sample QA logs
 ├── tests/
 │   ├── unit/
@@ -316,7 +329,7 @@ qa-compliance-sentry/
 |-------|-----------|
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
-| **Stage 3 (in progress)** | Retrieval, grounded answer contracts, and explicit OpenAI adapter complete; semantic evaluation next |
+| **Stage 3 (in progress)** | Retrieval, grounded answers, OpenAI adapter, and adversarial evaluation complete; algorithms and chatbot E2E next |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
