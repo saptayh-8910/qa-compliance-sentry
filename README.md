@@ -54,6 +54,27 @@ flowchart LR
   DB --> Repo
 ```
 
+## AI Quality Engineering
+
+Stage 3 treats the RAG assistant as a quality system with independently
+testable retrieval, generation, safety, citation, and efficiency behavior—not
+just another API endpoint.
+
+| AI quality area | Status | Test and evidence |
+|---|---|---|
+| **Hallucination detection** | Implemented with a bounded rubric | Unsupported questions and unresolved conflicts must return the exact abstention response. Required and forbidden terms detect known missing or invented claims; full claim-level semantic faithfulness remains Stage 4 work. |
+| **Prompt injection** | Implemented | Retrieved text contains a malicious instruction, while the answer must follow the system grounding contract, omit the injected response, and retain a valid citation. |
+| **Context recall** | Implemented | Human-labelled chunks produce context precision/recall, Hit@K, and reciprocal rank/MRR so retrieval failures are separated from generation failures. |
+| **Citation verification** | Implemented | Numeric citations fail closed, map to canonical sources, and produce citation precision/recall plus an exact-source gate for curated cases. |
+| **Latency benchmarking** | Foundation implemented | External results retain per-case latency and token usage. Repeated samples and percentile comparisons are intentionally deferred until the evaluation dataset is larger. |
+| **Regression across models** | Ready as an opt-in test | The same four cases and deterministic rubric compare Sol/Medium with Luna/High. Eight result rows require exactly six paid calls because retrieval misses skip generation. |
+
+All current grading labels are human-authored, version-controlled, and scored
+deterministically; no unvalidated LLM acts as the judge. See the
+[RAG evaluation methodology](docs/RAG_ARCHITECTURE.md#evaluation-metrics-and-grading)
+and [model comparison record](docs/MODEL_COMPARISON.md) for metric definitions,
+experiment boundaries, and limitations.
+
 ## Goals (Stage 1)
 
 **Learning:** Python, Git, Playwright, pytest, REST APIs, SQL consistency patterns.

@@ -47,6 +47,9 @@ and the project uses semantic versioning for milestone tags.
   citation, and safety failures without relying on an unvalidated LLM judge.
 - Opt-in Sol/Medium versus Luna/High adversarial matrix designed for exactly six
   paid calls, with latency and API token usage retained in HTML/JUnit evidence.
+- Dedicated README AI Quality Engineering matrix covering hallucination
+  controls, prompt injection, retrieval and citation metrics, latency evidence,
+  cross-model regression, and the remaining Stage 4 limitations.
 
 ## [0.4.1] - 2026-08-05
 
