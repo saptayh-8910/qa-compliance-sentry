@@ -5,5 +5,13 @@ from learning_algorithms.stage1 import (
     contains_duplicate,
     two_sum_indices,
 )
+from learning_algorithms.stage3 import LRUCache, Trie, valid_parentheses
 
-__all__ = ["binary_search", "contains_duplicate", "two_sum_indices"]
+__all__ = [
+    "LRUCache",
+    "Trie",
+    "binary_search",
+    "contains_duplicate",
+    "two_sum_indices",
+    "valid_parentheses",
+]

@@ -79,13 +79,21 @@ def test_validate_citations_deduplicates_valid_identifiers(
         quality_chunk,
         DocumentChunk("docs/tests.md", "Tests", "Unit tests are fast.", 0),
     )
-
     assert validate_citations(
         "Coverage runs [1]. Tests are fast [2] [1].", context
     ) == (
         1,
         2,
     )
+
+
+def test_validate_citations_rejects_unbalanced_generated_structure(
+    quality_chunk: DocumentChunk,
+) -> None:
+    with pytest.raises(CitationValidationError, match="unbalanced delimiters"):
+        validate_citations(
+            "Coverage checks (include Ruff [1].", _context(quality_chunk)
+        )
 
 
 @pytest.mark.parametrize(

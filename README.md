@@ -129,6 +129,25 @@ These implementations teach the underlying data structures. Production code
 should still use database uniqueness constraints, Python built-ins, or indexed
 queries when those tools better fit the requirement.
 
+### Stage 3 algorithm foundations
+
+The RAG milestone adds three interview patterns and uses each through the
+production QA-assistant path:
+
+- **Valid Parentheses:** a stack checks generated `()`, `[]`, and `{}` before
+  citation parsing accepts an answer.
+- **LRU Cache:** a hash map plus doubly linked list caches ranked retrieval
+  results with O(1) lookup, refresh, and eviction.
+- **Trie:** a prefix tree indexes canonical document source paths and returns
+  deterministic prefix matches.
+
+Canonical LeetCode-style examples, edge cases, and QA-oriented applications all
+run through `make test-algorithms`. See the
+[algorithm learning track](docs/ALGORITHM_LEARNING.md) for complexity analysis,
+interview questions, and production boundaries. Bracket balancing is a shallow
+structural guard rather than JSON Schema validation, and the in-memory cache is
+not a distributed persistence layer.
+
 ### Retrieve QA documentation
 
 Stage 3 starts with an offline retrieval boundary that can be tested without an
@@ -350,7 +369,7 @@ qa-compliance-sentry/
 |-------|-----------|
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
-| **Stage 3 (in progress)** | Retrieval, grounded answers, OpenAI adapter, and adversarial evaluation complete; algorithms and chatbot E2E next |
+| **Stage 3 (in progress)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, and algorithm foundations complete; chatbot E2E next |
 | Stage 4 | DeepEval / Ragas AI evaluation dashboard |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.

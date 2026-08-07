@@ -59,6 +59,13 @@ two differently worded phrases can mean the same thing. A later embedding or
 hybrid retriever can improve semantic recall while these deterministic tests
 remain as a baseline.
 
+Ranked results are cached by exact query and `top_k` in a fixed-capacity LRU
+cache. Repeated searches refresh their recency in O(1), and the oldest unused
+entry is evicted when capacity is exceeded. A trie separately indexes canonical
+source paths for exact, deterministic prefix lookup. Both are intentionally
+in-memory: they do not provide distributed consistency, persistence, TTLs, or
+automatic invalidation when a source document changes.
+
 ## Chunking and citations
 
 The ingester recursively discovers `.md` and `.txt` files, rejects missing or
@@ -139,7 +146,7 @@ validated against human-labelled examples first.
 
 | Level | What this milestone tests | Why it belongs there |
 |---|---|---|
-| Unit | tokenization, chunking, ranking, generator requests, OpenAI request mapping, citation validation, abstention, and evaluation scoring | Each rule is deterministic and isolated; the SDK client or model is replaced by a recording fake. |
+| Unit | tokenization, chunking, ranking, delimiter validation, LRU eviction, trie lookup, generator requests, OpenAI request mapping, citation validation, abstention, and evaluation scoring | Each rule is deterministic and isolated; the SDK client or model is replaced by a recording fake. |
 | Integration | source paths → chunks → context → generator → verified answer | Verifies that retrieval and generation agree on citation contracts. |
 | CLI component | retrieval, provider selection, supported answers, source lists, no-match behavior, and missing sources | Exercises the user entry point without a real external request. |
 | External E2E | four fixed cases → Sol/Medium and Luna/High → behavior, fact, injection, and source checks | Opt-in only through `RUN_OPENAI_LIVE_TESTS=1`; six paid calls produce HTML/JUnit evidence and remain excluded from deterministic CI. |
@@ -156,7 +163,4 @@ blocking CI. The remaining Stage 3 work is:
 
 1. Run and review the opt-in six-call evaluation when explicitly approved, then
    repeat it only when enough samples are needed for a comparison.
-2. Implement the three planned Stage 3 algorithm lessons: Valid Parentheses for
-   structured-output validation, LRU Cache for retrieval caching, and Trie for
-   document-prefix indexing.
-3. Add a small end-to-end chatbot journey and retained test evidence.
+2. Add a small end-to-end chatbot journey and retained test evidence.

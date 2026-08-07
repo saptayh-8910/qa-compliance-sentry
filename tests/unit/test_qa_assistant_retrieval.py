@@ -3,7 +3,12 @@ from pathlib import Path
 import pytest
 
 from qa_assistant.models import DocumentChunk
-from qa_assistant.retrieval import LexicalRetriever, build_context, tokenize
+from qa_assistant.retrieval import (
+    LexicalRetriever,
+    build_context,
+    build_context_from_results,
+    tokenize,
+)
 from qa_assistant.service import QAKnowledgeBase
 
 
@@ -142,6 +147,15 @@ def test_build_context_rejects_tiny_budget(chunks: tuple[DocumentChunk, ...]) ->
         build_context(LexicalRetriever(chunks), "quality", max_chars=99)
 
 
+def test_build_context_from_cached_results_rejects_tiny_budget(
+    chunks: tuple[DocumentChunk, ...],
+) -> None:
+    ranked = LexicalRetriever(chunks).search("quality")
+
+    with pytest.raises(ValueError, match="at least 100"):
+        build_context_from_results("quality", ranked, max_chars=99)
+
+
 def test_knowledge_base_indexes_paths_and_exposes_cited_context(
     tmp_path: Path,
 ) -> None:
@@ -167,3 +181,59 @@ def test_knowledge_base_rejects_documents_without_searchable_text(
 
     with pytest.raises(ValueError, match="searchable text"):
         QAKnowledgeBase.from_paths([blank])
+
+
+def test_knowledge_base_caches_ranked_search_results(
+    chunks: tuple[DocumentChunk, ...],
+) -> None:
+    knowledge_base = QAKnowledgeBase(
+        chunks,
+        document_count=3,
+        search_cache_capacity=2,
+    )
+
+    first = knowledge_base.search("quality coverage")
+    cached = knowledge_base.search("quality coverage")
+
+    assert cached is first
+
+
+def test_knowledge_base_lru_cache_evicts_old_search(
+    chunks: tuple[DocumentChunk, ...],
+) -> None:
+    knowledge_base = QAKnowledgeBase(
+        chunks,
+        document_count=3,
+        search_cache_capacity=1,
+    )
+
+    first = knowledge_base.search("quality coverage")
+    knowledge_base.search("playwright checkout")
+    refreshed = knowledge_base.search("quality coverage")
+
+    assert refreshed == first
+    assert refreshed is not first
+
+
+def test_knowledge_base_indexes_source_prefixes(
+    chunks: tuple[DocumentChunk, ...],
+) -> None:
+    knowledge_base = QAKnowledgeBase(chunks, document_count=3)
+
+    assert knowledge_base.sources_with_prefix("docs/") == (
+        "docs/browser.md",
+        "docs/ci.md",
+        "docs/data.md",
+    )
+    assert knowledge_base.sources_with_prefix("docs/", limit=2) == (
+        "docs/browser.md",
+        "docs/ci.md",
+    )
+    assert knowledge_base.sources_with_prefix("unknown") == ()
+
+
+def test_knowledge_base_rejects_invalid_cache_capacity(
+    chunks: tuple[DocumentChunk, ...],
+) -> None:
+    with pytest.raises(ValueError, match="capacity"):
+        QAKnowledgeBase(chunks, document_count=3, search_cache_capacity=0)

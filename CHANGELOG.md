@@ -50,6 +50,18 @@ and the project uses semantic versioning for milestone tags.
 - Dedicated README AI Quality Engineering matrix covering hallucination
   controls, prompt injection, retrieval and citation metrics, latency evidence,
   cross-model regression, and the remaining Stage 4 limitations.
+- Stage 3 implementations of Valid Parentheses, LRU Cache, and Trie with
+  canonical interview cases and QA/RAG-oriented tests.
+- Fail-closed generated-answer delimiter validation before citation parsing.
+- Fixed-capacity O(1) LRU caching for ranked searches and deterministic trie
+  prefix lookup for indexed source paths.
+
+### Changed
+
+- Bumped the package and default Docker image version to `0.6.0` for the Stage 3
+  algorithm milestone.
+- Expanded deterministic quality validation to 200 tests at 96.26%
+  branch-aware coverage.
 
 ## [0.4.1] - 2026-08-05
 

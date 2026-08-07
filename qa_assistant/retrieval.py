@@ -144,6 +144,19 @@ def build_context(
         raise ValueError("max_chars must be at least 100")
 
     ranked = retriever.search(query, top_k=top_k)
+    return build_context_from_results(query, ranked, max_chars=max_chars)
+
+
+def build_context_from_results(
+    query: str,
+    ranked: Sequence[SearchResult],
+    *,
+    max_chars: int = 4_000,
+) -> RetrievalContext:
+    """Render already-ranked results into bounded, numbered citation context."""
+    if max_chars < 100:
+        raise ValueError("max_chars must be at least 100")
+
     selected: list[SearchResult] = []
     blocks: list[str] = []
     used = 0

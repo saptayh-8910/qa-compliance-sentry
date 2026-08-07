@@ -55,7 +55,7 @@ Questions to practice explaining:
 2. Why does the loop use `left <= right`?
 3. What can go wrong if the collection is not sorted?
 
-## Current Stage 2 lessons
+## Stage 2 reliability foundations
 
 ### Top K Frequent Elements
 
@@ -114,6 +114,73 @@ Questions to practice explaining:
 3. What does an indegree of zero mean for a CI job?
 4. How would you return the actual execution order instead of a boolean?
 
+## Stage 3 RAG foundations
+
+### Valid Parentheses
+
+- Reference: [LeetCode 20](https://leetcode.com/problems/valid-parentheses/)
+- Project use: reject generated answers with truncated or mismatched `()`,
+  `[]`, or `{}` before citation parsing accepts them.
+- Simple approach: repeatedly remove matching pairs until the string stops
+  changing, which performs unnecessary rescans and can degrade to O(n²).
+- Implemented approach: push opening delimiters onto a stack and require every
+  closing delimiter to match the latest opening delimiter. This costs O(n) time
+  and O(n) worst-case space.
+- Production boundary: the project wrapper extracts delimiters from prose. It
+  catches shallow truncation and mismatch errors but does not understand quoted
+  strings, Markdown grammar, or JSON Schema.
+
+Questions to practice explaining:
+
+1. Why does a stack match nested structures better than a counter?
+2. Why is `([)]` invalid even though each delimiter count balances?
+3. What should the empty sequence return?
+4. What additional parser would a strict JSON response require?
+
+### LRU Cache
+
+- Reference: [LeetCode 146](https://leetcode.com/problems/lru-cache/)
+- Project use: cache ranked retrieval results by `(query, top_k)` inside the
+  knowledge base.
+- Simple approach: keep results in a dictionary and scan timestamps to find an
+  eviction candidate, making eviction O(n).
+- Implemented approach: combine direct dictionary lookup with a doubly linked
+  recency list. `get`, insert, refresh, and eviction are O(1), with O(capacity)
+  space.
+- Project adaptation: a miss returns `None` rather than LeetCode's integer-only
+  `-1`. The default cache holds 128 searches and stores no `None` values.
+- Production boundary: this cache is local to one process. It has no TTL,
+  persistence, cross-worker consistency, or document-change invalidation.
+
+Questions to practice explaining:
+
+1. Why are both a dictionary and a doubly linked list required?
+2. Why does reading an entry change its eviction order?
+3. Which entry is removed after a capacity overflow?
+4. When would Redis or another shared cache be more appropriate?
+
+### Implement Trie
+
+- Reference: [LeetCode 208](https://leetcode.com/problems/implement-trie-prefix-tree/)
+- Project use: index canonical documentation source paths and return
+  alphabetically ordered prefix matches.
+- Simple approach: scan every source path for every prefix query, costing O(nm)
+  for `n` paths of average length `m`.
+- Implemented approach: follow one node per character. Insert, exact search, and
+  prefix existence cost O(m); enumerating matches additionally costs the size
+  of the visited result subtree.
+- Production decision: duplicate paths count once, source matching is exact and
+  case-sensitive, and an optional positive limit bounds returned completions.
+- Production boundary: a trie is useful for this small in-memory index. A large
+  corpus would normally use database indexes or a dedicated search service.
+
+Questions to practice explaining:
+
+1. Why must trie nodes distinguish a complete word from a prefix?
+2. How do `search("app")` and `starts_with("app")` differ after only `apple` is inserted?
+3. What is the memory tradeoff versus scanning a sorted list?
+4. How would deletion or case-insensitive matching change the design?
+
 ## Twelve-problem roadmap
 
 | Stage | Problem | Practical connection | Status |
@@ -124,9 +191,9 @@ Questions to practice explaining:
 | 2 | [347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/) | Failure ranking | Implemented |
 | 2 | [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/) | Incident consolidation | Implemented |
 | 2 | [207. Course Schedule](https://leetcode.com/problems/course-schedule/) | Pipeline dependency validation | Implemented |
-| 3 | [20. Valid Parentheses](https://leetcode.com/problems/valid-parentheses/) | Structured-output validation | Planned |
-| 3 | [146. LRU Cache](https://leetcode.com/problems/lru-cache/) | Retrieval/result caching | Planned |
-| 3 | [208. Implement Trie](https://leetcode.com/problems/implement-trie-prefix-tree/) | Document-prefix indexing | Planned |
+| 3 | [20. Valid Parentheses](https://leetcode.com/problems/valid-parentheses/) | Structured-output validation | Implemented |
+| 3 | [146. LRU Cache](https://leetcode.com/problems/lru-cache/) | Retrieval/result caching | Implemented |
+| 3 | [208. Implement Trie](https://leetcode.com/problems/implement-trie-prefix-tree/) | Document-prefix indexing | Implemented |
 | 4 | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | Text-difference measurement | Planned |
 | 4 | [703. Kth Largest Element in a Stream](https://leetcode.com/problems/kth-largest-element-in-a-stream/) | Streaming score thresholds | Planned |
 | 4 | [643. Maximum Average Subarray I](https://leetcode.com/problems/maximum-average-subarray-i/) | Rolling evaluation metrics | Planned |
