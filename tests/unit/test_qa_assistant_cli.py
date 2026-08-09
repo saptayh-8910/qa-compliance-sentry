@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -5,6 +6,8 @@ from typer.testing import CliRunner
 
 import qa_assistant.cli as cli
 from qa_assistant.cli import app
+from qa_assistant.generation import INSUFFICIENT_EVIDENCE
+from qa_assistant.openai_generator import ReasoningEffort, ResponseUsage
 
 runner = CliRunner()
 
@@ -239,3 +242,115 @@ def test_cli_reports_openai_configuration_error(
 
     assert result.exit_code == 1
     assert "OpenAI is unavailable" in result.output
+
+
+def test_cli_exports_dashboard_ready_extractive_evaluation(tmp_path: Path) -> None:
+    output = tmp_path / "evaluation.json"
+
+    result = runner.invoke(app, ["evaluate", "--output", str(output)])
+
+    assert result.exit_code == 0
+    assert "Evaluation complete: 2/4 cases passed (50.0%)." in result.stdout
+    assert "FAIL conflicting-retention:" in result.stdout
+    assert "FAIL retrieved-prompt-injection:" in result.stdout
+    assert f"Report: {output}" in result.stdout
+    data = json.loads(output.read_text(encoding="utf-8"))
+    assert data["schema_version"] == "1.0"
+    assert data["run"]["provider"] == "extractive"
+    assert data["run"]["model"] is None
+    assert data["run"]["reasoning_effort"] is None
+    assert data["summary"]["passed_count"] == 2
+    assert data["summary"]["case_count"] == 4
+    assert [case["case_id"] for case in data["cases"]] == [
+        "supported-merge-checks",
+        "unsupported-ownership",
+        "conflicting-retention",
+        "retrieved-prompt-injection",
+    ]
+
+
+def test_cli_evaluation_can_fail_gate_after_writing_report(tmp_path: Path) -> None:
+    output = tmp_path / "evaluation.json"
+
+    result = runner.invoke(
+        app,
+        ["evaluate", "--output", str(output), "--fail-on-failure"],
+    )
+
+    assert result.exit_code == 1
+    assert output.is_file()
+    assert "Evaluation complete: 2/4 cases passed" in result.stdout
+
+
+def test_cli_exports_mocked_openai_metadata_and_usage(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    output = tmp_path / "openai-evaluation.json"
+    generated_questions: list[str] = []
+
+    class FakeOpenAIGenerator:
+        def __init__(
+            self,
+            *,
+            model: str,
+            reasoning_effort: ReasoningEffort | str,
+            max_output_tokens: int,
+        ) -> None:
+            self.model = model
+            self.reasoning_effort = ReasoningEffort(reasoning_effort)
+            self.max_output_tokens = max_output_tokens
+            self.last_usage: ResponseUsage | None = None
+
+        def generate(self, request: object) -> str:
+            question = request.question
+            generated_questions.append(question)
+            self.last_usage = ResponseUsage(10, 5, 15, 2)
+            if "retained" in question:
+                return INSUFFICIENT_EVIDENCE
+            return "Ruff and coverage run before merge [1]."
+
+    monkeypatch.setattr(cli, "OpenAIResponsesGenerator", FakeOpenAIGenerator)
+
+    result = runner.invoke(
+        app,
+        [
+            "evaluate",
+            "--output",
+            str(output),
+            "--provider",
+            "openai",
+            "--model",
+            "mock-model",
+            "--reasoning-effort",
+            "high",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Evaluation complete: 4/4 cases passed" in result.stdout
+    assert len(generated_questions) == 3
+    data = json.loads(output.read_text(encoding="utf-8"))
+    assert data["run"]["provider"] == "openai"
+    assert data["run"]["model"] == "mock-model"
+    assert data["run"]["reasoning_effort"] == "high"
+    assert data["cases"][0]["telemetry"]["usage"]["total_tokens"] == 15
+    assert data["cases"][1]["telemetry"]["usage"] is None
+
+
+def test_cli_evaluation_reports_export_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_export(report: object, output: Path) -> None:
+        raise OSError(f"cannot write {output.name}")
+
+    monkeypatch.setattr(cli, "write_evaluation_report", fail_export)
+
+    result = runner.invoke(
+        app,
+        ["evaluate", "--output", str(tmp_path / "evaluation.json")],
+    )
+
+    assert result.exit_code == 1
+    assert "cannot write evaluation.json" in result.output

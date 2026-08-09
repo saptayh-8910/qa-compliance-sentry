@@ -2,13 +2,14 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 3 complete — Grounded, Citation-Aware RAG Assistant**
+**Stage 4 — Versioned AI Evaluation Reporting**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
 intelligence. Stage 3 now connects deterministic document retrieval to a
 provider-neutral grounded-answer boundary with fail-closed citation validation,
-an interactive terminal chatbot, and retained end-to-end test evidence.
+an interactive terminal chatbot, and retained end-to-end test evidence. Stage 4
+now exports that evidence through a stable, dashboard-ready JSON contract.
 
 ## Why this project exists
 
@@ -36,7 +37,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, and adversarial evaluation |
+| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, adversarial evaluation, and versioned JSON reports |
 
 ```mermaid
 flowchart LR
@@ -70,6 +71,7 @@ just another API endpoint.
 | **Citation verification** | Implemented | Numeric citations fail closed, map to canonical sources, and produce citation precision/recall plus an exact-source gate for curated cases. |
 | **Latency benchmarking** | Foundation implemented | External results retain per-case latency and token usage. Repeated samples and percentile comparisons are intentionally deferred until the evaluation dataset is larger. |
 | **Regression across models** | Ready as an opt-in test | The same four cases and deterministic rubric compare Sol/Medium with Luna/High. Eight result rows require exactly six paid calls because retrieval misses skip generation. |
+| **Evaluation reporting** | Implemented | A versioned JSON contract exports run metadata, aggregate and per-case metrics, checks, failures, duration, and optional token usage for CI or dashboard consumers. |
 
 All current grading labels are human-authored, version-controlled, and scored
 deterministically; no unvalidated LLM acts as the judge. See the
@@ -249,6 +251,24 @@ claim that keyword checks prove full semantic entailment. It can aggregate case
 pass rate and the applicable retrieval and citation metrics while leaving
 no-answer metrics explicitly not applicable.
 
+### Export dashboard-ready evaluation data
+
+```bash
+make evaluate-rag
+
+.venv/bin/qa-assistant evaluate \
+  --output reports/rag-evaluation.json
+```
+
+The offline extractive baseline requires no API key or network access. Its known
+conflict and prompt-injection failures remain visible in the report instead of
+being converted into a false green result. Add `--fail-on-failure` when any
+failed case should make the command return exit code 1. The tracked
+[v1 JSON schema](schemas/evaluation-report-v1.schema.json) preserves
+non-applicable metrics as `null`; see the
+[Stage 4 reporting design](docs/EVALUATION_REPORTING.md) for the dashboard and
+future framework boundary.
+
 ### Run tests
 
 ```bash
@@ -258,6 +278,7 @@ make test-api     # REST API tests
 make test-db      # SQLite validation tests
 make test-e2e     # Sauce Demo smoke (Playwright)
 make test-ai-external # opt-in six-call adversarial Sol/Luna comparison
+make evaluate-rag # offline v1 JSON evaluation report
 make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
 make quality      # lint + format check + coverage gate
@@ -368,6 +389,7 @@ qa-compliance-sentry/
 ├── learning_algorithms/  # Interview labs mapped to project stages
 ├── pipeline_validator/   # CI dependency graph and cycle validation
 ├── qa_assistant/         # Retrieval, grounded answers, and evaluation rubrics
+├── schemas/              # Versioned dashboard/report contracts
 ├── examples/             # runnable sample QA logs
 ├── tests/
 │   ├── unit/
@@ -388,7 +410,7 @@ qa-compliance-sentry/
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
-| **Stage 4 (next)** | DeepEval / Ragas AI evaluation dashboard |
+| **Stage 4 (in progress)** | Versioned evaluation schema/exporter complete; metric dashboard, larger labelled datasets, repeated latency samples, and validated semantic faithfulness next |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
 
