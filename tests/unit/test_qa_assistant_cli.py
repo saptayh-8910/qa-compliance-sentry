@@ -354,3 +354,37 @@ def test_cli_evaluation_reports_export_error(
 
     assert result.exit_code == 1
     assert "cannot write evaluation.json" in result.output
+
+
+def test_cli_renders_evaluation_dashboard(tmp_path: Path) -> None:
+    report = tmp_path / "evaluation.json"
+    output = tmp_path / "dashboard.html"
+    evaluation = runner.invoke(app, ["evaluate", "--output", str(report)])
+
+    result = runner.invoke(
+        app,
+        [
+            "dashboard",
+            "--report",
+            str(report),
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert evaluation.exit_code == 0
+    assert result.exit_code == 0
+    assert f"Dashboard: {output}" in result.stdout
+    rendered = output.read_text(encoding="utf-8")
+    assert "Grounded RAG quality, made visible." in rendered
+    assert 'data-status="failed"' in rendered
+
+
+def test_cli_dashboard_reports_invalid_input(tmp_path: Path) -> None:
+    report = tmp_path / "invalid.json"
+    report.write_text('{"schema_version": "9.0"}', encoding="utf-8")
+
+    result = runner.invoke(app, ["dashboard", "--report", str(report)])
+
+    assert result.exit_code == 1
+    assert "unsupported evaluation report schema_version" in result.output

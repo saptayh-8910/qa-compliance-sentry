@@ -67,6 +67,12 @@ and the project uses semantic versioning for milestone tags.
   `make evaluate-rag` workflow and retained CI artifact.
 - Stage 4 evaluation-reporting design documenting non-applicable metric values,
   gating behavior, dashboard consumption, and semantic-judge validation.
+- Responsive standalone RAG evaluation dashboard with aggregate quality cards,
+  per-case diagnostics, Passed/Failed filters, citations, checks, and telemetry.
+- Strict v1 dashboard input validation and HTML escaping for adversarial answer,
+  citation, check, error, case, and run metadata fields.
+- Installed `qa-assistant dashboard` command plus the zero-cost
+  `make dashboard-rag` workflow and retained CI HTML artifact.
 
 ### Changed
 
@@ -85,6 +91,13 @@ and the project uses semantic versioning for milestone tags.
 - Marked Stage 4 in progress with visualization, dataset growth, repeated
   latency sampling, and validated semantic faithfulness still ahead.
 - Expanded deterministic quality validation to 223 tests at 96.60% branch-aware
+  coverage, plus the retained chatbot E2E journey.
+- Bumped the package and default Docker image version to `0.9.0` for the Stage 4
+  metric dashboard milestone.
+- Marked the Stage 4 metric dashboard complete while keeping dataset growth,
+  repeated latency sampling, algorithm lessons, and validated semantic
+  faithfulness ahead.
+- Expanded deterministic quality validation to 237 tests at 95.30% branch-aware
   coverage, plus the retained chatbot E2E journey.
 
 ## [0.4.1] - 2026-08-05

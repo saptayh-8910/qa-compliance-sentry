@@ -2,14 +2,15 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 4 — Versioned AI Evaluation Reporting**
+**Stage 4 — AI Evaluation Dashboard**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
 intelligence. Stage 3 now connects deterministic document retrieval to a
 provider-neutral grounded-answer boundary with fail-closed citation validation,
 an interactive terminal chatbot, and retained end-to-end test evidence. Stage 4
-now exports that evidence through a stable, dashboard-ready JSON contract.
+now exports that evidence through a stable JSON contract and turns it into a
+safe, standalone metric dashboard.
 
 ## Why this project exists
 
@@ -37,7 +38,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, adversarial evaluation, and versioned JSON reports |
+| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, adversarial evaluation, versioned JSON reports, and a local metric dashboard |
 
 ```mermaid
 flowchart LR
@@ -52,6 +53,9 @@ flowchart LR
   RAG --> CTX[Cited Context]
   CTX --> GEN[Answer Generator]
   GEN --> VERIFY[Citation Validator]
+  VERIFY --> EVAL[Deterministic Evaluation]
+  EVAL --> EVIDENCE[Versioned JSON Evidence]
+  EVIDENCE --> DASH[Local Metric Dashboard]
   PW --> Repo
   API --> Repo
   DB --> Repo
@@ -72,6 +76,7 @@ just another API endpoint.
 | **Latency benchmarking** | Foundation implemented | External results retain per-case latency and token usage. Repeated samples and percentile comparisons are intentionally deferred until the evaluation dataset is larger. |
 | **Regression across models** | Ready as an opt-in test | The same four cases and deterministic rubric compare Sol/Medium with Luna/High. Eight result rows require exactly six paid calls because retrieval misses skip generation. |
 | **Evaluation reporting** | Implemented | A versioned JSON contract exports run metadata, aggregate and per-case metrics, checks, failures, duration, and optional token usage for CI or dashboard consumers. |
+| **Evaluation dashboard** | Implemented | A responsive standalone HTML view presents aggregate and per-case diagnostics, filters failures, escapes untrusted model output, and is retained with CI evidence. |
 
 All current grading labels are human-authored, version-controlled, and scored
 deterministically; no unvalidated LLM acts as the judge. See the
@@ -251,13 +256,18 @@ claim that keyword checks prove full semantic entailment. It can aggregate case
 pass rate and the applicable retrieval and citation metrics while leaving
 no-answer metrics explicitly not applicable.
 
-### Export dashboard-ready evaluation data
+### Generate the evaluation report and dashboard
 
 ```bash
 make evaluate-rag
+make dashboard-rag
 
 .venv/bin/qa-assistant evaluate \
   --output reports/rag-evaluation.json
+
+.venv/bin/qa-assistant dashboard \
+  --report reports/rag-evaluation.json \
+  --output reports/rag-dashboard.html
 ```
 
 The offline extractive baseline requires no API key or network access. Its known
@@ -266,8 +276,14 @@ being converted into a false green result. Add `--fail-on-failure` when any
 failed case should make the command return exit code 1. The tracked
 [v1 JSON schema](schemas/evaluation-report-v1.schema.json) preserves
 non-applicable metrics as `null`; see the
-[Stage 4 reporting design](docs/EVALUATION_REPORTING.md) for the dashboard and
-future framework boundary.
+[Stage 4 reporting design](docs/EVALUATION_REPORTING.md) for dashboard fields,
+safe rendering, and the future framework boundary.
+
+`make dashboard-rag` regenerates that same zero-cost report and writes
+`reports/rag-dashboard.html`. The responsive page works directly from disk,
+requires no hosted service or remote assets, and filters All, Passed, or Failed
+cases. It keeps the extractive baseline's two known failures visible so the
+portfolio demonstrates diagnosis rather than hiding imperfect model behavior.
 
 ### Run tests
 
@@ -279,6 +295,7 @@ make test-db      # SQLite validation tests
 make test-e2e     # Sauce Demo smoke (Playwright)
 make test-ai-external # opt-in six-call adversarial Sol/Luna comparison
 make evaluate-rag # offline v1 JSON evaluation report
+make dashboard-rag # offline report + standalone metric dashboard
 make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
 make quality      # lint + format check + coverage gate
@@ -370,7 +387,8 @@ coverage, and tests supported Python versions on pull requests and updates to
 `main`. It also builds the Docker image, verifies that it runs as a non-root
 user, and executes the deterministic suite inside the container. HTML, XML,
 and JUnit reports are uploaded for inspection. The chatbot journey has dedicated
-HTML and JUnit evidence retained with each quality run.
+HTML and JUnit evidence retained with each quality run. CI also generates and
+retains the deterministic RAG JSON report and its standalone metric dashboard.
 
 Public API and Playwright checks run in a separate workflow every Monday at
 03:00 UTC or on demand from the GitHub Actions page. Keeping that workflow
@@ -388,7 +406,7 @@ qa-compliance-sentry/
 ├── log_analyzer/         # JSONL parsing, failure ranking, incident grouping
 ├── learning_algorithms/  # Interview labs mapped to project stages
 ├── pipeline_validator/   # CI dependency graph and cycle validation
-├── qa_assistant/         # Retrieval, grounded answers, and evaluation rubrics
+├── qa_assistant/         # Retrieval, grounded answers, evaluation, and dashboard
 ├── schemas/              # Versioned dashboard/report contracts
 ├── examples/             # runnable sample QA logs
 ├── tests/
@@ -410,7 +428,7 @@ qa-compliance-sentry/
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
-| **Stage 4 (in progress)** | Versioned evaluation schema/exporter complete; metric dashboard, larger labelled datasets, repeated latency samples, and validated semantic faithfulness next |
+| **Stage 4 (in progress)** | Versioned evaluation schema/exporter and safe metric dashboard complete; larger labelled datasets, repeated latency samples, Stage 4 algorithms, and validated semantic faithfulness next |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
 
