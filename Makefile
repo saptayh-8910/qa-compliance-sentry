@@ -1,11 +1,11 @@
 .PHONY: install test test-local test-unit test-algorithms test-api test-db \
-	test-e2e test-ai-external validate validate-pipeline retrieve-docs \
-	answer-docs answer-docs-openai report \
+	test-e2e test-chatbot-e2e test-ai-external validate validate-pipeline \
+	retrieve-docs answer-docs chat-docs answer-docs-openai report \
 	analyze-sample \
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.6.0
+DOCKER_IMAGE ?= qa-compliance-sentry:0.7.0
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -30,6 +30,13 @@ test-db:
 
 test-e2e:
 	.venv/bin/pytest tests/e2e -v -m smoke
+
+test-chatbot-e2e:
+	mkdir -p reports
+	.venv/bin/pytest tests/e2e/test_qa_assistant_chat.py -m chatbot -v \
+		-o junit_family=legacy \
+		--html=reports/chatbot-e2e.html --self-contained-html \
+		--junitxml=reports/chatbot-e2e.xml
 
 test-ai-external:
 	mkdir -p reports
@@ -70,7 +77,7 @@ coverage:
 		--html=reports/local-report.html --self-contained-html \
 		--junitxml=reports/local-junit.xml
 
-quality: lint format-check coverage
+quality: lint format-check coverage test-chatbot-e2e
 
 docker-build:
 	docker build --pull -t $(DOCKER_IMAGE) .
@@ -116,6 +123,9 @@ answer-docs:
 	.venv/bin/qa-assistant answer \
 		"Why separate scheduled external checks from merge-blocking tests?" \
 		--source docs --top 3
+
+chat-docs:
+	.venv/bin/qa-assistant chat --source docs --top 3
 
 # Explicitly makes a paid OpenAI API request.
 answer-docs-openai:

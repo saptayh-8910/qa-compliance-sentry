@@ -7,6 +7,8 @@ extractive baseline, abstention, and fail-closed citation validation. The third
 milestone adds an explicit OpenAI Responses API adapter while keeping real model
 execution outside deterministic CI. The fourth milestone adds explainable
 grounding and prompt-injection evaluations plus opt-in model comparisons.
+The final milestone adds a reusable interactive chat session and a deterministic
+subprocess journey with retained CI evidence.
 
 The grounding contract follows OpenAI's current
 [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/model-guidance?model=gpt-5.6):
@@ -21,6 +23,7 @@ flowchart LR
   SRC["README, Markdown, and text files"] --> DISC["Discover and load UTF-8 documents"]
   DISC --> CHUNK["Split at Markdown headings and paragraph boundaries"]
   CHUNK --> INDEX["Build an in-memory lexical index"]
+  CHAT["Interactive terminal chat session"] --> QUERY
   QUERY["User question"] --> RANK["BM25-style deterministic ranking"]
   INDEX --> RANK
   RANK --> LIMIT["Apply top-k and context-size limits"]
@@ -29,6 +32,7 @@ flowchart LR
   REQUEST --> GEN["Provider-neutral answer generator"]
   GEN --> VALIDATE["Validate every numeric citation ID"]
   VALIDATE --> ANSWER["Grounded answer and verified source list"]
+  ANSWER --> CHAT
   ANSWER --> EVAL["Score behavior, terms, and exact sources"]
   OFFLINE["Offline extractive baseline"] --> GEN
   OPENAI["OpenAI Responses API adapter"] --> GEN
@@ -149,18 +153,22 @@ validated against human-labelled examples first.
 | Unit | tokenization, chunking, ranking, delimiter validation, LRU eviction, trie lookup, generator requests, OpenAI request mapping, citation validation, abstention, and evaluation scoring | Each rule is deterministic and isolated; the SDK client or model is replaced by a recording fake. |
 | Integration | source paths → chunks → context → generator → verified answer | Verifies that retrieval and generation agree on citation contracts. |
 | CLI component | retrieval, provider selection, supported answers, source lists, no-match behavior, and missing sources | Exercises the user entry point without a real external request. |
+| Deterministic chatbot E2E | installed module → interactive session → supported answer → verified source → abstention → exit | Exercises the complete offline user journey in a subprocess and retains dedicated HTML/JUnit evidence in merge-blocking CI. |
 | External E2E | four fixed cases → Sol/Medium and Luna/High → behavior, fact, injection, and source checks | Opt-in only through `RUN_OPENAI_LIVE_TESTS=1`; six paid calls produce HTML/JUnit evidence and remain excluded from deterministic CI. |
 
 This follows the testing pyramid: many fast unit cases, fewer boundary tests,
 and eventually a small number of end-to-end assistant journeys.
 
-## Stage 3 boundaries and next milestones
+## Stage 3 completion and boundaries
 
 This milestone proves grounded answer orchestration with both a deliberately
 simple offline generator and a secure external provider boundary. It adds a
 repeatable adversarial matrix without making external models part of merge-
-blocking CI. The remaining Stage 3 work is:
+blocking CI. Stage 3 is complete with a multi-question terminal entry point and a
+retained offline E2E journey covering a supported answer, verified citation,
+evidence-first abstention, and clean exit.
 
-1. Run and review the opt-in six-call evaluation when explicitly approved, then
-   repeat it only when enough samples are needed for a comparison.
-2. Add a small end-to-end chatbot journey and retained test evidence.
+The six-call Sol/Medium versus Luna/High matrix remains an explicitly approved,
+optional experiment rather than a completion gate. Stage 4 can build on this
+baseline with semantic faithfulness, larger labelled datasets, repeated latency
+samples, and an evaluation dashboard.
