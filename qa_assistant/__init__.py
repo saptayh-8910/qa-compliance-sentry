@@ -7,13 +7,21 @@ from qa_assistant.evaluation import (
     summarize_results,
 )
 from qa_assistant.openai_generator import OpenAIResponsesGenerator
+from qa_assistant.reporting import (
+    EvaluationReport,
+    evaluation_report_data,
+    write_evaluation_report,
+)
 from qa_assistant.service import QAKnowledgeBase
 
 __all__ = [
     "OpenAIResponsesGenerator",
     "QAAssistant",
     "QAKnowledgeBase",
+    "EvaluationReport",
     "evaluate_case",
+    "evaluation_report_data",
     "grounding_evaluation_cases",
     "summarize_results",
+    "write_evaluation_report",
 ]

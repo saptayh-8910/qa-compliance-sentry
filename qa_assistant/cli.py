@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import os
+from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
+from time import perf_counter
+from uuid import uuid4
 
 import typer
 from dotenv import load_dotenv
 
 from qa_assistant.assistant import QAAssistant
+from qa_assistant.evaluation import evaluate_case, grounding_evaluation_cases
 from qa_assistant.generation import AnswerGenerator, ExtractiveGenerator
 from qa_assistant.models import GroundedAnswer
 from qa_assistant.openai_generator import (
@@ -18,6 +22,13 @@ from qa_assistant.openai_generator import (
     OpenAIAdapterError,
     OpenAIResponsesGenerator,
     ReasoningEffort,
+    ResponseUsage,
+)
+from qa_assistant.reporting import (
+    EvaluationObservation,
+    EvaluationReport,
+    EvaluationRunMetadata,
+    write_evaluation_report,
 )
 from qa_assistant.service import QAKnowledgeBase
 
@@ -93,6 +104,14 @@ def _echo_grounded_answer(grounded_answer: GroundedAnswer) -> None:
         typer.echo("Sources:")
         for citation in grounded_answer.citations:
             typer.echo(citation.label)
+
+
+def _report_configuration(
+    generator: AnswerGenerator,
+) -> tuple[str | None, str | None]:
+    if not isinstance(generator, OpenAIResponsesGenerator):
+        return None, None
+    return generator.model, generator.reasoning_effort.value
 
 
 @app.callback()
@@ -281,6 +300,99 @@ def chat(
 
         typer.echo("Assistant:")
         _echo_grounded_answer(grounded_answer)
+
+
+@app.command("evaluate")
+def evaluate(
+    output: Path = typer.Option(
+        Path("reports/rag-evaluation.json"),
+        "--output",
+        "-o",
+        help="Destination for the versioned JSON report",
+    ),
+    provider: AnswerProvider = typer.Option(
+        AnswerProvider.EXTRACTIVE,
+        "--provider",
+        help="Generator under evaluation; openai makes three paid API requests",
+    ),
+    max_answer_chars: int = typer.Option(500, "--max-answer-chars", min=80),
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        help="OpenAI model override (or set OPENAI_MODEL)",
+    ),
+    reasoning_effort: ReasoningEffort | None = typer.Option(
+        None,
+        "--reasoning-effort",
+        help="OpenAI reasoning level (or set OPENAI_REASONING_EFFORT)",
+    ),
+    max_output_tokens: int = typer.Option(
+        600,
+        "--max-output-tokens",
+        min=1,
+        help="Maximum output tokens for each OpenAI response",
+    ),
+    fail_on_failure: bool = typer.Option(
+        False,
+        "--fail-on-failure",
+        help="Return exit code 1 after writing the report when any case fails",
+    ),
+) -> None:
+    """Run the fixed grounding rubric and export dashboard-ready JSON."""
+    try:
+        generator = _answer_generator(
+            provider,
+            max_answer_chars=max_answer_chars,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            max_output_tokens=max_output_tokens,
+        )
+        selected_model, selected_effort = _report_configuration(generator)
+        observations: list[EvaluationObservation] = []
+        for case in grounding_evaluation_cases():
+            if isinstance(generator, OpenAIResponsesGenerator):
+                generator.last_usage = None
+            started = perf_counter()
+            result = evaluate_case(case, generator)
+            duration = round(perf_counter() - started, 6)
+            usage = getattr(generator, "last_usage", None)
+            observations.append(
+                EvaluationObservation(
+                    result=result,
+                    duration_seconds=duration,
+                    usage=usage if isinstance(usage, ResponseUsage) else None,
+                )
+            )
+
+        report = EvaluationReport(
+            metadata=EvaluationRunMetadata(
+                run_id=str(uuid4()),
+                created_at=datetime.now(UTC),
+                provider=provider.value,
+                model=selected_model,
+                reasoning_effort=selected_effort,
+            ),
+            observations=tuple(observations),
+        )
+        write_evaluation_report(report, output)
+    except (OSError, UnicodeError, ValueError, OpenAIAdapterError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    summary = report.summary
+    typer.echo(
+        f"Evaluation complete: {summary.passed_count}/{summary.case_count} "
+        f"cases passed ({summary.pass_rate:.1%})."
+    )
+    for observation in report.observations:
+        if not observation.result.passed:
+            typer.echo(
+                f"FAIL {observation.result.case_id}: "
+                f"{observation.result.failure_summary}"
+            )
+    typer.echo(f"Report: {output}")
+    if fail_on_failure and summary.passed_count != summary.case_count:
+        raise typer.Exit(code=1)
 
 
 def main() -> None:

@@ -60,6 +60,13 @@ and the project uses semantic versioning for milestone tags.
 - Deterministic subprocess chatbot E2E coverage for a supported answer, verified
   source, abstention, and clean exit without an API key or network request.
 - Dedicated chatbot HTML and JUnit evidence retained by merge-blocking CI.
+- Stage 4 versioned JSON evaluation contract with run metadata, aggregate and
+  case-level metrics, explainable checks, failures, duration, and optional token
+  usage.
+- Atomic `qa-assistant evaluate` report export plus a zero-cost
+  `make evaluate-rag` workflow and retained CI artifact.
+- Stage 4 evaluation-reporting design documenting non-applicable metric values,
+  gating behavior, dashboard consumption, and semantic-judge validation.
 
 ### Changed
 
@@ -69,10 +76,16 @@ and the project uses semantic versioning for milestone tags.
   completion.
 - Marked Stage 3 complete and made the Stage 4 evaluation dashboard the next
   roadmap milestone.
-- Expanded deterministic quality validation to 204 tests at 96.34%
-  branch-aware coverage, plus one dedicated subprocess chatbot E2E journey.
 - Expanded deterministic quality validation to 200 tests at 96.26%
   branch-aware coverage.
+- Expanded deterministic quality validation to 204 tests at 96.34%
+  branch-aware coverage, plus one dedicated subprocess chatbot E2E journey.
+- Bumped the package and default Docker image version to `0.8.0` for the Stage 4
+  evaluation-reporting foundation.
+- Marked Stage 4 in progress with visualization, dataset growth, repeated
+  latency sampling, and validated semantic faithfulness still ahead.
+- Expanded deterministic quality validation to 223 tests at 96.60% branch-aware
+  coverage, plus the retained chatbot E2E journey.
 
 ## [0.4.1] - 2026-08-05
 

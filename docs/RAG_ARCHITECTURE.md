@@ -172,3 +172,10 @@ The six-call Sol/Medium versus Luna/High matrix remains an explicitly approved,
 optional experiment rather than a completion gate. Stage 4 can build on this
 baseline with semantic faithfulness, larger labelled datasets, repeated latency
 samples, and an evaluation dashboard.
+
+Stage 4 now exports the existing deterministic evidence through a versioned JSON
+contract. Aggregate metrics, per-case checks, canonical citations, failures,
+duration, and optional token counts can be consumed without rerunning a model.
+See [the evaluation reporting design](EVALUATION_REPORTING.md). The schema does
+not add semantic faithfulness by itself; it creates the stable boundary needed
+to compare a future judge against human labels and visualize trustworthy trends.
