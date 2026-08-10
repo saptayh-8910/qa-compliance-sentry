@@ -81,6 +81,16 @@ and the project uses semantic versioning for milestone tags.
   similarity, explicitly separated from semantic correctness or groundedness.
 - Bounded evaluation-score trend analysis with a kth-highest threshold and best
   fixed-size rolling average.
+- Ten-case human-labelled RAG dataset covering supported answers, multi-source
+  synthesis, distracting retrieval, lexical paraphrase failure, stale policy,
+  conflicting evidence, and supported or unsupported prompt injection.
+- Case-specific expected context precision and recall so intentional retrieval
+  misses and distractors remain diagnostic without producing false rubric
+  failures.
+- Evaluation report schema v2 with the original question and expected
+  answer-or-abstain behavior on every case, plus legacy v1 dashboard support.
+- Plain-English expected outcomes on dashboard case cards so non-technical
+  readers can interpret what each result was supposed to do.
 
 ### Changed
 
@@ -112,6 +122,12 @@ and the project uses semantic versioning for milestone tags.
 - Completed the twelve-problem, three-per-stage interview learning roadmap.
 - Expanded deterministic quality validation to 278 tests at 95.50% branch-aware
   coverage, plus the retained chatbot E2E journey.
+- Bumped the package and default Docker image version to `0.11.0` for the
+  expanded Stage 4 evaluation dataset milestone.
+- Completed the larger labelled-dataset roadmap item while keeping the paid
+  Sol/Luna comparison on its original four-case, six-call budget.
+- Expanded deterministic quality validation to 284 tests at 95.56%
+  branch-aware coverage, plus the retained chatbot E2E journey.
 
 ## [0.4.1] - 2026-08-05
 

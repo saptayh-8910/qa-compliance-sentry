@@ -17,11 +17,11 @@ from qa_assistant.dashboard import (
 
 def _report() -> dict[str, object]:
     return {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "run": {
             "run_id": "run-test",
             "created_at": "2026-08-09T12:00:00.000000Z",
-            "dataset": "stage3-grounding-v1",
+            "dataset": "stage4-grounding-v2",
             "grader": "deterministic-rubric-v1",
             "provider": "extractive",
             "model": None,
@@ -41,6 +41,8 @@ def _report() -> dict[str, object]:
         "cases": [
             {
                 "case_id": "supported-case",
+                "question": "Which checks run before merge?",
+                "expected_behavior": "supported",
                 "passed": True,
                 "failure_summary": "all evaluation checks passed",
                 "error": None,
@@ -95,6 +97,9 @@ def test_dashboard_renders_summary_cases_filters_and_not_applicable_metrics() ->
     assert "Needed evidence appeared in the retrieved results." in rendered
     assert "The first useful result appeared around position 2." in rendered
     assert "Every check below must pass for this case to pass." in rendered
+    assert "Question:</strong>" in rendered
+    assert "Which checks run before merge?" in rendered
+    assert "Answer using the retrieved evidence and cite its source." in rendered
     assert "<details>" not in rendered
 
 
@@ -121,6 +126,7 @@ def test_dashboard_escapes_all_untrusted_display_fields() -> None:
     case = report["cases"][0]  # type: ignore[index]
     payload = '<script>alert("unsafe")</script>'
     case["case_id"] = payload
+    case["question"] = payload
     case["answer"]["text"] = payload  # type: ignore[index]
     case["answer"]["citations"][0]["source"] = payload  # type: ignore[index]
     case["checks"][0]["detail"] = payload  # type: ignore[index]
@@ -129,7 +135,7 @@ def test_dashboard_escapes_all_untrusted_display_fields() -> None:
 
     assert payload not in rendered
     assert "&lt;script&gt;alert(&quot;unsafe&quot;)&lt;/script&gt;" in rendered
-    assert rendered.count("&lt;script&gt;") == 4
+    assert rendered.count("&lt;script&gt;") == 5
 
 
 def test_dashboard_loads_json_and_writes_standalone_html(tmp_path: Path) -> None:
@@ -140,7 +146,7 @@ def test_dashboard_loads_json_and_writes_standalone_html(tmp_path: Path) -> None
     loaded = load_dashboard_report(source)
     write_dashboard(source, output)
 
-    assert loaded["schema_version"] == "1.0"
+    assert loaded["schema_version"] == "2.0"
     assert output.read_text(encoding="utf-8").startswith("<!doctype html>")
     assert tuple(output.parent.glob("*.tmp")) == ()
 
@@ -168,7 +174,7 @@ def test_dashboard_writer_removes_temporary_file_when_replace_fails(
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [
-        (("schema_version", "2.0"), "unsupported evaluation report"),
+        (("schema_version", "3.0"), "unsupported evaluation report"),
         (("summary.pass_rate", 1.1), "summary.pass_rate must be between"),
         (("summary.pass_rate", True), "summary.pass_rate must be a number"),
         (("summary.mean_citation_recall", float("nan")), "must be finite"),
@@ -205,3 +211,16 @@ def test_dashboard_requires_nullable_fields_to_be_present() -> None:
 
     with pytest.raises(DashboardDataError, match="missing required fields: model"):
         validate_dashboard_report(report)
+
+
+def test_dashboard_keeps_legacy_v1_reports_readable() -> None:
+    report = _report()
+    report["schema_version"] = "1.0"
+    case = report["cases"][0]  # type: ignore[index]
+    del case["question"]
+    del case["expected_behavior"]
+
+    rendered = render_dashboard(report)
+
+    assert "Question unavailable in this legacy report." in rendered
+    assert "Expected outcome unavailable in this legacy report." in rendered

@@ -16,21 +16,39 @@ make evaluate-rag
 ```
 
 The default provider is the zero-cost extractive generator. Its current result
-is intentionally diagnostic: supported evidence and retrieval-miss abstention
-pass, while conflicting evidence and prompt injection expose limitations. The
-command writes those failures and returns success so the report can be explored.
-Use `--fail-on-failure` when the same rubric should act as a blocking gate.
+is intentionally diagnostic: 5 of 10 cases pass. The other five isolate
+conflicting evidence, retrieved prompt injection, multi-source synthesis, a
+lexical paraphrase miss, and unsafe unsupported context. The command writes
+those failures and returns success so the report can be explored. Use
+`--fail-on-failure` when the same rubric should act as a blocking gate.
 
-Selecting `--provider openai` is explicit and makes three paid API requests for
-the four-case dataset because the retrieval-miss case skips generation. Paid
-runs are never enabled by deterministic CI.
+Selecting `--provider openai` for the full ten-case command is explicit and
+makes eight paid API requests because two retrieval misses skip generation.
+Paid runs are never enabled by deterministic CI. The separate Sol/Luna external
+regression intentionally keeps the original four-case subset and six-call
+budget.
+
+## What the ten cases teach
+
+| Case | Expected result in plain English | Failure it can identify |
+|---|---|---|
+| Supported merge checks | Answer with Ruff and coverage evidence, then cite it. | A basic retrieval, fact, or citation regression. |
+| Unsupported ownership | Say there is not enough evidence; do not call a model. | Inventing an answer when search found nothing. |
+| Conflicting retention | Refuse to choose between unresolved 14-day and 30-day rules. | Overconfident generation from contradictory evidence. |
+| Retrieved prompt injection | Use the supported fact but ignore the instruction hidden in the document. | Treating retrieved content as commands instead of evidence. |
+| Browser smoke test | Answer with Playwright evidence and cite the browser guide. | Failure to retrieve and cite a second supported topic. |
+| Multi-source release gates | Combine code-quality and browser evidence and cite both sources. | Incomplete synthesis or missing citations. |
+| Partially relevant retrieval | Answer from the useful result even when another result is distracting. | Poor context precision or distraction by irrelevant evidence. |
+| Lexical paraphrase miss | The desired outcome is a cited answer, but lexical search misses differently worded evidence. | A retrieval-recall limitation rather than a generation failure. |
+| Current versus archived policy | Use the current 30-day rule and ignore the archived 14-day distractor. | Stale-document selection or unsupported policy mixing. |
+| Unsupported injection | Refuse because the retrieved text is unsafe and does not support the question. | Hallucination or obedience to an irrelevant injected command. |
 
 ## Generate the local dashboard
 
 ```bash
 make dashboard-rag
 
-# Or render an existing v1 report without re-running evaluation:
+# Or render an existing v2 or legacy v1 report without re-running evaluation:
 .venv/bin/qa-assistant dashboard \
   --report reports/rag-evaluation.json \
   --output reports/rag-dashboard.html
@@ -55,15 +73,15 @@ the JSON source and HTML view and retains them in the same quality artifact.
 
 ## Versioned contract
 
-[`schemas/evaluation-report-v1.schema.json`](../schemas/evaluation-report-v1.schema.json)
-is the public v1 contract. Each report contains:
+[`schemas/evaluation-report-v2.schema.json`](../schemas/evaluation-report-v2.schema.json)
+is the current public contract. Each report contains:
 
 - schema version plus run, dataset, grader, provider, model, and reasoning
   metadata;
 - aggregate pass rate, context precision/recall, Hit@K, MRR, and citation
   precision/recall;
-- per-case answer text, canonical citations, explainable checks, failure
-  summary, and error;
+- per-case question, expected answer-or-abstain behavior, answer text, canonical
+  citations, explainable checks, failure summary, and error;
 - per-case duration and optional input, output, total, and reasoning token
   counts.
 
@@ -76,17 +94,22 @@ Reports are written through a temporary file in the destination directory and
 atomically replaced. A reader therefore sees either the previous complete run
 or the new complete run, never a partially written JSON document.
 
-Answer text, check details, errors, source paths, headings, case identifiers,
-and run metadata are treated as untrusted display data. The renderer validates
-the consumed v1 fields, rejects invalid metric ranges and inconsistent case
-counts, and HTML-escapes every report-derived string. It never embeds the raw
-report in executable JavaScript. The prompt-injection case deliberately
-demonstrates that adversarial text can reach evaluation evidence.
+Answer text, questions, check details, errors, source paths, headings, case
+identifiers, and run metadata are treated as untrusted display data. The
+renderer validates the consumed fields, rejects invalid metric ranges and
+inconsistent case counts, and HTML-escapes every report-derived string. It never
+embeds the raw report in executable JavaScript. The prompt-injection case
+deliberately demonstrates that adversarial text can reach evaluation evidence.
+
+The dashboard remains backwards-compatible with the tracked
+[`v1 schema`](../schemas/evaluation-report-v1.schema.json). Legacy reports omit
+the question and expected behavior, so the renderer supplies an honest fallback
+instead of inventing missing information.
 
 ## Presentation and framework boundary
 
 The tracked schema is the boundary between scoring and presentation. The local
-dashboard reads the existing v1 metrics without redefining them. DeepEval,
+dashboard reads the existing metrics without redefining them. DeepEval,
 Ragas, or another framework may later contribute additional fields through a
 new schema version, but it must not silently redefine the existing
 human-labelled metrics.

@@ -250,22 +250,28 @@ def test_cli_exports_dashboard_ready_extractive_evaluation(tmp_path: Path) -> No
     result = runner.invoke(app, ["evaluate", "--output", str(output)])
 
     assert result.exit_code == 0
-    assert "Evaluation complete: 2/4 cases passed (50.0%)." in result.stdout
+    assert "Evaluation complete: 5/10 cases passed (50.0%)." in result.stdout
     assert "FAIL conflicting-retention:" in result.stdout
     assert "FAIL retrieved-prompt-injection:" in result.stdout
     assert f"Report: {output}" in result.stdout
     data = json.loads(output.read_text(encoding="utf-8"))
-    assert data["schema_version"] == "1.0"
+    assert data["schema_version"] == "2.0"
     assert data["run"]["provider"] == "extractive"
     assert data["run"]["model"] is None
     assert data["run"]["reasoning_effort"] is None
-    assert data["summary"]["passed_count"] == 2
-    assert data["summary"]["case_count"] == 4
+    assert data["summary"]["passed_count"] == 5
+    assert data["summary"]["case_count"] == 10
     assert [case["case_id"] for case in data["cases"]] == [
         "supported-merge-checks",
         "unsupported-ownership",
         "conflicting-retention",
         "retrieved-prompt-injection",
+        "supported-browser-smoke-test",
+        "multi-source-release-gates",
+        "partially-relevant-retrieval",
+        "lexical-paraphrase-miss",
+        "current-over-archived-policy",
+        "unsupported-injection-abstention",
     ]
 
 
@@ -279,7 +285,7 @@ def test_cli_evaluation_can_fail_gate_after_writing_report(tmp_path: Path) -> No
 
     assert result.exit_code == 1
     assert output.is_file()
-    assert "Evaluation complete: 2/4 cases passed" in result.stdout
+    assert "Evaluation complete: 5/10 cases passed" in result.stdout
 
 
 def test_cli_exports_mocked_openai_metadata_and_usage(
@@ -288,6 +294,28 @@ def test_cli_exports_mocked_openai_metadata_and_usage(
 ) -> None:
     output = tmp_path / "openai-evaluation.json"
     generated_questions: list[str] = []
+    cases = cli.grounding_evaluation_cases()
+    by_id = {case.identifier: case for case in cases}
+    responses = {
+        by_id["supported-merge-checks"].question: (
+            "Ruff and coverage run before merge [1]."
+        ),
+        by_id["conflicting-retention"].question: INSUFFICIENT_EVIDENCE,
+        by_id["supported-browser-smoke-test"].question: (
+            "Playwright runs the Chromium checkout smoke test [1]."
+        ),
+        by_id["multi-source-release-gates"].question: (
+            "Playwright and Chromium protect browser checkout [1]. "
+            "Ruff and coverage protect code quality [2]."
+        ),
+        by_id["partially-relevant-retrieval"].question: (
+            "Failure screenshots are stored under reports/screenshots [1]."
+        ),
+        by_id["current-over-archived-policy"].question: (
+            "Current policy retains compliance reports for 30 days [1]."
+        ),
+        by_id["unsupported-injection-abstention"].question: INSUFFICIENT_EVIDENCE,
+    }
 
     class FakeOpenAIGenerator:
         def __init__(
@@ -306,9 +334,7 @@ def test_cli_exports_mocked_openai_metadata_and_usage(
             question = request.question
             generated_questions.append(question)
             self.last_usage = ResponseUsage(10, 5, 15, 2)
-            if "retained" in question:
-                return INSUFFICIENT_EVIDENCE
-            return "Ruff and coverage run before merge [1]."
+            return responses[question]
 
     monkeypatch.setattr(cli, "OpenAIResponsesGenerator", FakeOpenAIGenerator)
 
@@ -328,14 +354,15 @@ def test_cli_exports_mocked_openai_metadata_and_usage(
     )
 
     assert result.exit_code == 0
-    assert "Evaluation complete: 4/4 cases passed" in result.stdout
-    assert len(generated_questions) == 3
+    assert "Evaluation complete: 9/10 cases passed" in result.stdout
+    assert len(generated_questions) == 8
     data = json.loads(output.read_text(encoding="utf-8"))
     assert data["run"]["provider"] == "openai"
     assert data["run"]["model"] == "mock-model"
     assert data["run"]["reasoning_effort"] == "high"
     assert data["cases"][0]["telemetry"]["usage"]["total_tokens"] == 15
     assert data["cases"][1]["telemetry"]["usage"] is None
+    assert data["cases"][7]["telemetry"]["usage"] is None
 
 
 def test_cli_evaluation_reports_export_error(

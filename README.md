@@ -2,7 +2,7 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 4 — AI Evaluation and Regression Foundations**
+**Stage 4 — Expanded AI Evaluation Dataset**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
@@ -10,8 +10,9 @@ intelligence. Stage 3 now connects deterministic document retrieval to a
 provider-neutral grounded-answer boundary with fail-closed citation validation,
 an interactive terminal chatbot, and retained end-to-end test evidence. Stage 4
 now exports that evidence through a stable JSON contract, turns it into a safe
-metric dashboard, and adds interview-algorithm foundations for answer regression
-and score-trend analysis.
+metric dashboard, adds interview-algorithm foundations, and exercises ten
+human-labelled scenarios that isolate retrieval, generation, citation, and
+safety failures.
 
 ## Why this project exists
 
@@ -39,7 +40,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Twelve stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, adversarial evaluation, versioned JSON reports, and a local metric dashboard |
+| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, a ten-case labelled evaluation suite, versioned JSON reports, and a local metric dashboard |
 
 ```mermaid
 flowchart LR
@@ -72,11 +73,11 @@ just another API endpoint.
 |---|---|---|
 | **Hallucination detection** | Implemented with a bounded rubric | Unsupported questions and unresolved conflicts must return the exact abstention response. Required and forbidden terms detect known missing or invented claims; full claim-level semantic faithfulness remains Stage 4 work. |
 | **Prompt injection** | Implemented | Retrieved text contains a malicious instruction, while the answer must follow the system grounding contract, omit the injected response, and retain a valid citation. |
-| **Context recall** | Implemented | Human-labelled chunks produce context precision/recall, Hit@K, and reciprocal rank/MRR so retrieval failures are separated from generation failures. |
+| **Context recall** | Implemented | Ten human-labelled scenarios produce context precision/recall, Hit@K, and reciprocal rank/MRR so retrieval failures are separated from generation failures. |
 | **Citation verification** | Implemented | Numeric citations fail closed, map to canonical sources, and produce citation precision/recall plus an exact-source gate for curated cases. |
-| **Latency benchmarking** | Foundation implemented | External results retain per-case latency and token usage. Repeated samples and percentile comparisons are intentionally deferred until the evaluation dataset is larger. |
-| **Regression across models** | Ready as an opt-in test | The same four cases and deterministic rubric compare Sol/Medium with Luna/High. Eight result rows require exactly six paid calls because retrieval misses skip generation. |
-| **Evaluation reporting** | Implemented | A versioned JSON contract exports run metadata, aggregate and per-case metrics, checks, failures, duration, and optional token usage for CI or dashboard consumers. |
+| **Latency benchmarking** | Foundation implemented | External results retain per-case latency and token usage. Repeated samples and percentile comparisons remain a separate Stage 4 milestone. |
+| **Regression across models** | Ready as an opt-in test | A stable four-case subset compares Sol/Medium with Luna/High. Eight result rows require exactly six paid calls because retrieval misses skip generation; the larger offline suite does not silently increase that cost. |
+| **Evaluation reporting** | Implemented | The v2 JSON contract exports each question and expected behavior alongside run metadata, aggregate and per-case metrics, checks, failures, duration, and optional token usage. |
 | **Evaluation dashboard** | Implemented | A responsive standalone HTML view presents aggregate and per-case diagnostics, filters failures, escapes untrusted model output, and is retained with CI evidence. |
 | **Regression foundations** | Implemented | Literal answer changes use Edit Distance, while kth-largest and rolling-window utilities summarize bounded score history without claiming semantic equivalence or complete reliability. |
 
@@ -178,7 +179,7 @@ analysis all run through `make test-algorithms`. See the
 [algorithm learning track](docs/ALGORITHM_LEARNING.md) for plain-English
 interpretations, complexity, interview prompts, and limitations. A best window
 or top-score threshold is not a full latency or reliability distribution; those
-require a larger repeated dataset later in Stage 4.
+require repeated observations later in Stage 4.
 
 ### Retrieve QA documentation
 
@@ -293,12 +294,16 @@ make dashboard-rag
   --output reports/rag-dashboard.html
 ```
 
-The offline extractive baseline requires no API key or network access. Its known
-conflict and prompt-injection failures remain visible in the report instead of
+The offline extractive baseline requires no API key or network access. It passes
+5 of the 10 labelled scenarios. The five visible failures diagnose conflicting
+evidence, retrieved prompt injection, multi-source synthesis, a lexical
+paraphrase miss, and unsafe unsupported context. They remain visible instead of
 being converted into a false green result. Add `--fail-on-failure` when any
 failed case should make the command return exit code 1. The tracked
-[v1 JSON schema](schemas/evaluation-report-v1.schema.json) preserves
-non-applicable metrics as `null`; see the
+[v2 JSON schema](schemas/evaluation-report-v2.schema.json) adds the question and
+plain expected behavior to every case while preserving non-applicable metrics
+as `null`. The dashboard still accepts
+[legacy v1 reports](schemas/evaluation-report-v1.schema.json); see the
 [Stage 4 reporting design](docs/EVALUATION_REPORTING.md) for dashboard fields,
 safe rendering, and the future framework boundary.
 
@@ -307,9 +312,10 @@ safe rendering, and the future framework boundary.
 requires no hosted service or remote assets, and filters All, Passed, or Failed
 cases. An always-visible guide explains every metric in plain English, and each
 case translates its result—for example, Hit@K “Hit” means the needed evidence
-appeared in the retrieved results. It keeps the extractive baseline's two known
+appeared in the retrieved results. It keeps the extractive baseline's five known
 failures visible so the portfolio demonstrates diagnosis rather than hiding
-imperfect model behavior.
+imperfect model behavior. Each card also states the original question and
+whether a reader should expect a cited answer or a safe refusal.
 
 ### Run tests
 
@@ -320,7 +326,7 @@ make test-api     # REST API tests
 make test-db      # SQLite validation tests
 make test-e2e     # Sauce Demo smoke (Playwright)
 make test-ai-external # opt-in six-call adversarial Sol/Luna comparison
-make evaluate-rag # offline v1 JSON evaluation report
+make evaluate-rag # offline v2 JSON evaluation report
 make dashboard-rag # offline report + standalone metric dashboard
 make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
@@ -454,7 +460,7 @@ qa-compliance-sentry/
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
-| **Stage 4 (in progress)** | Versioned evaluation reports, safe metric dashboard, and three algorithm foundations complete; larger labelled datasets, repeated latency samples, and validated semantic faithfulness next |
+| **Stage 4 (in progress)** | Versioned evaluation reports, safe metric dashboard, three algorithm foundations, and a ten-case labelled dataset complete; repeated latency samples and validated semantic faithfulness next |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
 
