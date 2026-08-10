@@ -13,6 +13,7 @@ import typer
 from dotenv import load_dotenv
 
 from qa_assistant.assistant import QAAssistant
+from qa_assistant.dashboard import DashboardDataError, write_dashboard
 from qa_assistant.evaluation import evaluate_case, grounding_evaluation_cases
 from qa_assistant.generation import AnswerGenerator, ExtractiveGenerator
 from qa_assistant.models import GroundedAnswer
@@ -116,7 +117,7 @@ def _report_configuration(
 
 @app.callback()
 def root() -> None:
-    """Build deterministic context for the Stage 3 QA assistant."""
+    """Run grounded QA, evaluation, and reporting workflows."""
 
 
 @app.command("retrieve")
@@ -393,6 +394,31 @@ def evaluate(
     typer.echo(f"Report: {output}")
     if fail_on_failure and summary.passed_count != summary.case_count:
         raise typer.Exit(code=1)
+
+
+@app.command("dashboard")
+def dashboard(
+    report: Path = typer.Option(
+        Path("reports/rag-evaluation.json"),
+        "--report",
+        "-r",
+        help="Version 1 evaluation JSON to visualize",
+    ),
+    output: Path = typer.Option(
+        Path("reports/rag-dashboard.html"),
+        "--output",
+        "-o",
+        help="Destination for the standalone HTML dashboard",
+    ),
+) -> None:
+    """Render a safe local dashboard from a version 1 evaluation report."""
+    try:
+        write_dashboard(report, output)
+    except (OSError, UnicodeError, DashboardDataError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"Dashboard: {output}")
 
 
 def main() -> None:

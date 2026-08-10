@@ -1,11 +1,12 @@
 .PHONY: install test test-local test-unit test-algorithms test-api test-db \
 	test-e2e test-chatbot-e2e test-ai-external validate validate-pipeline \
-	retrieve-docs answer-docs chat-docs evaluate-rag answer-docs-openai report \
+	retrieve-docs answer-docs chat-docs evaluate-rag dashboard-rag \
+	answer-docs-openai report \
 	analyze-sample \
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.8.0
+DOCKER_IMAGE ?= qa-compliance-sentry:0.9.0
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -130,6 +131,11 @@ chat-docs:
 evaluate-rag:
 	mkdir -p reports
 	.venv/bin/qa-assistant evaluate --output reports/rag-evaluation.json
+
+dashboard-rag: evaluate-rag
+	.venv/bin/qa-assistant dashboard \
+		--report reports/rag-evaluation.json \
+		--output reports/rag-dashboard.html
 
 # Explicitly makes a paid OpenAI API request.
 answer-docs-openai:

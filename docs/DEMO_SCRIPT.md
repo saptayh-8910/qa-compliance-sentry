@@ -1,4 +1,4 @@
-# 2-minute demo script
+# Portfolio demo script
 
 Use this script when recording your Loom/YouTube walkthrough. Paste the final URL into [README.md](../README.md).
 
@@ -30,7 +30,22 @@ pytest tests/api tests/db -v
 python scripts/run_validations.py
 ```
 
-## 1:45–2:00 — Wrap-up
+## AI quality evaluation dashboard
+
+```bash
+make dashboard-rag
+```
+
+Open `reports/rag-dashboard.html`. Show the 50% offline baseline, filter to the
+two failed cases, and expand their rubric checks. Explain that the failures are
+intentional evidence: retrieval succeeds, while the extractive generator does
+not yet resolve conflicting policies or remove a retrieved prompt injection.
+
+Point out that the dashboard reads the same versioned JSON retained by CI,
+escapes model-generated text, and makes no paid API request.
+
+## Wrap-up
 
 - Open `reports/report.html` if generated via `make report`
-- Mention Stage 2: Docker + GitHub Actions next
+- Mention the progression from classic UI/API/DB automation through CI,
+  reliability analysis, grounded RAG evaluation, and AI quality reporting.

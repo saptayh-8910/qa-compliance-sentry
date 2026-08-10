@@ -60,8 +60,12 @@ jobs:
             --html=reports/chatbot-e2e.html --self-contained-html \
             --junitxml=reports/chatbot-e2e.xml
 
-      - name: Export deterministic RAG evaluation baseline
-        run: qa-assistant evaluate --output reports/rag-evaluation.json
+      - name: Export deterministic RAG evaluation and dashboard baseline
+        run: |
+          qa-assistant evaluate --output reports/rag-evaluation.json
+          qa-assistant dashboard \
+            --report reports/rag-evaluation.json \
+            --output reports/rag-dashboard.html
 
       - name: Upload quality reports
         if: always()
