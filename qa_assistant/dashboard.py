@@ -13,6 +13,12 @@ from typing import Any
 
 from qa_assistant.reporting import EVALUATION_REPORT_SCHEMA_VERSION
 
+LEGACY_EVALUATION_REPORT_SCHEMA_VERSION = "1.0"
+SUPPORTED_EVALUATION_REPORT_SCHEMA_VERSIONS = {
+    LEGACY_EVALUATION_REPORT_SCHEMA_VERSION,
+    EVALUATION_REPORT_SCHEMA_VERSION,
+}
+
 
 class DashboardDataError(ValueError):
     """Raised when an evaluation report cannot be safely rendered."""
@@ -248,13 +254,17 @@ def _validate_telemetry(case: Mapping[str, Any], location: str) -> None:
 
 
 def validate_dashboard_report(report: object) -> Mapping[str, Any]:
-    """Validate the v1 fields consumed by the HTML renderer."""
+    """Validate the supported report fields consumed by the HTML renderer."""
     data = _mapping(report, "report")
     version = data.get("schema_version")
-    if version != EVALUATION_REPORT_SCHEMA_VERSION:
+    if (
+        not isinstance(version, str)
+        or version not in SUPPORTED_EVALUATION_REPORT_SCHEMA_VERSIONS
+    ):
         raise DashboardDataError(
             "unsupported evaluation report schema_version "
-            f"{version!r}; expected {EVALUATION_REPORT_SCHEMA_VERSION!r}"
+            f"{version!r}; expected one of "
+            f"{sorted(SUPPORTED_EVALUATION_REPORT_SCHEMA_VERSIONS)!r}"
         )
     _required_fields(data, ("schema_version", "run", "summary", "cases"), "report")
     _validate_run(data)
@@ -282,6 +292,18 @@ def validate_dashboard_report(report: object) -> Mapping[str, Any]:
             ),
             location,
         )
+        if version == EVALUATION_REPORT_SCHEMA_VERSION:
+            _required_fields(
+                case,
+                ("question", "expected_behavior"),
+                location,
+            )
+            _string(case.get("question"), f"{location}.question")
+            expected_behavior = case.get("expected_behavior")
+            if expected_behavior not in {"supported", "abstain"}:
+                raise DashboardDataError(
+                    f"{location}.expected_behavior must be supported or abstain"
+                )
         case_id = _string(case.get("case_id"), f"{location}.case_id")
         if case_id in case_ids:
             raise DashboardDataError(f"duplicate case_id {case_id!r}")
@@ -477,6 +499,15 @@ def _case_card(case: Mapping[str, Any], index: int) -> str:
     answer = case["answer"]
     answer_text = answer["text"] if answer is not None else "No answer was produced."
     error = case["error"]
+    question = case.get("question") or "Question unavailable in this legacy report."
+    expected_behavior = case.get("expected_behavior")
+    expected_outcome = {
+        "supported": "Answer using the retrieved evidence and cite its source.",
+        "abstain": "Decline to answer because the evidence is missing or unsafe.",
+    }.get(
+        expected_behavior,
+        "Expected outcome unavailable in this legacy report.",
+    )
     error_markup = (
         f'<p class="error"><strong>Error:</strong> {_text(error)}</p>'
         if error is not None
@@ -488,6 +519,10 @@ def _case_card(case: Mapping[str, Any], index: int) -> str:
         <div>
           <p class="eyebrow">Case {index:02d}</p>
           <h2>{_text(case["case_id"])}</h2>
+          <p class="case-question"><strong>Question:</strong>
+            {_text(question)}</p>
+          <p class="expected-outcome"><strong>Expected outcome:</strong>
+            {_text(expected_outcome)}</p>
         </div>
         <span class="status-pill {status}">{status_label}</span>
       </header>
@@ -639,6 +674,8 @@ def render_dashboard(report: object) -> str:
     .case-header {{ display: flex; justify-content: space-between; gap: 16px; align-items: start; }}
     .case-header h2 {{ margin: 0; font: 650 22px/1.25 ui-monospace, SFMono-Regular, Menlo, monospace;
       letter-spacing: -.03em; overflow-wrap: anywhere; }}
+    .case-question {{ margin: 12px 0 0; color: var(--ink); font-size: 15px; }}
+    .expected-outcome {{ margin: 5px 0 0; color: var(--muted); font-size: 13px; }}
     .status-pill {{ padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 750; }}
     .status-pill.passed {{ color: var(--mint); background: #65d6ad18; border: 1px solid #65d6ad42; }}
     .status-pill.failed {{ color: var(--coral); background: #ff7d6e18; border: 1px solid #ff7d6e42; }}

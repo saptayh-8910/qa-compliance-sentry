@@ -17,8 +17,8 @@ from qa_assistant.evaluation import (
 )
 from qa_assistant.openai_generator import ResponseUsage
 
-EVALUATION_REPORT_SCHEMA_VERSION = "1.0"
-DEFAULT_EVALUATION_DATASET = "stage3-grounding-v1"
+EVALUATION_REPORT_SCHEMA_VERSION = "2.0"
+DEFAULT_EVALUATION_DATASET = "stage4-grounding-v2"
 DETERMINISTIC_GRADER = "deterministic-rubric-v1"
 
 
@@ -135,6 +135,8 @@ def _observation_data(observation: EvaluationObservation) -> dict[str, Any]:
     answer = result.answer
     return {
         "case_id": result.case_id,
+        "question": result.question,
+        "expected_behavior": result.expected_behavior.value,
         "passed": result.passed,
         "failure_summary": result.failure_summary,
         "error": result.error,

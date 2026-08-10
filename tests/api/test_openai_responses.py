@@ -9,7 +9,7 @@ import pytest
 from qa_assistant.evaluation import (
     EvaluationCase,
     evaluate_case,
-    grounding_evaluation_cases,
+    model_comparison_evaluation_cases,
 )
 from qa_assistant.openai_generator import OpenAIResponsesGenerator, ReasoningEffort
 
@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.api, pytest.mark.external, pytest.mark.ai]
 )
 @pytest.mark.parametrize(
     "case",
-    grounding_evaluation_cases(),
+    model_comparison_evaluation_cases(),
     ids=lambda case: case.identifier,
 )
 def test_openai_grounding_evaluation_live(

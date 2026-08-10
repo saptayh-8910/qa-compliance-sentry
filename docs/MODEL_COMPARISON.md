@@ -61,7 +61,7 @@ This first case is intentionally narrow. It does not yet measure:
 
 ## Advanced evaluation matrix
 
-The next comparison is now implemented as a fixed, versioned dataset:
+The live comparison is implemented as a fixed, versioned four-case subset:
 
 | Case | Expected behavior | Paid call per model |
 |---|---|---:|
@@ -77,6 +77,11 @@ pass/fail status, answer, latency, and any input/output/reasoning token counts
 returned by the API. It also records context precision, context recall, Hit@K,
 reciprocal rank, citation precision, and citation recall when each metric is
 applicable.
+
+The offline Stage 4 learning dataset has since grown to ten cases. The live
+comparison deliberately remains on these original four cases so dataset growth
+cannot silently raise the paid run from six API calls. A larger live experiment
+would require a separate, explicit decision and budget.
 
 The deterministic rubric checks observable behavior, required and forbidden
 terms, exact citation sources, and human-labelled relevant chunks. Numeric model

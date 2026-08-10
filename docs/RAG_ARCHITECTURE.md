@@ -104,11 +104,13 @@ insufficient-evidence response. This supports safe abstention when retrieved
 evidence is incomplete or contradictory without allowing an uncited factual
 answer through.
 
-The versioned evaluation dataset covers a supported fact, a retrieval miss,
-unresolved conflicting evidence, and an instruction embedded in untrusted
-retrieved text. Its transparent rubric checks expected answer behavior,
-required and forbidden terms, and exact citation sources. These checks are
-useful deterministic proxies, not proof that every generated claim is
+The versioned offline evaluation dataset now covers ten scenarios: simple and
+multi-source supported answers, retrieval misses, partially relevant context,
+lexical paraphrase failure, unresolved conflict, current-versus-archived
+policy, and both supported and unsupported prompt injection. Its transparent
+rubric checks expected answer behavior, case-specific retrieval precision and
+recall, required and forbidden terms, and exact citation sources. These checks
+are useful deterministic proxies, not proof that every generated claim is
 semantically entailed.
 
 ## Evaluation metrics and grading
@@ -154,7 +156,7 @@ validated against human-labelled examples first.
 | Integration | source paths → chunks → context → generator → verified answer | Verifies that retrieval and generation agree on citation contracts. |
 | CLI component | retrieval, provider selection, supported answers, source lists, no-match behavior, and missing sources | Exercises the user entry point without a real external request. |
 | Deterministic chatbot E2E | installed module → interactive session → supported answer → verified source → abstention → exit | Exercises the complete offline user journey in a subprocess and retains dedicated HTML/JUnit evidence in merge-blocking CI. |
-| External E2E | four fixed cases → Sol/Medium and Luna/High → behavior, fact, injection, and source checks | Opt-in only through `RUN_OPENAI_LIVE_TESTS=1`; six paid calls produce HTML/JUnit evidence and remain excluded from deterministic CI. |
+| External E2E | stable four-case subset → Sol/Medium and Luna/High → behavior, fact, injection, and source checks | Opt-in only through `RUN_OPENAI_LIVE_TESTS=1`; six paid calls produce HTML/JUnit evidence and remain excluded from deterministic CI. The broader offline dataset does not change this budget. |
 
 This follows the testing pyramid: many fast unit cases, fewer boundary tests,
 and eventually a small number of end-to-end assistant journeys.
@@ -169,13 +171,14 @@ retained offline E2E journey covering a supported answer, verified citation,
 evidence-first abstention, and clean exit.
 
 The six-call Sol/Medium versus Luna/High matrix remains an explicitly approved,
-optional experiment rather than a completion gate. Stage 4 can build on this
-baseline with semantic faithfulness, larger labelled datasets, repeated latency
-samples, and an evaluation dashboard.
+optional experiment rather than a completion gate. Stage 4 has built on this
+baseline with a safe dashboard and ten-case labelled offline dataset. Repeated
+latency samples and validated semantic faithfulness remain future milestones.
 
-Stage 4 now exports the existing deterministic evidence through a versioned JSON
-contract. Aggregate metrics, per-case checks, canonical citations, failures,
-duration, and optional token counts can be consumed without rerunning a model.
+Stage 4 now exports the deterministic evidence through a versioned JSON
+contract. The v2 case record adds the reader-facing question and expected
+answer-or-abstain behavior to aggregate metrics, checks, canonical citations,
+failures, duration, and optional token counts.
 See [the evaluation reporting design](EVALUATION_REPORTING.md). The schema does
 not add semantic faithfulness by itself; it creates the stable boundary needed
 to compare a future judge against human labels and visualize trustworthy trends.

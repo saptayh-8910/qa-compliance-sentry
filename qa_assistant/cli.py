@@ -314,7 +314,7 @@ def evaluate(
     provider: AnswerProvider = typer.Option(
         AnswerProvider.EXTRACTIVE,
         "--provider",
-        help="Generator under evaluation; openai makes three paid API requests",
+        help="Generator under evaluation; openai makes eight paid API requests",
     ),
     max_answer_chars: int = typer.Option(500, "--max-answer-chars", min=80),
     model: str | None = typer.Option(

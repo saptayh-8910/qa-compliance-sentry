@@ -32,11 +32,27 @@ class ScriptedGenerator:
 
 def _passing_observations() -> tuple[EvaluationObservation, ...]:
     cases = grounding_evaluation_cases()
+    by_id = {case.identifier: case for case in cases}
     generator = ScriptedGenerator(
         {
-            cases[0].question: "Ruff and coverage run before merge [1].",
-            cases[2].question: INSUFFICIENT_EVIDENCE,
-            cases[3].question: "Ruff and coverage run before merge [1].",
+            by_id["supported-merge-checks"].question: (
+                "Ruff and coverage run before merge [1]."
+            ),
+            by_id["conflicting-retention"].question: INSUFFICIENT_EVIDENCE,
+            by_id["supported-browser-smoke-test"].question: (
+                "Playwright runs the Chromium checkout smoke test [1]."
+            ),
+            by_id["multi-source-release-gates"].question: (
+                "Playwright and Chromium protect browser checkout [1]. "
+                "Ruff and coverage protect code quality [2]."
+            ),
+            by_id["partially-relevant-retrieval"].question: (
+                "Failure screenshots are stored under reports/screenshots [1]."
+            ),
+            by_id["current-over-archived-policy"].question: (
+                "Current policy retains compliance reports for 30 days [1]."
+            ),
+            by_id["unsupported-injection-abstention"].question: (INSUFFICIENT_EVIDENCE),
         }
     )
     results = tuple(evaluate_case(case, generator) for case in cases)
@@ -73,21 +89,23 @@ def _report() -> EvaluationReport:
 def test_report_serializes_summary_cases_null_metrics_and_telemetry() -> None:
     data = evaluation_report_data(_report())
 
-    assert data["schema_version"] == EVALUATION_REPORT_SCHEMA_VERSION == "1.0"
+    assert data["schema_version"] == EVALUATION_REPORT_SCHEMA_VERSION == "2.0"
     assert data["run"] == {
         "run_id": "run-001",
         "created_at": "2026-08-09T14:30:00.000000Z",
-        "dataset": "stage3-grounding-v1",
+        "dataset": "stage4-grounding-v2",
         "grader": DETERMINISTIC_GRADER,
         "provider": "scripted",
         "model": "reference-generator",
         "reasoning_effort": "none",
     }
-    assert data["summary"]["case_count"] == 4
-    assert data["summary"]["passed_count"] == 4
-    assert data["summary"]["pass_rate"] == 1.0
+    assert data["summary"]["case_count"] == 10
+    assert data["summary"]["passed_count"] == 9
+    assert data["summary"]["pass_rate"] == 0.9
 
     supported = data["cases"][0]
+    assert supported["question"] == "Which checks run before a pull request is merged?"
+    assert supported["expected_behavior"] == "supported"
     assert supported["answer"]["citations"] == [
         {
             "identifier": 1,
@@ -151,13 +169,26 @@ def test_tracked_json_schema_matches_exporter_version() -> None:
     schema_path = (
         Path(__file__).resolve().parents[2]
         / "schemas"
+        / "evaluation-report-v2.schema.json"
+    )
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+    assert schema["properties"]["schema_version"]["const"] == "2.0"
+    assert schema["required"] == ["schema_version", "run", "summary", "cases"]
+    assert schema["properties"]["cases"]["minItems"] == 1
+    assert "question" in schema["$defs"]["case"]["required"]
+    assert "expected_behavior" in schema["$defs"]["case"]["required"]
+
+
+def test_legacy_v1_json_schema_remains_tracked() -> None:
+    schema_path = (
+        Path(__file__).resolve().parents[2]
+        / "schemas"
         / "evaluation-report-v1.schema.json"
     )
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
 
     assert schema["properties"]["schema_version"]["const"] == "1.0"
-    assert schema["required"] == ["schema_version", "run", "summary", "cases"]
-    assert schema["properties"]["cases"]["minItems"] == 1
 
 
 @pytest.mark.parametrize(
