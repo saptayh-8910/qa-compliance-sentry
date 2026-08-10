@@ -2,15 +2,16 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 4 — AI Evaluation Dashboard**
+**Stage 4 — AI Evaluation and Regression Foundations**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
 intelligence. Stage 3 now connects deterministic document retrieval to a
 provider-neutral grounded-answer boundary with fail-closed citation validation,
 an interactive terminal chatbot, and retained end-to-end test evidence. Stage 4
-now exports that evidence through a stable JSON contract and turns it into a
-safe, standalone metric dashboard.
+now exports that evidence through a stable JSON contract, turns it into a safe
+metric dashboard, and adds interview-algorithm foundations for answer regression
+and score-trend analysis.
 
 ## Why this project exists
 
@@ -37,7 +38,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Containerized testing** | Pinned Playwright image, non-root execution, reproducible local/CI commands |
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
-| **Algorithm foundations** | Stage-aligned interview labs with canonical and QA-oriented tests |
+| **Algorithm foundations** | Twelve stage-aligned interview labs with canonical and QA-oriented tests |
 | **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, adversarial evaluation, versioned JSON reports, and a local metric dashboard |
 
 ```mermaid
@@ -77,6 +78,7 @@ just another API endpoint.
 | **Regression across models** | Ready as an opt-in test | The same four cases and deterministic rubric compare Sol/Medium with Luna/High. Eight result rows require exactly six paid calls because retrieval misses skip generation. |
 | **Evaluation reporting** | Implemented | A versioned JSON contract exports run metadata, aggregate and per-case metrics, checks, failures, duration, and optional token usage for CI or dashboard consumers. |
 | **Evaluation dashboard** | Implemented | A responsive standalone HTML view presents aggregate and per-case diagnostics, filters failures, escapes untrusted model output, and is retained with CI evidence. |
+| **Regression foundations** | Implemented | Literal answer changes use Edit Distance, while kth-largest and rolling-window utilities summarize bounded score history without claiming semantic equivalence or complete reliability. |
 
 All current grading labels are human-authored, version-controlled, and scored
 deterministically; no unvalidated LLM acts as the judge. See the
@@ -156,6 +158,27 @@ run through `make test-algorithms`. See the
 interview questions, and production boundaries. Bracket balancing is a shallow
 structural guard rather than JSON Schema validation, and the in-memory cache is
 not a distributed persistence layer.
+
+### Stage 4 algorithm foundations
+
+The evaluation milestone completes the twelve-problem learning track with
+three more interview patterns and practical QA adapters:
+
+- **Edit Distance:** dynamic programming measures the minimum character edits
+  between reference and candidate answers. The project normalizes this into a
+  literal similarity ratio, but never treats spelling similarity as semantic
+  correctness or groundedness.
+- **Kth Largest Element in a Stream:** a size-k min-heap maintains a live
+  quality-score threshold in O(log k) time per new score and O(k) space.
+- **Maximum Average Subarray:** a sliding window finds the strongest contiguous
+  evaluation period in O(n) time without re-summing each window.
+
+Canonical examples, edge cases, invalid inputs, and practical answer/score
+analysis all run through `make test-algorithms`. See the
+[algorithm learning track](docs/ALGORITHM_LEARNING.md) for plain-English
+interpretations, complexity, interview prompts, and limitations. A best window
+or top-score threshold is not a full latency or reliability distribution; those
+require a larger repeated dataset later in Stage 4.
 
 ### Retrieve QA documentation
 
@@ -431,7 +454,7 @@ qa-compliance-sentry/
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
-| **Stage 4 (in progress)** | Versioned evaluation schema/exporter and safe metric dashboard complete; larger labelled datasets, repeated latency samples, Stage 4 algorithms, and validated semantic faithfulness next |
+| **Stage 4 (in progress)** | Versioned evaluation reports, safe metric dashboard, and three algorithm foundations complete; larger labelled datasets, repeated latency samples, and validated semantic faithfulness next |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
 
