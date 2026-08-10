@@ -41,10 +41,13 @@ HTML file with no hosted service, JavaScript dependency, remote font, or image.
 It displays:
 
 - aggregate pass rate, context recall, citation precision, and MRR;
+- an always-visible plain-English guide explaining what each metric asks and
+  how to interpret percentages, Hit/Miss, and N/A;
 - provider, model, dataset, grader, reasoning, and run identity;
 - Passed/Failed case filters;
-- per-case retrieval and citation metrics, observed answer, evidence, rubric
-  checks, failures, duration, and optional token usage.
+- per-case retrieval and citation metrics with result-specific explanations,
+  observed answer, evidence, always-visible rubric checks, failures, duration,
+  and optional token usage.
 
 The dashboard deliberately keeps known failures visible. It is diagnostic
 evidence, not a decorative all-green scorecard. Deterministic CI generates both

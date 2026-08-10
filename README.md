@@ -282,8 +282,11 @@ safe rendering, and the future framework boundary.
 `make dashboard-rag` regenerates that same zero-cost report and writes
 `reports/rag-dashboard.html`. The responsive page works directly from disk,
 requires no hosted service or remote assets, and filters All, Passed, or Failed
-cases. It keeps the extractive baseline's two known failures visible so the
-portfolio demonstrates diagnosis rather than hiding imperfect model behavior.
+cases. An always-visible guide explains every metric in plain English, and each
+case translates its result—for example, Hit@K “Hit” means the needed evidence
+appeared in the retrieved results. It keeps the extractive baseline's two known
+failures visible so the portfolio demonstrates diagnosis rather than hiding
+imperfect model behavior.
 
 ### Run tests
 

@@ -335,6 +335,36 @@ def _metric_card(label: str, value: float | int | None, note: str) -> str:
       </article>"""
 
 
+def _metric_interpretation(label: str, value: object) -> str:
+    if value is None:
+        if label == "Hit@K":
+            return "No supporting evidence was expected, so this does not apply."
+        return "This score was not needed for this case; it is not a failure."
+    if label == "Hit@K":
+        if bool(value):
+            return "Needed evidence appeared in the retrieved results."
+        return "Needed evidence did not appear in the retrieved results."
+
+    percentage = _metric(float(value))[0]
+    if label == "Context precision":
+        return f"{percentage} of the retrieved evidence was relevant."
+    if label == "Context recall":
+        return f"{percentage} of the needed evidence was found."
+    if label == "Citation precision":
+        return f"{percentage} of the cited sources were relevant."
+    if label == "Citation recall":
+        return f"{percentage} of the expected sources were cited."
+    if label == "MRR":
+        reciprocal_rank = float(value)
+        if reciprocal_rank == 0:
+            return "No useful result appeared in the ranked results."
+        rank = round(1 / reciprocal_rank)
+        if rank == 1:
+            return "The first retrieved result was useful."
+        return f"The first useful result appeared around position {rank}."
+    raise ValueError(f"unknown dashboard metric {label!r}")
+
+
 def _case_metric(label: str, value: object) -> str:
     if isinstance(value, bool):
         display = "Hit" if value else "Miss"
@@ -342,10 +372,55 @@ def _case_metric(label: str, value: object) -> str:
         display = "N/A"
     else:
         display = _metric(float(value))[0]
-    return (
-        '<div class="case-metric"><span>'
-        f"{_text(label)}</span><strong>{display}</strong></div>"
+    interpretation = _metric_interpretation(label, value)
+    return f"""<div class="case-metric">
+      <span>{_text(label)}</span><strong>{display}</strong>
+      <small>{_text(interpretation)}</small>
+    </div>"""
+
+
+def _reading_guide() -> str:
+    criteria = (
+        (
+            "Context precision",
+            "Of everything retrieved, how much was actually useful?",
+        ),
+        (
+            "Context recall",
+            "Of all evidence needed for the answer, how much did retrieval find?",
+        ),
+        (
+            "Hit@K",
+            "Did at least one needed piece of evidence appear in the top results?",
+        ),
+        (
+            "MRR",
+            "How early did the first useful result appear? 100% means it was first.",
+        ),
+        (
+            "Citation precision",
+            "Of the sources the answer cited, how many were relevant?",
+        ),
+        (
+            "Citation recall",
+            "Of the sources the answer should cite, how many did it include?",
+        ),
     )
+    items = "".join(
+        f"""<div class="guide-item"><dt>{_text(label)}</dt>
+          <dd>{_text(explanation)}</dd></div>"""
+        for label, explanation in criteria
+    )
+    return f"""
+    <section class="reading-guide" aria-labelledby="reading-guide-title">
+      <div class="guide-heading">
+        <div><p class="eyebrow">Plain-English guide</p>
+          <h2 id="reading-guide-title">How to read this evaluation</h2></div>
+        <p><strong>Higher percentages are better.</strong> “N/A” means a score
+          does not apply to that scenario—it does not mean the scenario failed.</p>
+      </div>
+      <dl class="guide-grid">{items}</dl>
+    </section>"""
 
 
 def _checks_markup(checks: Sequence[Mapping[str, Any]]) -> str:
@@ -437,10 +512,13 @@ def _case_card(case: Mapping[str, Any], index: int) -> str:
           {_citations_markup(answer)}
         </section>
       </div>
-      <details>
-        <summary>View {_text(len(case["checks"]))} rubric checks</summary>
+      <section class="criteria" aria-label="Evaluation criteria">
+        <div class="criteria-heading">
+          <h3>Evaluation criteria</h3>
+          <p>Every check below must pass for this case to pass.</p>
+        </div>
         <ul class="checks">{_checks_markup(case["checks"])}</ul>
-      </details>
+      </section>
       <footer class="telemetry">{_usage_markup(case["telemetry"])}</footer>
     </article>"""
 
@@ -458,22 +536,23 @@ def render_dashboard(report: object) -> str:
             _metric_card(
                 "Pass rate",
                 summary["pass_rate"],
-                f"{summary['passed_count']} of {summary['case_count']} cases passed",
+                f"Every required check passed in {summary['passed_count']} "
+                f"of {summary['case_count']} scenarios",
             ),
             _metric_card(
                 "Context recall",
                 summary["mean_context_recall"],
-                "Relevant evidence retrieved",
+                "100% means all needed evidence was found",
             ),
             _metric_card(
                 "Citation precision",
                 summary["mean_citation_precision"],
-                "Cited sources that were relevant",
+                "100% means every cited source was relevant",
             ),
             _metric_card(
                 "Mean reciprocal rank",
                 summary["mean_reciprocal_rank"],
-                "First relevant result position",
+                "100% means the first retrieved result was useful",
             ),
         )
     )
@@ -534,6 +613,16 @@ def render_dashboard(report: object) -> str:
     .metric-card:nth-child(1) .metric-track span {{ background: var(--amber); }}
     .metric-card.is-na .metric-track {{ opacity: .35; }}
     .metric-note {{ margin: 13px 0 0; min-height: 40px; color: var(--muted); font-size: 13px; }}
+    .reading-guide {{ margin: -24px 0 52px; padding: 26px; border: 1px solid #78a8ff45;
+      border-radius: var(--radius); background: linear-gradient(135deg, #101d2a, #0d171f); }}
+    .guide-heading {{ display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: end;
+      padding-bottom: 20px; border-bottom: 1px solid var(--line); }}
+    .guide-heading h2 {{ margin: 0; font-size: 24px; }}
+    .guide-heading > p {{ margin: 0; color: #c7d0d7; font-size: 14px; }}
+    .guide-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 18px 0 0; }}
+    .guide-item {{ padding: 13px 18px 13px 0; }}
+    .guide-item dt {{ color: var(--ink); font-weight: 750; text-transform: none; letter-spacing: 0; }}
+    .guide-item dd {{ color: var(--muted); font-size: 13px; font-weight: 400; }}
     .toolbar {{ display: flex; align-items: center; justify-content: space-between; gap: 20px;
       margin: 0 0 18px; }}
     .toolbar h2 {{ margin: 0; font-size: 24px; }}
@@ -558,6 +647,7 @@ def render_dashboard(report: object) -> str:
     .case-metric {{ display: grid; gap: 5px; padding: 13px; background: #0b151e; }}
     .case-metric span {{ color: var(--muted); font-size: 11px; }}
     .case-metric strong {{ font-size: 18px; }}
+    .case-metric small {{ color: var(--muted); font-size: 11px; line-height: 1.4; }}
     .case-grid {{ display: grid; grid-template-columns: 1.7fr 1fr; gap: 28px; }}
     h3 {{ margin: 0 0 10px; color: var(--muted); font-size: 12px; text-transform: uppercase;
       letter-spacing: .09em; }}
@@ -571,8 +661,10 @@ def render_dashboard(report: object) -> str:
     .citation strong, .citation small {{ display: block; overflow-wrap: anywhere; }}
     .citation small {{ margin-top: 3px; color: var(--muted); }}
     .empty {{ color: var(--muted); font-style: italic; }}
-    details {{ margin-top: 22px; border-top: 1px solid var(--line); padding-top: 16px; }}
-    summary {{ width: fit-content; color: #c8d1d8; cursor: pointer; font-weight: 650; font-size: 13px; }}
+    .criteria {{ margin-top: 22px; border-top: 1px solid var(--line); padding-top: 16px; }}
+    .criteria-heading {{ display: flex; justify-content: space-between; gap: 18px; align-items: baseline; }}
+    .criteria-heading h3, .criteria-heading p {{ margin: 0; }}
+    .criteria-heading p {{ color: var(--muted); font-size: 12px; }}
     .checks {{ display: grid; grid-template-columns: 1fr 1fr; gap: 9px; list-style: none; padding: 14px 0 0; margin: 0; }}
     .check {{ display: flex; gap: 10px; align-items: start; padding: 11px; border-radius: 10px; background: #0b151e; }}
     .check-icon {{ display: grid; place-items: center; flex: 0 0 22px; height: 22px; border-radius: 50%;
@@ -585,14 +677,15 @@ def render_dashboard(report: object) -> str:
     .page-footer {{ margin-top: 40px; color: var(--muted); font-size: 12px; text-align: center; }}
     [hidden] {{ display: none !important; }}
     @media (max-width: 900px) {{
-      .hero, .case-grid {{ grid-template-columns: 1fr; }} .run-card {{ border-left: 0; border-top: 1px solid var(--line); padding: 24px 0 0; }}
-      .metrics {{ grid-template-columns: 1fr 1fr; }} .case-metrics {{ grid-template-columns: repeat(3, 1fr); }}
+      .hero, .case-grid, .guide-heading {{ grid-template-columns: 1fr; }} .run-card {{ border-left: 0; border-top: 1px solid var(--line); padding: 24px 0 0; }}
+      .metrics {{ grid-template-columns: 1fr 1fr; }} .case-metrics, .guide-grid {{ grid-template-columns: repeat(3, 1fr); }}
     }}
     @media (max-width: 580px) {{
       main {{ width: min(100% - 20px, 1180px); padding-top: 38px; }} h1 {{ font-size: 43px; }}
       .metrics {{ grid-template-columns: 1fr; margin: 36px 0; }} .toolbar {{ align-items: start; flex-direction: column; }}
       .case-card {{ padding: 21px 18px; }} .case-header {{ align-items: start; flex-direction: column; }}
-      .case-metrics {{ grid-template-columns: 1fr 1fr; }} .checks {{ grid-template-columns: 1fr; }}
+      .case-metrics {{ grid-template-columns: 1fr 1fr; }} .checks, .guide-grid {{ grid-template-columns: 1fr; }}
+      .criteria-heading {{ align-items: start; flex-direction: column; }}
       .run-card dl {{ grid-template-columns: 1fr; }}
     }}
     @media (prefers-reduced-motion: reduce) {{ html {{ scroll-behavior: auto; }} }}
@@ -620,6 +713,7 @@ def render_dashboard(report: object) -> str:
       </aside>
     </section>
     <section class="metrics" aria-label="Aggregate quality metrics">{cards}</section>
+    {_reading_guide()}
     <section aria-labelledby="cases-heading">
       <div class="toolbar">
         <div><h2 id="cases-heading">Evaluation cases</h2>

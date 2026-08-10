@@ -73,6 +73,8 @@ and the project uses semantic versioning for milestone tags.
   citation, check, error, case, and run metadata fields.
 - Installed `qa-assistant dashboard` command plus the zero-cost
   `make dashboard-rag` workflow and retained CI HTML artifact.
+- Always-visible plain-English metric definitions, result interpretations, and
+  case evaluation criteria for readers without RAG or QA terminology.
 
 ### Changed
 
@@ -97,7 +99,7 @@ and the project uses semantic versioning for milestone tags.
 - Marked the Stage 4 metric dashboard complete while keeping dataset growth,
   repeated latency sampling, algorithm lessons, and validated semantic
   faithfulness ahead.
-- Expanded deterministic quality validation to 237 tests at 95.30% branch-aware
+- Expanded deterministic quality validation to 238 tests at 95.24% branch-aware
   coverage, plus the retained chatbot E2E journey.
 
 ## [0.4.1] - 2026-08-05

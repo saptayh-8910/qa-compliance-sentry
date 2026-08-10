@@ -90,6 +90,30 @@ def test_dashboard_renders_summary_cases_filters_and_not_applicable_metrics() ->
     assert 'data-filter="failed"' in rendered
     assert 'data-status="passed"' in rendered
     assert "card.hidden = !show" in rendered
+    assert "How to read this evaluation" in rendered
+    assert "Of everything retrieved, how much was actually useful?" in rendered
+    assert "Needed evidence appeared in the retrieved results." in rendered
+    assert "The first useful result appeared around position 2." in rendered
+    assert "Every check below must pass for this case to pass." in rendered
+    assert "<details>" not in rendered
+
+
+def test_dashboard_explains_miss_and_not_applicable_without_jargon() -> None:
+    report = _report()
+    case = report["cases"][0]  # type: ignore[index]
+    case["metrics"]["hit_at_k"] = False  # type: ignore[index]
+
+    missed = render_dashboard(report)
+
+    assert "Needed evidence did not appear in the retrieved results." in missed
+
+    case["metrics"]["hit_at_k"] = None  # type: ignore[index]
+    not_applicable = render_dashboard(report)
+
+    assert "No supporting evidence was expected, so this does not apply." in (
+        not_applicable
+    )
+    assert "it does not mean the scenario failed" in not_applicable
 
 
 def test_dashboard_escapes_all_untrusted_display_fields() -> None:
