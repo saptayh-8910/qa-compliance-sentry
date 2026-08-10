@@ -75,6 +75,12 @@ and the project uses semantic versioning for milestone tags.
   `make dashboard-rag` workflow and retained CI HTML artifact.
 - Always-visible plain-English metric definitions, result interpretations, and
   case evaluation criteria for readers without RAG or QA terminology.
+- Stage 4 implementations of Edit Distance, Kth Largest Element in a Stream,
+  and Maximum Average Subarray with canonical, edge-case, and QA-oriented tests.
+- Literal answer-regression comparison with edit count and normalized surface
+  similarity, explicitly separated from semantic correctness or groundedness.
+- Bounded evaluation-score trend analysis with a kth-highest threshold and best
+  fixed-size rolling average.
 
 ### Changed
 
@@ -100,6 +106,11 @@ and the project uses semantic versioning for milestone tags.
   repeated latency sampling, algorithm lessons, and validated semantic
   faithfulness ahead.
 - Expanded deterministic quality validation to 238 tests at 95.24% branch-aware
+  coverage, plus the retained chatbot E2E journey.
+- Bumped the package and default Docker image version to `0.10.0` for the Stage
+  4 algorithm foundations milestone.
+- Completed the twelve-problem, three-per-stage interview learning roadmap.
+- Expanded deterministic quality validation to 278 tests at 95.50% branch-aware
   coverage, plus the retained chatbot E2E journey.
 
 ## [0.4.1] - 2026-08-05

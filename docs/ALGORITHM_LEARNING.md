@@ -181,6 +181,75 @@ Questions to practice explaining:
 3. What is the memory tradeoff versus scanning a sorted list?
 4. How would deletion or case-insensitive matching change the design?
 
+## Stage 4 evaluation foundations
+
+### Edit Distance
+
+- Reference: [LeetCode 72](https://leetcode.com/problems/edit-distance/)
+- Project use: quantify literal text changes between a reference answer and a
+  candidate answer during regression analysis.
+- Simple approach: recursively try insertion, deletion, and replacement at
+  every mismatch. Repeated subproblems make that approach exponential.
+- Implemented approach: dynamic programming records the cheapest edit count
+  for progressively longer prefixes. It costs O(mn) time and keeps only one
+  previous row, using O(min(m, n)) additional space.
+- Project adaptation: `compare_answer_text` also reports a length-normalized
+  similarity ratio where 100% means the strings are identical.
+- Production boundary: low edit distance means similar spelling, not similar
+  meaning. It cannot decide whether an answer is factually correct, grounded,
+  or semantically equivalent.
+
+Questions to practice explaining:
+
+1. What does one cell in the dynamic-programming table represent?
+2. Why do insertion, deletion, and replacement look at different neighbors?
+3. Why can the implementation discard every row except the previous one?
+4. Why must semantic or groundedness evaluation remain a separate check?
+
+### Kth Largest Element in a Stream
+
+- Reference: [LeetCode 703](https://leetcode.com/problems/kth-largest-element-in-a-stream/)
+- Project use: maintain an explainable quality-score threshold while new
+  evaluation results arrive.
+- Simple approach: append each score and sort the complete history after every
+  update, costing O(n log n) per addition.
+- Implemented approach: a min-heap retains only the largest `k` observations.
+  The smallest retained value is the kth largest. Construction costs
+  O(n log k), each addition costs O(log k), and storage is O(k).
+- Project adaptation: scores may be integers or decimals, but booleans,
+  infinity, and NaN are rejected. At least `k - 1` initial observations are
+  required so the first added value can produce a real kth-largest result.
+- Production boundary: a top-score threshold can hide poor results below it.
+  Release gates still need pass rates, failure counts, and lower-tail analysis.
+
+Questions to practice explaining:
+
+1. Why is the root of a size-k min-heap the kth-largest observed value?
+2. Why can values smaller than the heap root be discarded safely?
+3. How do duplicate scores affect the result?
+4. When would a lower percentile be more useful than a top-k threshold?
+
+### Maximum Average Subarray I
+
+- Reference: [LeetCode 643](https://leetcode.com/problems/maximum-average-subarray-i/)
+- Project use: find the strongest contiguous window in evaluation score
+  history without repeatedly summing every window.
+- Simple approach: sum each window independently, costing O(nk) time.
+- Implemented approach: a sliding window subtracts the outgoing score and adds
+  the incoming score. It costs O(n) time and O(1) additional working space.
+- Project adaptation: `analyze_evaluation_scores` returns the best window
+  average together with the kth-highest threshold and the parameters used.
+- Production boundary: the best window is optimistic. A reliability dashboard
+  should also show recent, worst, median, and percentile behavior once enough
+  repeated samples exist.
+
+Questions to practice explaining:
+
+1. Which value leaves and which value enters when the window moves?
+2. Why does the rolling sum avoid repeated work?
+3. How does window size change the sensitivity of a trend?
+4. Why is the maximum window alone insufficient for a quality gate?
+
 ## Twelve-problem roadmap
 
 | Stage | Problem | Practical connection | Status |
@@ -194,10 +263,10 @@ Questions to practice explaining:
 | 3 | [20. Valid Parentheses](https://leetcode.com/problems/valid-parentheses/) | Structured-output validation | Implemented |
 | 3 | [146. LRU Cache](https://leetcode.com/problems/lru-cache/) | Retrieval/result caching | Implemented |
 | 3 | [208. Implement Trie](https://leetcode.com/problems/implement-trie-prefix-tree/) | Document-prefix indexing | Implemented |
-| 4 | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | Text-difference measurement | Planned |
-| 4 | [703. Kth Largest Element in a Stream](https://leetcode.com/problems/kth-largest-element-in-a-stream/) | Streaming score thresholds | Planned |
-| 4 | [643. Maximum Average Subarray I](https://leetcode.com/problems/maximum-average-subarray-i/) | Rolling evaluation metrics | Planned |
+| 4 | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | Text-difference measurement | Implemented |
+| 4 | [703. Kth Largest Element in a Stream](https://leetcode.com/problems/kth-largest-element-in-a-stream/) | Streaming score thresholds | Implemented |
+| 4 | [643. Maximum Average Subarray I](https://leetcode.com/problems/maximum-average-subarray-i/) | Rolling evaluation metrics | Implemented |
 
 The algorithm analogy does not replace production tooling. For example, edit
-distance is not semantic similarity, and bracket balancing is not JSON Schema
-validation. Each future lesson will document that boundary explicitly.
+distance is not semantic similarity, the best rolling window is not a complete
+reliability distribution, and bracket balancing is not JSON Schema validation.

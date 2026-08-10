@@ -6,7 +6,7 @@
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.9.0
+DOCKER_IMAGE ?= qa-compliance-sentry:0.10.0
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
