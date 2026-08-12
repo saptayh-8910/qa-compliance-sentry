@@ -98,6 +98,17 @@ and the project uses semantic versioning for milestone tags.
   every criterion and distinguishes a consistent failure from a correct result.
 - Explicit paid-benchmark confirmation that blocks OpenAI execution and reports
   the projected call count unless `--confirm-paid` is supplied.
+- Fifteen balanced, human-labelled supported, contradicted, and unsupported
+  claims with an explanation for every ground-truth decision.
+- Transparent candidate-judge validation with exact three-label accuracy,
+  unfaithful precision/recall/F1, false-positive and false-negative counts, and
+  a complete confusion matrix.
+- Safety-oriented acceptance policy requiring at least 90% exact accuracy, at
+  least 95% unfaithful recall, and zero false negatives.
+- Versioned faithfulness JSON schema plus an atomically written standalone
+  dashboard with always-visible plain-English criteria and claim-level evidence.
+- Merge-blocking, zero-cost faithfulness validation and dashboard evidence in
+  deterministic CI.
 
 ### Changed
 
@@ -140,6 +151,12 @@ and the project uses semantic versioning for milestone tags.
 - Completed the repeated latency and reproducibility roadmap item; validated
   semantic faithfulness remains the final planned Stage 4 capability.
 - Expanded deterministic quality validation to 311 tests at 92.70%
+  branch-aware coverage, plus the retained chatbot E2E journey.
+- Bumped the package and default Docker image version to `0.13.0` for bounded
+  human-labelled faithfulness validation.
+- Implemented the final planned Stage 4 capability; repository and release
+  closeout remain before the stage is marked complete.
+- Expanded deterministic quality validation to 342 tests at 92.34%
   branch-aware coverage, plus the retained chatbot E2E journey.
 
 ## [0.4.1] - 2026-08-05

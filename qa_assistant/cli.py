@@ -25,6 +25,18 @@ from qa_assistant.benchmarking import (
 )
 from qa_assistant.dashboard import DashboardDataError, write_dashboard
 from qa_assistant.evaluation import evaluate_case, grounding_evaluation_cases
+from qa_assistant.faithfulness import (
+    DeterministicFaithfulnessJudge,
+    validate_faithfulness_judge,
+)
+from qa_assistant.faithfulness_dashboard import (
+    FaithfulnessDashboardDataError,
+    write_faithfulness_dashboard,
+)
+from qa_assistant.faithfulness_reporting import (
+    faithfulness_report_data,
+    write_faithfulness_report,
+)
 from qa_assistant.generation import AnswerGenerator, ExtractiveGenerator
 from qa_assistant.models import GroundedAnswer
 from qa_assistant.openai_generator import (
@@ -554,6 +566,70 @@ def benchmark_dashboard(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1) from exc
     typer.echo(f"Benchmark dashboard: {output}")
+
+
+@app.command("faithfulness")
+def faithfulness(
+    output: Path = typer.Option(
+        Path("reports/rag-faithfulness.json"),
+        "--output",
+        "-o",
+        help="Destination for human-labelled judge-validation JSON",
+    ),
+    fail_if_unvalidated: bool = typer.Option(
+        False,
+        "--fail-if-unvalidated",
+        help="Return exit code 1 after writing evidence when thresholds fail",
+    ),
+) -> None:
+    """Validate a candidate claim judge against version-controlled human labels."""
+    try:
+        validation = validate_faithfulness_judge(DeterministicFaithfulnessJudge())
+        data = faithfulness_report_data(
+            validation,
+            run_id=str(uuid4()),
+            created_at=datetime.now(UTC),
+        )
+        write_faithfulness_report(data, output)
+    except (OSError, UnicodeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    metrics = validation.metrics
+    status = "validated" if validation.validated else "not validated"
+    typer.echo(
+        f"Faithfulness judge {status}: {metrics.exact_match_count}/"
+        f"{metrics.example_count} exact labels ({metrics.accuracy:.1%}); "
+        f"unfaithful recall {metrics.unfaithful_recall:.1%}; "
+        f"{metrics.false_negative_count} false negatives."
+    )
+    typer.echo(f"Faithfulness report: {output}")
+    if fail_if_unvalidated and not validation.validated:
+        raise typer.Exit(code=1)
+
+
+@app.command("faithfulness-dashboard")
+def faithfulness_dashboard(
+    report: Path = typer.Option(
+        Path("reports/rag-faithfulness.json"),
+        "--report",
+        "-r",
+        help="Human-labelled faithfulness report to visualize",
+    ),
+    output: Path = typer.Option(
+        Path("reports/rag-faithfulness.html"),
+        "--output",
+        "-o",
+        help="Destination for the standalone faithfulness dashboard",
+    ),
+) -> None:
+    """Render claim-level judge validation with plain-English criteria."""
+    try:
+        write_faithfulness_dashboard(report, output)
+    except (OSError, UnicodeError, FaithfulnessDashboardDataError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"Faithfulness dashboard: {output}")
 
 
 def main() -> None:

@@ -95,6 +95,7 @@ latency distributions.
 
 No LLM grades these results. Questions, relevant chunks, expected citation
 sources, required facts, forbidden content, and expected abstentions are all
-human-authored and version-controlled. A future judge-based faithfulness metric
-must first be checked against human labels before its scores are treated as
-evidence.
+human-authored and version-controlled. The project now demonstrates that
+requirement with a separate [bounded faithfulness validation](FAITHFULNESS.md).
+It does not use the compared answer models as judges; any future LLM judge must
+be validated against broader human-labelled evidence first.

@@ -2,7 +2,7 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 4 — AI Stability and Latency Benchmarking**
+**Stage 4 — Human-Validated AI Quality**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
@@ -14,6 +14,8 @@ metric dashboard, adds interview-algorithm foundations, and exercises ten
 human-labelled scenarios that isolate retrieval, generation, citation, and
 safety failures. Repeated offline runs now separate correctness, response
 consistency, latency percentiles, and optional token usage.
+The final capability validates a transparent claim-level faithfulness judge
+against human labels before its metrics are accepted.
 
 ## Why this project exists
 
@@ -41,7 +43,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Twelve stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, a ten-case labelled suite, versioned reports, quality dashboard, and repeated stability benchmark |
+| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, a ten-case labelled suite, versioned reports, quality dashboards, stability benchmarking, and human-validated claim faithfulness |
 
 ```mermaid
 flowchart LR
@@ -59,6 +61,7 @@ flowchart LR
   VERIFY --> EVAL[Deterministic Evaluation]
   EVAL --> EVIDENCE[Versioned JSON Evidence]
   EVIDENCE --> DASH[Local Metric Dashboard]
+  EVIDENCE --> FAITH[Human-labelled Faithfulness Validation]
   PW --> Repo
   API --> Repo
   DB --> Repo
@@ -72,7 +75,7 @@ just another API endpoint.
 
 | AI quality area | Status | Test and evidence |
 |---|---|---|
-| **Hallucination detection** | Implemented with a bounded rubric | Unsupported questions and unresolved conflicts must return the exact abstention response. Required and forbidden terms detect known missing or invented claims; full claim-level semantic faithfulness remains Stage 4 work. |
+| **Hallucination detection** | Implemented with explicit boundaries | Unsupported questions and unresolved conflicts must return the exact abstention response. Required and forbidden terms detect known missing or invented claims; a separate human-labelled dataset validates claim-level supported, contradicted, and unsupported decisions. |
 | **Prompt injection** | Implemented | Retrieved text contains a malicious instruction, while the answer must follow the system grounding contract, omit the injected response, and retain a valid citation. |
 | **Context recall** | Implemented | Ten human-labelled scenarios produce context precision/recall, Hit@K, and reciprocal rank/MRR so retrieval failures are separated from generation failures. |
 | **Citation verification** | Implemented | Numeric citations fail closed, map to canonical sources, and produce citation precision/recall plus an exact-source gate for curated cases. |
@@ -81,6 +84,7 @@ just another API endpoint.
 | **Evaluation reporting** | Implemented | The v2 JSON contract exports each question and expected behavior alongside run metadata, aggregate and per-case metrics, checks, failures, duration, and optional token usage. |
 | **Evaluation dashboard** | Implemented | A responsive standalone HTML view presents aggregate and per-case diagnostics, filters failures, escapes untrusted model output, and is retained with CI evidence. |
 | **Stability benchmarking** | Implemented | A separate versioned artifact reports repeated sample pass rate, pass/fail stability, exact answer-and-citation consistency, latency percentiles, and optional token summaries. Stable failures remain visibly wrong. |
+| **Semantic faithfulness** | Validated on a bounded dataset | A transparent candidate judge is compared with 15 balanced human labels. Acceptance requires at least 90% exact accuracy, at least 95% unfaithful recall, and zero false negatives. This is scoped validation, not universal language understanding. |
 | **Regression foundations** | Implemented | Literal answer changes use Edit Distance, while kth-largest and rolling-window utilities summarize bounded score history without claiming semantic equivalence or complete reliability. |
 
 All current grading labels are human-authored, version-controlled, and scored
@@ -88,6 +92,8 @@ deterministically; no unvalidated LLM acts as the judge. See the
 [RAG evaluation methodology](docs/RAG_ARCHITECTURE.md#evaluation-metrics-and-grading)
 and [model comparison record](docs/MODEL_COMPARISON.md) for metric definitions,
 experiment boundaries, and limitations.
+The dedicated [faithfulness validation guide](docs/FAITHFULNESS.md) explains
+every acceptance criterion and the limits of the result in plain English.
 
 ## Goals (Stage 1)
 
@@ -355,6 +361,26 @@ two retrieval-miss cases per repetition skip generation. Do not run it without
 an explicit cost decision. See the
 [benchmark methodology](docs/BENCHMARKING.md).
 
+### Validate claim-level faithfulness
+
+```bash
+make faithfulness-rag
+make dashboard-faithfulness-rag
+```
+
+This compares a deterministic candidate judge with 15 human-labelled evidence
+and claim pairs: five supported, five contradicted, and five unsupported. The
+judge is accepted only when exact three-label accuracy is at least 90%, recall
+of contradicted or unsupported claims is at least 95%, and no unfaithful claim
+is wrongly accepted as supported. The current bounded baseline scores 15 of 15
+with zero dangerous misses.
+
+The result means the judge handles this small, audited dataset; it does not
+prove general semantic understanding. Open
+`reports/rag-faithfulness.html` after running the dashboard command to inspect
+every claim, label, human explanation, metric definition, and acceptance
+threshold. See the [faithfulness methodology](docs/FAITHFULNESS.md).
+
 ### Run tests
 
 ```bash
@@ -368,6 +394,8 @@ make evaluate-rag # offline v2 JSON evaluation report
 make dashboard-rag # offline report + standalone metric dashboard
 make benchmark-rag # 30-sample offline latency and stability evidence
 make dashboard-benchmark-rag # standalone benchmark dashboard
+make faithfulness-rag # human-labelled candidate-judge validation
+make dashboard-faithfulness-rag # standalone faithfulness evidence dashboard
 make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
 make quality      # lint + format check + coverage gate
@@ -500,7 +528,7 @@ qa-compliance-sentry/
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
-| **Stage 4 (in progress)** | Versioned reports, safe dashboards, three algorithm foundations, ten labelled cases, and repeated latency/stability evidence complete; validated semantic faithfulness next |
+| **Stage 4 (closeout next)** | Versioned reports, safe dashboards, three algorithm foundations, ten labelled RAG cases, repeated latency/stability evidence, and bounded human-validated semantic faithfulness implemented |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
 

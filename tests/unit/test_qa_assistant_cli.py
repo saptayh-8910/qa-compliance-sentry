@@ -6,6 +6,7 @@ from typer.testing import CliRunner
 
 import qa_assistant.cli as cli
 from qa_assistant.cli import app
+from qa_assistant.faithfulness import FaithfulnessLabel
 from qa_assistant.generation import INSUFFICIENT_EVIDENCE
 from qa_assistant.openai_generator import ReasoningEffort, ResponseUsage
 
@@ -498,4 +499,83 @@ def test_cli_renders_repeated_benchmark_dashboard(tmp_path: Path) -> None:
     assert f"Benchmark dashboard: {output}" in result.stdout
     rendered = output.read_text(encoding="utf-8")
     assert "Is the result fast—and repeatable?" in rendered
+    assert "Evaluation criteria" in rendered
+
+
+def test_cli_exports_validated_human_labelled_faithfulness(tmp_path: Path) -> None:
+    output = tmp_path / "faithfulness.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "faithfulness",
+            "--fail-if-unvalidated",
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Faithfulness judge validated" in result.stdout
+    assert "15/15 exact labels (100.0%)" in result.stdout
+    assert "unfaithful recall 100.0%" in result.stdout
+    assert "0 false negatives" in result.stdout
+    data = json.loads(output.read_text(encoding="utf-8"))
+    assert data["schema_version"] == "1.0"
+    assert data["run"]["label_source"] == "human-authored-version-controlled"
+    assert data["summary"]["validated"] is True
+    assert data["summary"]["example_count"] == 15
+    assert data["summary"]["human_supported_count"] == 5
+    assert len(data["claims"]) == 15
+
+
+def test_cli_fail_gates_unvalidated_faithfulness_after_writing_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "unvalidated.json"
+
+    class UnsafeJudge:
+        name = "unsafe"
+
+        def classify(self, example: object) -> object:
+            return FaithfulnessLabel.SUPPORTED
+
+    monkeypatch.setattr(cli, "DeterministicFaithfulnessJudge", UnsafeJudge)
+
+    result = runner.invoke(
+        app,
+        [
+            "faithfulness",
+            "--fail-if-unvalidated",
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert output.is_file()
+    assert "Faithfulness judge not validated" in result.stdout
+
+
+def test_cli_renders_faithfulness_dashboard(tmp_path: Path) -> None:
+    report = tmp_path / "faithfulness.json"
+    output = tmp_path / "faithfulness.html"
+    exported = runner.invoke(app, ["faithfulness", "--output", str(report)])
+
+    result = runner.invoke(
+        app,
+        [
+            "faithfulness-dashboard",
+            "--report",
+            str(report),
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert exported.exit_code == 0
+    assert result.exit_code == 0
+    assert f"Faithfulness dashboard: {output}" in result.stdout
+    rendered = output.read_text(encoding="utf-8")
+    assert "Can this judge detect unsupported claims?" in rendered
     assert "Evaluation criteria" in rendered

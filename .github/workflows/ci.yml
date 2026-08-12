@@ -72,6 +72,12 @@ jobs:
           qa-assistant benchmark-dashboard \
             --report reports/rag-benchmark.json \
             --output reports/rag-benchmark.html
+          qa-assistant faithfulness \
+            --fail-if-unvalidated \
+            --output reports/rag-faithfulness.json
+          qa-assistant faithfulness-dashboard \
+            --report reports/rag-faithfulness.json \
+            --output reports/rag-faithfulness.html
 
       - name: Upload quality reports
         if: always()
