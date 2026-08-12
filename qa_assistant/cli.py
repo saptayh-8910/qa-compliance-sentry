@@ -13,6 +13,16 @@ import typer
 from dotenv import load_dotenv
 
 from qa_assistant.assistant import QAAssistant
+from qa_assistant.benchmark_dashboard import (
+    BenchmarkDashboardDataError,
+    write_benchmark_dashboard,
+)
+from qa_assistant.benchmarking import (
+    BenchmarkMetadata,
+    BenchmarkReport,
+    BenchmarkSample,
+    write_benchmark_report,
+)
 from qa_assistant.dashboard import DashboardDataError, write_dashboard
 from qa_assistant.evaluation import evaluate_case, grounding_evaluation_cases
 from qa_assistant.generation import AnswerGenerator, ExtractiveGenerator
@@ -402,7 +412,7 @@ def dashboard(
         Path("reports/rag-evaluation.json"),
         "--report",
         "-r",
-        help="Version 1 evaluation JSON to visualize",
+        help="Version 2 or legacy version 1 evaluation JSON to visualize",
     ),
     output: Path = typer.Option(
         Path("reports/rag-dashboard.html"),
@@ -411,7 +421,7 @@ def dashboard(
         help="Destination for the standalone HTML dashboard",
     ),
 ) -> None:
-    """Render a safe local dashboard from a version 1 evaluation report."""
+    """Render a safe local dashboard from a supported evaluation report."""
     try:
         write_dashboard(report, output)
     except (OSError, UnicodeError, DashboardDataError) as exc:
@@ -419,6 +429,131 @@ def dashboard(
         raise typer.Exit(code=1) from exc
 
     typer.echo(f"Dashboard: {output}")
+
+
+@app.command("benchmark")
+def benchmark(
+    output: Path = typer.Option(
+        Path("reports/rag-benchmark.json"),
+        "--output",
+        "-o",
+        help="Destination for the repeated-run benchmark JSON",
+    ),
+    repetitions: int = typer.Option(
+        3,
+        "--repetitions",
+        min=2,
+        max=100,
+        help="Number of times to repeat every evaluation case",
+    ),
+    provider: AnswerProvider = typer.Option(
+        AnswerProvider.EXTRACTIVE,
+        "--provider",
+        help="Generator under benchmark; OpenAI can create paid API usage",
+    ),
+    confirm_paid: bool = typer.Option(
+        False,
+        "--confirm-paid",
+        help="Explicitly allow the projected paid OpenAI benchmark calls",
+    ),
+    max_answer_chars: int = typer.Option(500, "--max-answer-chars", min=80),
+    model: str | None = typer.Option(None, "--model", help="OpenAI model override"),
+    reasoning_effort: ReasoningEffort | None = typer.Option(
+        None, "--reasoning-effort", help="OpenAI reasoning level"
+    ),
+    max_output_tokens: int = typer.Option(
+        600, "--max-output-tokens", min=1, help="Maximum tokens per OpenAI response"
+    ),
+) -> None:
+    """Repeat the grounding rubric and summarize stability and latency."""
+    paid_calls = repetitions * 8
+    if provider is AnswerProvider.OPENAI and not confirm_paid:
+        typer.echo(
+            "OpenAI benchmarking is blocked until --confirm-paid is supplied; "
+            f"this configuration can make {paid_calls} paid API requests.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        generator = _answer_generator(
+            provider,
+            max_answer_chars=max_answer_chars,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            max_output_tokens=max_output_tokens,
+        )
+        selected_model, selected_effort = _report_configuration(generator)
+        samples: list[BenchmarkSample] = []
+        for iteration in range(1, repetitions + 1):
+            for case in grounding_evaluation_cases():
+                if isinstance(generator, OpenAIResponsesGenerator):
+                    generator.last_usage = None
+                started = perf_counter()
+                result = evaluate_case(case, generator)
+                duration = round(perf_counter() - started, 6)
+                usage = getattr(generator, "last_usage", None)
+                samples.append(
+                    BenchmarkSample(
+                        iteration=iteration,
+                        result=result,
+                        duration_seconds=duration,
+                        usage=usage if isinstance(usage, ResponseUsage) else None,
+                    )
+                )
+        report = BenchmarkReport(
+            metadata=BenchmarkMetadata(
+                benchmark_id=str(uuid4()),
+                created_at=datetime.now(UTC),
+                provider=provider.value,
+                model=selected_model,
+                reasoning_effort=selected_effort,
+                repetitions=repetitions,
+            ),
+            samples=tuple(samples),
+        )
+        write_benchmark_report(report, output)
+    except (OSError, UnicodeError, ValueError, OpenAIAdapterError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+
+    summary = report.summary
+    typer.echo(
+        f"Benchmark complete: {summary.passed_sample_count}/{summary.sample_count} "
+        f"samples passed ({summary.sample_pass_rate:.1%}); "
+        f"{summary.stable_case_count}/{summary.case_count} cases kept the same "
+        f"verdict; {summary.response_stable_case_count}/{summary.case_count} "
+        "kept the same answer and citations."
+    )
+    typer.echo(
+        f"Latency: p50 {summary.latency.p50_seconds * 1000:.2f} ms; "
+        f"p95 {summary.latency.p95_seconds * 1000:.2f} ms."
+    )
+    typer.echo(f"Benchmark report: {output}")
+
+
+@app.command("benchmark-dashboard")
+def benchmark_dashboard(
+    report: Path = typer.Option(
+        Path("reports/rag-benchmark.json"),
+        "--report",
+        "-r",
+        help="Repeated-run benchmark JSON to visualize",
+    ),
+    output: Path = typer.Option(
+        Path("reports/rag-benchmark.html"),
+        "--output",
+        "-o",
+        help="Destination for the standalone benchmark dashboard",
+    ),
+) -> None:
+    """Render repeated latency and stability evidence in plain English."""
+    try:
+        write_benchmark_dashboard(report, output)
+    except (OSError, UnicodeError, BenchmarkDashboardDataError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"Benchmark dashboard: {output}")
 
 
 def main() -> None:

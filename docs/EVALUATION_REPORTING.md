@@ -106,6 +106,10 @@ The dashboard remains backwards-compatible with the tracked
 the question and expected behavior, so the renderer supplies an honest fallback
 instead of inventing missing information.
 
+Repeated performance and consistency evidence uses a separate
+[benchmark contract and dashboard](BENCHMARKING.md). Keeping it separate avoids
+pretending one evaluation run contains a latency distribution.
+
 ## Presentation and framework boundary
 
 The tracked schema is the boundary between scoring and presentation. The local

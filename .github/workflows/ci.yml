@@ -66,6 +66,12 @@ jobs:
           qa-assistant dashboard \
             --report reports/rag-evaluation.json \
             --output reports/rag-dashboard.html
+          qa-assistant benchmark \
+            --repetitions 3 \
+            --output reports/rag-benchmark.json
+          qa-assistant benchmark-dashboard \
+            --report reports/rag-benchmark.json \
+            --output reports/rag-benchmark.html
 
       - name: Upload quality reports
         if: always()

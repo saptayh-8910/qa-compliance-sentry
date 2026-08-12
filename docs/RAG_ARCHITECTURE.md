@@ -173,7 +173,8 @@ evidence-first abstention, and clean exit.
 The six-call Sol/Medium versus Luna/High matrix remains an explicitly approved,
 optional experiment rather than a completion gate. Stage 4 has built on this
 baseline with a safe dashboard and ten-case labelled offline dataset. Repeated
-latency samples and validated semantic faithfulness remain future milestones.
+latency and reproducibility evidence are now implemented; validated semantic
+faithfulness remains the next milestone.
 
 Stage 4 now exports the deterministic evidence through a versioned JSON
 contract. The v2 case record adds the reader-facing question and expected
@@ -182,3 +183,9 @@ failures, duration, and optional token counts.
 See [the evaluation reporting design](EVALUATION_REPORTING.md). The schema does
 not add semantic faithfulness by itself; it creates the stable boundary needed
 to compare a future judge against human labels and visualize trustworthy trends.
+
+Stage 4 now also repeats the ten-case offline suite three times. A separate
+[benchmark artifact](BENCHMARKING.md) reports complete-rubric sample pass rate,
+pass/fail stability, exact answer-and-citation consistency, nearest-rank p50/p95
+latency, and optional token usage. Deterministic stable failures remain failures;
+consistency is evidence about reproducibility, not correctness.
