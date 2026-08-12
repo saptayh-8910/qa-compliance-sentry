@@ -415,3 +415,87 @@ def test_cli_dashboard_reports_invalid_input(tmp_path: Path) -> None:
 
     assert result.exit_code == 1
     assert "unsupported evaluation report schema_version" in result.output
+
+
+def test_cli_exports_repeated_offline_benchmark(tmp_path: Path) -> None:
+    output = tmp_path / "benchmark.json"
+
+    result = runner.invoke(
+        app,
+        ["benchmark", "--repetitions", "3", "--output", str(output)],
+    )
+
+    assert result.exit_code == 0
+    assert "Benchmark complete: 15/30 samples passed (50.0%)" in result.stdout
+    assert "10/10 cases kept the same verdict" in result.stdout
+    assert "10/10 kept the same answer and citations" in result.stdout
+    assert "Latency: p50" in result.stdout
+    data = json.loads(output.read_text(encoding="utf-8"))
+    assert data["schema_version"] == "1.0"
+    assert data["run"]["repetitions"] == 3
+    assert data["summary"]["case_count"] == 10
+    assert data["summary"]["sample_count"] == 30
+    assert data["summary"]["passed_sample_count"] == 15
+    assert data["summary"]["stability_rate"] == 1.0
+    assert data["summary"]["response_stability_rate"] == 1.0
+    assert data["summary"]["tokens"] is None
+    assert data["cases"][0]["verdict"] == "consistently-passed"
+    assert data["cases"][2]["verdict"] == "consistently-failed"
+
+
+def test_cli_blocks_unconfirmed_paid_benchmark(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    constructed = False
+
+    class UnexpectedGenerator:
+        def __init__(self, **kwargs: object) -> None:
+            nonlocal constructed
+            constructed = True
+
+    monkeypatch.setattr(cli, "OpenAIResponsesGenerator", UnexpectedGenerator)
+
+    result = runner.invoke(
+        app,
+        [
+            "benchmark",
+            "--provider",
+            "openai",
+            "--repetitions",
+            "3",
+            "--output",
+            str(tmp_path / "paid.json"),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "blocked until --confirm-paid" in result.output
+    assert "24 paid API requests" in result.output
+    assert constructed is False
+
+
+def test_cli_renders_repeated_benchmark_dashboard(tmp_path: Path) -> None:
+    report = tmp_path / "benchmark.json"
+    output = tmp_path / "benchmark.html"
+    benchmark = runner.invoke(
+        app,
+        ["benchmark", "--repetitions", "2", "--output", str(report)],
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "benchmark-dashboard",
+            "--report",
+            str(report),
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert benchmark.exit_code == 0
+    assert result.exit_code == 0
+    assert f"Benchmark dashboard: {output}" in result.stdout
+    rendered = output.read_text(encoding="utf-8")
+    assert "Is the result fast—and repeatable?" in rendered
+    assert "Evaluation criteria" in rendered

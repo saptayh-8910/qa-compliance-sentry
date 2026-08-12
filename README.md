@@ -2,7 +2,7 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 4 — Expanded AI Evaluation Dataset**
+**Stage 4 — AI Stability and Latency Benchmarking**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
@@ -12,7 +12,8 @@ an interactive terminal chatbot, and retained end-to-end test evidence. Stage 4
 now exports that evidence through a stable JSON contract, turns it into a safe
 metric dashboard, adds interview-algorithm foundations, and exercises ten
 human-labelled scenarios that isolate retrieval, generation, citation, and
-safety failures.
+safety failures. Repeated offline runs now separate correctness, response
+consistency, latency percentiles, and optional token usage.
 
 ## Why this project exists
 
@@ -40,7 +41,7 @@ requests, merge commits, test growth, coverage, and the planned release tags.
 | **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Twelve stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, a ten-case labelled evaluation suite, versioned JSON reports, and a local metric dashboard |
+| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, a ten-case labelled suite, versioned reports, quality dashboard, and repeated stability benchmark |
 
 ```mermaid
 flowchart LR
@@ -75,10 +76,11 @@ just another API endpoint.
 | **Prompt injection** | Implemented | Retrieved text contains a malicious instruction, while the answer must follow the system grounding contract, omit the injected response, and retain a valid citation. |
 | **Context recall** | Implemented | Ten human-labelled scenarios produce context precision/recall, Hit@K, and reciprocal rank/MRR so retrieval failures are separated from generation failures. |
 | **Citation verification** | Implemented | Numeric citations fail closed, map to canonical sources, and produce citation precision/recall plus an exact-source gate for curated cases. |
-| **Latency benchmarking** | Foundation implemented | External results retain per-case latency and token usage. Repeated samples and percentile comparisons remain a separate Stage 4 milestone. |
+| **Latency benchmarking** | Implemented | Three deterministic repetitions across ten cases produce p50 typical latency and p95 slower-end latency. The dashboard states that this small local learning sample is not a production SLA. |
 | **Regression across models** | Ready as an opt-in test | A stable four-case subset compares Sol/Medium with Luna/High. Eight result rows require exactly six paid calls because retrieval misses skip generation; the larger offline suite does not silently increase that cost. |
 | **Evaluation reporting** | Implemented | The v2 JSON contract exports each question and expected behavior alongside run metadata, aggregate and per-case metrics, checks, failures, duration, and optional token usage. |
 | **Evaluation dashboard** | Implemented | A responsive standalone HTML view presents aggregate and per-case diagnostics, filters failures, escapes untrusted model output, and is retained with CI evidence. |
+| **Stability benchmarking** | Implemented | A separate versioned artifact reports repeated sample pass rate, pass/fail stability, exact answer-and-citation consistency, latency percentiles, and optional token summaries. Stable failures remain visibly wrong. |
 | **Regression foundations** | Implemented | Literal answer changes use Edit Distance, while kth-largest and rolling-window utilities summarize bounded score history without claiming semantic equivalence or complete reliability. |
 
 All current grading labels are human-authored, version-controlled, and scored
@@ -317,6 +319,42 @@ failures visible so the portfolio demonstrates diagnosis rather than hiding
 imperfect model behavior. Each card also states the original question and
 whether a reader should expect a cited answer or a safe refusal.
 
+### Benchmark latency and stability
+
+```bash
+make benchmark-rag
+make dashboard-benchmark-rag
+
+.venv/bin/qa-assistant benchmark \
+  --repetitions 3 \
+  --output reports/rag-benchmark.json
+
+.venv/bin/qa-assistant benchmark-dashboard \
+  --report reports/rag-benchmark.json \
+  --output reports/rag-benchmark.html
+```
+
+The default benchmark repeats all ten cases three times without an API key or
+network access. It answers four separate questions in plain English:
+
+- **Correctness:** how many repeated case runs passed every quality check?
+- **Verdict stability:** did each case keep the same pass/fail result?
+- **Response consistency:** did its exact answer text and verified citations
+  remain unchanged?
+- **Performance:** what were the typical p50 and slower-end p95 completion
+  times, and—when a provider reports them—the token totals?
+
+The current extractive baseline passes 15 of 30 samples and is fully consistent.
+That does **not** make its five repeatable failures correct. The dashboard labels
+them “consistently failed” to prevent that interpretation. Local timing is useful
+for regression learning but is not a production service-level objective.
+
+OpenAI benchmarking is never enabled by CI and is blocked unless
+`--confirm-paid` is supplied. Three repetitions can make 24 paid calls because
+two retrieval-miss cases per repetition skip generation. Do not run it without
+an explicit cost decision. See the
+[benchmark methodology](docs/BENCHMARKING.md).
+
 ### Run tests
 
 ```bash
@@ -328,6 +366,8 @@ make test-e2e     # Sauce Demo smoke (Playwright)
 make test-ai-external # opt-in six-call adversarial Sol/Luna comparison
 make evaluate-rag # offline v2 JSON evaluation report
 make dashboard-rag # offline report + standalone metric dashboard
+make benchmark-rag # 30-sample offline latency and stability evidence
+make dashboard-benchmark-rag # standalone benchmark dashboard
 make test-local   # deterministic unit + DB tests, no network
 make test         # unit + api + db + e2e smoke
 make quality      # lint + format check + coverage gate
@@ -460,7 +500,7 @@ qa-compliance-sentry/
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
-| **Stage 4 (in progress)** | Versioned evaluation reports, safe metric dashboard, three algorithm foundations, and a ten-case labelled dataset complete; repeated latency samples and validated semantic faithfulness next |
+| **Stage 4 (in progress)** | Versioned reports, safe dashboards, three algorithm foundations, ten labelled cases, and repeated latency/stability evidence complete; validated semantic faithfulness next |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
 

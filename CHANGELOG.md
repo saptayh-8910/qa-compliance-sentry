@@ -91,6 +91,13 @@ and the project uses semantic versioning for milestone tags.
   answer-or-abstain behavior on every case, plus legacy v1 dashboard support.
 - Plain-English expected outcomes on dashboard case cards so non-technical
   readers can interpret what each result was supposed to do.
+- Repeated RAG benchmark with three zero-cost repetitions across ten cases,
+  nearest-rank p50/p95 latency, sample pass rate, verdict stability, exact
+  answer-and-citation consistency, and optional token summaries.
+- Versioned benchmark JSON schema plus a safe standalone dashboard that explains
+  every criterion and distinguishes a consistent failure from a correct result.
+- Explicit paid-benchmark confirmation that blocks OpenAI execution and reports
+  the projected call count unless `--confirm-paid` is supplied.
 
 ### Changed
 
@@ -127,6 +134,12 @@ and the project uses semantic versioning for milestone tags.
 - Completed the larger labelled-dataset roadmap item while keeping the paid
   Sol/Luna comparison on its original four-case, six-call budget.
 - Expanded deterministic quality validation to 284 tests at 95.56%
+  branch-aware coverage, plus the retained chatbot E2E journey.
+- Bumped the package and default Docker image version to `0.12.0` for the Stage
+  4 latency and stability benchmarking milestone.
+- Completed the repeated latency and reproducibility roadmap item; validated
+  semantic faithfulness remains the final planned Stage 4 capability.
+- Expanded deterministic quality validation to 311 tests at 92.70%
   branch-aware coverage, plus the retained chatbot E2E journey.
 
 ## [0.4.1] - 2026-08-05
