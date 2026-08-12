@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/saptayh-8910/qa-compliance-sentry/schemas/faithfulness-report-v1.schema.json",
+  "title": "QA Compliance Sentry Faithfulness Validation Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run", "summary", "policy", "claims"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "created_at", "dataset", "judge", "label_source"],
+      "properties": {
+        "run_id": {"type": "string", "minLength": 1},
+        "created_at": {"type": "string", "format": "date-time"},
+        "dataset": {"type": "string", "minLength": 1},
+        "judge": {"type": "string", "minLength": 1},
+        "label_source": {"const": "human-authored-version-controlled"}
+      }
+    },
+    "summary": {"$ref": "#/$defs/summary"},
+    "policy": {"$ref": "#/$defs/policy"},
+    "claims": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/claim"}}
+  },
+  "$defs": {
+    "rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "matrixRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["supported", "contradicted", "unsupported"],
+      "properties": {
+        "supported": {"type": "integer", "minimum": 0},
+        "contradicted": {"type": "integer", "minimum": 0},
+        "unsupported": {"type": "integer", "minimum": 0}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["validated", "example_count", "human_supported_count", "human_faithfulness_rate", "exact_match_count", "accuracy", "unfaithful_precision", "unfaithful_recall", "unfaithful_f1", "false_positive_count", "false_negative_count", "confusion_matrix"],
+      "properties": {
+        "validated": {"type": "boolean"},
+        "example_count": {"type": "integer", "minimum": 1},
+        "human_supported_count": {"type": "integer", "minimum": 0},
+        "human_faithfulness_rate": {"$ref": "#/$defs/rate"},
+        "exact_match_count": {"type": "integer", "minimum": 0},
+        "accuracy": {"$ref": "#/$defs/rate"},
+        "unfaithful_precision": {"$ref": "#/$defs/rate"},
+        "unfaithful_recall": {"$ref": "#/$defs/rate"},
+        "unfaithful_f1": {"$ref": "#/$defs/rate"},
+        "false_positive_count": {"type": "integer", "minimum": 0},
+        "false_negative_count": {"type": "integer", "minimum": 0},
+        "confusion_matrix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["supported", "contradicted", "unsupported"],
+          "properties": {
+            "supported": {"$ref": "#/$defs/matrixRow"},
+            "contradicted": {"$ref": "#/$defs/matrixRow"},
+            "unsupported": {"$ref": "#/$defs/matrixRow"}
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum_accuracy", "minimum_unfaithful_recall", "maximum_false_negatives"],
+      "properties": {
+        "minimum_accuracy": {"$ref": "#/$defs/rate"},
+        "minimum_unfaithful_recall": {"$ref": "#/$defs/rate"},
+        "maximum_false_negatives": {"type": "integer", "minimum": 0}
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "evidence", "claim", "human_label", "judge_label", "correct", "human_explanation"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "evidence": {"type": "string", "minLength": 1},
+        "claim": {"type": "string", "minLength": 1},
+        "human_label": {"enum": ["supported", "contradicted", "unsupported"]},
+        "judge_label": {"enum": ["supported", "contradicted", "unsupported"]},
+        "correct": {"type": "boolean"},
+        "human_explanation": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

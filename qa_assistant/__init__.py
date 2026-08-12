@@ -11,6 +11,10 @@ from qa_assistant.evaluation import (
     grounding_evaluation_cases,
     summarize_results,
 )
+from qa_assistant.faithfulness import (
+    DeterministicFaithfulnessJudge,
+    validate_faithfulness_judge,
+)
 from qa_assistant.openai_generator import OpenAIResponsesGenerator
 from qa_assistant.reporting import (
     EvaluationReport,
@@ -25,11 +29,13 @@ __all__ = [
     "QAKnowledgeBase",
     "BenchmarkReport",
     "EvaluationReport",
+    "DeterministicFaithfulnessJudge",
     "evaluate_case",
     "benchmark_report_data",
     "evaluation_report_data",
     "grounding_evaluation_cases",
     "summarize_results",
+    "validate_faithfulness_judge",
     "write_evaluation_report",
     "write_benchmark_report",
 ]

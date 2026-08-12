@@ -2,12 +2,13 @@
 	test-e2e test-chatbot-e2e test-ai-external validate validate-pipeline \
 	retrieve-docs answer-docs chat-docs evaluate-rag dashboard-rag \
 	benchmark-rag dashboard-benchmark-rag \
+	faithfulness-rag dashboard-faithfulness-rag \
 	answer-docs-openai report \
 	analyze-sample \
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.12.0
+DOCKER_IMAGE ?= qa-compliance-sentry:0.13.0
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -147,6 +148,16 @@ dashboard-benchmark-rag: benchmark-rag
 	.venv/bin/qa-assistant benchmark-dashboard \
 		--report reports/rag-benchmark.json \
 		--output reports/rag-benchmark.html
+
+faithfulness-rag:
+	mkdir -p reports
+	.venv/bin/qa-assistant faithfulness \
+		--fail-if-unvalidated --output reports/rag-faithfulness.json
+
+dashboard-faithfulness-rag: faithfulness-rag
+	.venv/bin/qa-assistant faithfulness-dashboard \
+		--report reports/rag-faithfulness.json \
+		--output reports/rag-faithfulness.html
 
 # Explicitly makes a paid OpenAI API request.
 answer-docs-openai:

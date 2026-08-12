@@ -84,5 +84,6 @@ This benchmark does not claim:
 - cost estimates without a dated pricing source;
 - model quality from speed or consistency alone.
 
-The next Stage 4 boundary remains validated semantic faithfulness: any semantic
-judge must first be compared against human labels before its scores are trusted.
+The next Stage 4 capability is now implemented as
+[human-labelled faithfulness validation](FAITHFULNESS.md): a candidate judge is
+compared against an audited dataset before its scores are trusted.

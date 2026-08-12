@@ -118,6 +118,9 @@ Ragas, or another framework may later contribute additional fields through a
 new schema version, but it must not silently redefine the existing
 human-labelled metrics.
 
-Any semantic faithfulness or LLM-as-judge score must first be compared with
-human labels. Until that validation exists, the report identifies the grader as
-`deterministic-rubric-v1` and does not claim complete semantic entailment.
+Semantic faithfulness now uses a separate
+[human-labelled validation contract](FAITHFULNESS.md). It compares a candidate
+judge with audited labels and applies explicit acceptance thresholds without
+redefining the RAG evaluation report's deterministic rubric. The original
+grader remains `deterministic-rubric-v1`, and neither artifact claims complete
+semantic entailment.

@@ -85,9 +85,10 @@ Every chunk retains:
 - its normalized section text.
 
 Retrieved context labels each passage as `[n] path :: heading`. Generators are
-required to cite these identifiers. The Stage 3 rubric now checks exact expected
-sources and case-specific facts; deeper semantic entailment remains Stage 4
-work.
+required to cite these identifiers. The Stage 3 rubric checks exact expected
+sources and case-specific facts. Stage 4 adds a bounded, human-labelled
+[claim-level faithfulness validation](FAITHFULNESS.md) without claiming general
+semantic entailment.
 
 The default generator is an offline extractive baseline. It returns a bounded
 passage from the top-ranked result with `[1]`. The OpenAI adapter implements the
@@ -144,9 +145,10 @@ All current grading is deterministic. Questions, evidence, relevant-chunk
 labels, expected citations, required facts, forbidden content, and abstention
 behavior are human-authored and version-controlled. No LLM acts as a judge.
 Unit tests deliberately introduce irrelevant retrieval and incorrect citations
-to confirm that each metric fails for the intended reason. Full claim-level
-faithfulness remains future work; any LLM judge added for that purpose must be
-validated against human-labelled examples first.
+to confirm that each metric fails for the intended reason. A separate
+15-example dataset now validates supported, contradicted, and unsupported claim
+classification. Any LLM judge added later must be compared with broader
+human-labelled examples before it is trusted.
 
 ## Testing strategy
 
@@ -173,8 +175,8 @@ evidence-first abstention, and clean exit.
 The six-call Sol/Medium versus Luna/High matrix remains an explicitly approved,
 optional experiment rather than a completion gate. Stage 4 has built on this
 baseline with a safe dashboard and ten-case labelled offline dataset. Repeated
-latency and reproducibility evidence are now implemented; validated semantic
-faithfulness remains the next milestone.
+latency and reproducibility evidence and bounded human-validated faithfulness
+are now implemented; project closeout remains next.
 
 Stage 4 now exports the deterministic evidence through a versioned JSON
 contract. The v2 case record adds the reader-facing question and expected
@@ -182,10 +184,19 @@ answer-or-abstain behavior to aggregate metrics, checks, canonical citations,
 failures, duration, and optional token counts.
 See [the evaluation reporting design](EVALUATION_REPORTING.md). The schema does
 not add semantic faithfulness by itself; it creates the stable boundary needed
-to compare a future judge against human labels and visualize trustworthy trends.
+to compare a judge against human labels and visualize trustworthy trends. That
+comparison is now implemented in a separate v1 faithfulness artifact so the
+original evaluation contract does not silently change meaning.
 
 Stage 4 now also repeats the ten-case offline suite three times. A separate
 [benchmark artifact](BENCHMARKING.md) reports complete-rubric sample pass rate,
 pass/fail stability, exact answer-and-citation consistency, nearest-rank p50/p95
 latency, and optional token usage. Deterministic stable failures remain failures;
 consistency is evidence about reproducibility, not correctness.
+
+Finally, Stage 4 validates a transparent deterministic candidate judge against
+15 balanced human-labelled claims. The acceptance policy requires at least 90%
+exact three-label accuracy, at least 95% recall of contradicted or unsupported
+claims, and zero false negatives. The dashboard displays these criteria beside
+every result. Passing this small dataset is scoped learning evidence, not proof
+of universal semantic understanding.
