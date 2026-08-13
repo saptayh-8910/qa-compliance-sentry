@@ -8,6 +8,10 @@ and the project uses semantic versioning for milestone tags.
 
 ## [Unreleased]
 
+No changes yet.
+
+## [0.13.0] - 2026-08-13
+
 ### Added
 
 - Permanent changelog and project-history documentation.
@@ -124,8 +128,8 @@ and the project uses semantic versioning for milestone tags.
   branch-aware coverage, plus one dedicated subprocess chatbot E2E journey.
 - Bumped the package and default Docker image version to `0.8.0` for the Stage 4
   evaluation-reporting foundation.
-- Marked Stage 4 in progress with visualization, dataset growth, repeated
-  latency sampling, and validated semantic faithfulness still ahead.
+- Began Stage 4 with visualization, dataset growth, repeated latency sampling,
+  and validated semantic faithfulness identified as later milestones.
 - Expanded deterministic quality validation to 223 tests at 96.60% branch-aware
   coverage, plus the retained chatbot E2E journey.
 - Bumped the package and default Docker image version to `0.9.0` for the Stage 4
@@ -148,16 +152,19 @@ and the project uses semantic versioning for milestone tags.
   branch-aware coverage, plus the retained chatbot E2E journey.
 - Bumped the package and default Docker image version to `0.12.0` for the Stage
   4 latency and stability benchmarking milestone.
-- Completed the repeated latency and reproducibility roadmap item; validated
-  semantic faithfulness remains the final planned Stage 4 capability.
+- Completed the repeated latency and reproducibility roadmap item before the
+  final planned Stage 4 faithfulness capability.
 - Expanded deterministic quality validation to 311 tests at 92.70%
   branch-aware coverage, plus the retained chatbot E2E journey.
 - Bumped the package and default Docker image version to `0.13.0` for bounded
   human-labelled faithfulness validation.
-- Implemented the final planned Stage 4 capability; repository and release
-  closeout remain before the stage is marked complete.
+- Implemented the final planned Stage 4 capability and completed the roadmap
+  documentation and release closeout.
 - Expanded deterministic quality validation to 342 tests at 92.34%
   branch-aware coverage, plus the retained chatbot E2E journey.
+- Marked all four roadmap stages complete, expanded project history through PR
+  #19, and added final release notes, portfolio claims, maintenance guidance,
+  and a five-minute evidence-led demo.
 
 ## [0.4.1] - 2026-08-05
 
@@ -258,7 +265,8 @@ at commit `a5e8512`.
 Merged in [PR #1](https://github.com/saptayh-8910/qa-compliance-sentry/pull/1)
 at commit `ed550d7`.
 
-[Unreleased]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.4.1...v0.13.0
 [0.4.1]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/saptayh-8910/qa-compliance-sentry/compare/v0.2.0...v0.3.0

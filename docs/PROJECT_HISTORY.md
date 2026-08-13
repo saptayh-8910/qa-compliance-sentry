@@ -1,119 +1,116 @@
 # Project history
 
-This document explains how the Autonomous QA & Compliance Sentry evolved from
-a QA automation foundation into a reliability and AI-quality learning platform.
-It complements the concise release entries in [CHANGELOG.md](../CHANGELOG.md).
+This document records how the Autonomous QA & Compliance Sentry evolved from
+classic test automation into an AI quality engineering portfolio. It
+complements the release-oriented [changelog](../CHANGELOG.md).
 
-Deleting a merged feature branch does not remove its history. The merge commit
-remains on `main`, and the corresponding GitHub pull request retains its
-description, file diff, discussion, and CI results.
+Deleting a merged feature branch does not remove its work. The merge commit
+remains on `main`, and its GitHub pull request retains the description, diff,
+discussion, and CI evidence.
 
 ## Evolution
 
 ```mermaid
 flowchart LR
-  V010["v0.1.0<br/>Hardened QA foundation"] -->
-  V020["v0.2.0<br/>CI quality gates"] -->
-  V030["v0.3.0<br/>Docker testing"] -->
-  V040["v0.4.0<br/>Reliability intelligence"] -->
-  V041["v0.4.1<br/>Algorithm foundations"] -->
-  S3["Stage 3<br/>RAG assistant"]
+  S1["Stage 1<br/>UI, API, DB, CLI"] -->
+  S2["Stage 2<br/>CI, Docker, reliability"] -->
+  S3["Stage 3<br/>Grounded RAG assistant"] -->
+  S4["Stage 4<br/>AI evaluation and validation"] -->
+  DONE["v0.13.0<br/>Portfolio complete"]
 ```
 
-The repository began on 2026-06-07 with the Stage 1 automation foundation:
-the bug-tracker CLI, Playwright Page Object Model, API checks, and SQLite data
-validation. The later pull requests made that foundation reproducible, added
-reliability tooling, and connected interview fundamentals to practical QA work.
+The repository began with a bug-tracker CLI, Playwright Page Object Model, API
+checks, and SQLite consistency validation. It then added deterministic CI,
+containerized execution, failure intelligence, a citation-aware documentation
+assistant, RAG quality metrics, model comparison, safe dashboards, repeated
+latency and stability evidence, and human-labelled faithfulness validation.
 
 ## Milestones
 
-Dates below are GitHub merge dates in UTC. Test figures are the validation
-evidence recorded in each pull request, so they show how the suite grew.
+Dates are GitHub merge dates in UTC. Versions show the package version at each
+merge. Test figures are stated only where the repository recorded exact
+evidence; the final closeout baseline is 342 deterministic tests at 92.34%
+branch-aware coverage plus one chatbot E2E journey.
 
-| Version | Milestone | Evidence at merge | Pull request | Merge commit |
-|---|---|---|---|---|
-| 0.1.0 | Hardened Stage 1 validation and test isolation | 19 full, 14 deterministic, 7 DB checks | [#1](https://github.com/saptayh-8910/qa-compliance-sentry/pull/1), 2026-07-31 | [`ed550d7`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/ed550d73e8da6cb830ab8a8e230c81157a7c710d) |
-| 0.2.0 | Added CI, Python compatibility, reports, and quality gates | 25 full, 20 deterministic, 95.88% coverage | [#2](https://github.com/saptayh-8910/qa-compliance-sentry/pull/2), 2026-08-03 | [`a5e8512`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/a5e85121495d00804dfc99d7b73db9758c2d312d) |
-| 0.3.0 | Added reproducible non-root Playwright Docker testing | 20 deterministic and 5 external container tests, 95.88% coverage | [#3](https://github.com/saptayh-8910/qa-compliance-sentry/pull/3), 2026-08-04 | [`8e7222e`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/8e7222e1bb66714fffd461daa647f29ee5071f47) |
-| 0.4.0 | Added log analysis, CI dependency validation, and Stage 2 algorithms | 68 deterministic, 19 algorithm tests, 95.41% coverage | [#4](https://github.com/saptayh-8910/qa-compliance-sentry/pull/4), 2026-08-05 | [`cfc9e8c`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/cfc9e8c3c101bcc685a12146ec4ac67f65d7a01e) |
-| 0.4.1 | Added Stage 1 algorithm foundation lab | 84 deterministic, 16 new foundation cases, 95.73% coverage | [#5](https://github.com/saptayh-8910/qa-compliance-sentry/pull/5), 2026-08-05 | [`0cbf054`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/0cbf0545f9f084131ec0a1d12d6fda7163f0069e) |
+| Version | Milestone | Pull request and date | Merge commit |
+|---|---|---|---|
+| 0.1.0 | Hardened Stage 1 validation and test isolation | [#1](https://github.com/saptayh-8910/qa-compliance-sentry/pull/1), 2026-07-31 | [`ed550d7`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/ed550d73e8da6cb830ab8a8e230c81157a7c710d) |
+| 0.2.0 | Added CI, Python compatibility, reports, and quality gates | [#2](https://github.com/saptayh-8910/qa-compliance-sentry/pull/2), 2026-08-03 | [`a5e8512`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/a5e85121495d00804dfc99d7b73db9758c2d312d) |
+| 0.3.0 | Added reproducible non-root Playwright Docker testing | [#3](https://github.com/saptayh-8910/qa-compliance-sentry/pull/3), 2026-08-04 | [`8e7222e`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/8e7222e1bb66714fffd461daa647f29ee5071f47) |
+| 0.4.0 | Added log analysis, pipeline validation, and Stage 2 algorithms | [#4](https://github.com/saptayh-8910/qa-compliance-sentry/pull/4), 2026-08-05 | [`cfc9e8c`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/cfc9e8c3c101bcc685a12146ec4ac67f65d7a01e) |
+| 0.4.1 | Added retrospective Stage 1 algorithm foundations | [#5](https://github.com/saptayh-8910/qa-compliance-sentry/pull/5), 2026-08-05 | [`0cbf054`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/0cbf0545f9f084131ec0a1d12d6fda7163f0069e) |
+| 0.4.1 | Documented permanent project history | [#6](https://github.com/saptayh-8910/qa-compliance-sentry/pull/6), 2026-08-06 | [`1d44265`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/1d442658f2c06a1d85690ee6235257054f73ad17) |
+| 0.5.0 | Added citation-aware document ingestion and retrieval | [#7](https://github.com/saptayh-8910/qa-compliance-sentry/pull/7), 2026-08-06 | [`1c0183f`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/1c0183fe5ed636e3baa7a7b61f444c7aec3c5fd0) |
+| 0.5.1 | Added grounded generation, abstention, and citation enforcement | [#8](https://github.com/saptayh-8910/qa-compliance-sentry/pull/8), 2026-08-06 | [`55daf14`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/55daf147ef3cb84eab3ff78134b9884e100547af) |
+| 0.5.2 | Added the explicit OpenAI boundary and Sol/Luna comparison | [#9](https://github.com/saptayh-8910/qa-compliance-sentry/pull/9), 2026-08-06 | [`9ef6e7a`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/9ef6e7a2f9e57f56f6e094b9519ad0847b670484) |
+| 0.5.3 | Added retrieval, answer, safety, and citation evaluation | [#10](https://github.com/saptayh-8910/qa-compliance-sentry/pull/10), 2026-08-07 | [`fc5d523`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/fc5d5233a2d5dfa044627504c3cb6483fa9a3a7e) |
+| 0.5.3 | Made the AI quality strategy explicit | [#11](https://github.com/saptayh-8910/qa-compliance-sentry/pull/11), 2026-08-07 | [`78f8287`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/78f8287eed109c74f9e17573bde95113c86300db) |
+| 0.6.0 | Added Stage 3 algorithm foundations | [#12](https://github.com/saptayh-8910/qa-compliance-sentry/pull/12), 2026-08-07 | [`2c7ed16`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/2c7ed1615bc7fe9a6f77b7dce5b461c2ad616695) |
+| 0.7.0 | Completed Stage 3 with interactive chat and retained E2E evidence | [#13](https://github.com/saptayh-8910/qa-compliance-sentry/pull/13), 2026-08-09 | [`5fc3444`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/5fc344440791582f2f13a44d8e5034ed6a70b5aa) |
+| 0.8.0 | Added versioned Stage 4 evaluation reporting | [#14](https://github.com/saptayh-8910/qa-compliance-sentry/pull/14), 2026-08-09 | [`7b1d954`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/7b1d954100c6d4364214ad0c2fa08e932352922a) |
+| 0.9.0 | Added safe, plain-English RAG evaluation dashboards | [#15](https://github.com/saptayh-8910/qa-compliance-sentry/pull/15), 2026-08-10 | [`e8bc3c2`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/e8bc3c20edc08e7c8e783828d3d3b0b0e5d338a1) |
+| 0.10.0 | Completed the twelve-problem algorithm learning track | [#16](https://github.com/saptayh-8910/qa-compliance-sentry/pull/16), 2026-08-10 | [`e9347f1`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/e9347f1e06ae399620effdc9b8fdfaf71dbad32d) |
+| 0.11.0 | Expanded the RAG dataset to ten diagnostic cases | [#17](https://github.com/saptayh-8910/qa-compliance-sentry/pull/17), 2026-08-10 | [`69de612`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/69de6123341bd3ac956bd2f3818e0c0e71bb90dd) |
+| 0.12.0 | Added repeated latency, stability, and consistency evidence | [#18](https://github.com/saptayh-8910/qa-compliance-sentry/pull/18), 2026-08-12 | [`9ef1e8d`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/9ef1e8dffe705b94f09f78b036ba03333d178b53) |
+| 0.13.0 | Added bounded human-labelled faithfulness validation | [#19](https://github.com/saptayh-8910/qa-compliance-sentry/pull/19), 2026-08-12 | [`a7d0f5c`](https://github.com/saptayh-8910/qa-compliance-sentry/commit/a7d0f5ca50041be839deb4dbcf9cb4d9050aa804) |
 
-## What each milestone taught
+The final closeout pull request marks all four stages complete and prepares the
+`v0.13.0` release. The tag must point to that closeout merge commit, not the
+earlier PR #19 merge, so the release includes the final documentation.
 
-### v0.1.0 — trustworthy validation
+## What the stages taught
 
-The original suite mostly proved that known-good data passed. The hardening
-milestone introduced negative cases, read-only validation, isolated HTTP tests,
-atomic persistence, and a deterministic offline test path. The lesson was that
-a useful test must be able to fail for the right reason.
+### Stage 1 — trustworthy software testing
 
-### v0.2.0 — repeatable quality gates
+Unit, API, database, and browser tests established isolation, negative cases,
+read-only validation, atomic persistence, and a practical testing pyramid.
 
-Local commands became automated pull-request checks. The project separated
-deterministic merge-blocking tests from scheduled external checks, exercised
-four supported Python versions, and retained evidence as workflow artifacts.
-The lesson was to design CI around signal, speed, and dependency stability.
+### Stage 2 — repeatable delivery and reliability
 
-### v0.3.0 — reproducible execution
+GitHub Actions, multi-version Python checks, Docker, retained reports, failure
+ranking, and dependency-cycle validation made execution and diagnosis
+repeatable. External network checks were separated from deterministic merge
+gates.
 
-The official browser environment was pinned to the Python Playwright version,
-the application ran without root privileges, and the same quality paths worked
-locally and in CI. The lesson was that environment consistency is part of test
-reliability.
+### Stage 3 — grounded AI behavior
 
-### v0.4.0 — reliability intelligence
+The assistant separates retrieval from generation, treats documents as
+untrusted evidence, validates citations, abstains when evidence is missing,
+supports an explicit external provider boundary, and retains an offline chatbot
+E2E journey.
 
-Stage 2 moved beyond executing tests into interpreting failure evidence. The
-log analyzer ranks recurring signatures and consolidates incident windows; the
-pipeline validator detects dependency cycles. Three interview algorithms were
-implemented and then reused by real QA-oriented features.
+### Stage 4 — measurable AI quality
 
-### v0.4.1 — explicit foundations
+Human-labelled retrieval and citation metrics isolate failure stages. Versioned
+JSON contracts feed safe dashboards. Repeated runs separate correctness from
+consistency and latency. A candidate faithfulness judge is checked against
+human labels before its score is trusted.
 
-The retrospective learning lab added hashing, sets, and binary search without
-forcing handwritten algorithms into production paths where database constraints
-or built-ins are safer. The lesson was to understand the underlying mechanism
-and also know when not to use it.
+## Final evidence and honest boundaries
 
-## Planned release tags
+- 342 deterministic unit, algorithm, and database tests pass at 92.34%
+  branch-aware coverage.
+- One deterministic chatbot E2E journey exercises supported answering,
+  citation, abstention, and clean exit.
+- The ten-case offline RAG baseline passes 5 cases and fails 5 diagnostically;
+  repeatability does not turn those stable failures into correct answers.
+- The 15-claim faithfulness baseline matches all labels, but this small curated
+  result does not prove universal semantic understanding.
+- Paid OpenAI checks remain opt-in and outside deterministic CI.
+- Local timing is learning evidence, not a production service-level objective.
 
-The following annotated tags should be created after this history document is
-merged. Each tag points to the merge commit where that version was completed.
-
-| Tag | Commit | Meaning |
-|---|---|---|
-| `v0.1.0` | `ed550d7` | Hardened Stage 1 foundation |
-| `v0.2.0` | `a5e8512` | CI and quality gates |
-| `v0.3.0` | `8e7222e` | Docker testing |
-| `v0.4.0` | `cfc9e8c` | Reliability intelligence |
-| `v0.4.1` | `0cbf054` | Algorithm foundations |
+These limitations make the evidence more credible: the portfolio demonstrates
+how to find and explain quality gaps rather than presenting every metric as
+production proof.
 
 ## Inspecting history
 
-View the compact main-branch history:
-
 ```bash
 git log --oneline --graph --decorate main
-```
-
-Inspect one milestone:
-
-```bash
-git show 0cbf054
-```
-
-Compare two tagged milestones after tags are published:
-
-```bash
-git diff v0.1.0..v0.4.1 --stat
-git log v0.1.0..v0.4.1 --oneline
-```
-
-List merged pull requests with the GitHub CLI:
-
-```bash
+git show a7d0f5c
+git diff v0.4.1..v0.13.0 --stat
 gh pr list --state merged
 ```
 
-The pull request is the best place to review why a milestone was introduced;
-the commit and tag are the best references for its exact repository state.
+Use the pull request to understand why a milestone changed. Use its merge
+commit and release tag to identify the exact repository state.
