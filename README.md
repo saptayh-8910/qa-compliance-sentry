@@ -2,7 +2,7 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Stage 4 — Human-Validated AI Quality**
+**Project complete — v0.13.0 AI Quality Engineering Portfolio**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
@@ -15,20 +15,24 @@ human-labelled scenarios that isolate retrieval, generation, citation, and
 safety failures. Repeated offline runs now separate correctness, response
 consistency, latency percentiles, and optional token usage.
 The final capability validates a transparent claim-level faithfulness judge
-against human labels before its metrics are accepted.
+against human labels before its metrics are accepted. All four planned stages
+are complete; future work is maintenance or a separately scoped product
+milestone.
 
 ## Why this project exists
 
 This project turns a Manual→AI Tester learning roadmap into one evolving,
 runnable portfolio instead of a collection of disconnected tutorials. Stage 1
 builds the Python, browser automation, API testing, pytest, and SQL foundation
-expected for QA Automation and SDET roles. Later stages can add CI/CD,
-reliability tooling, retrieval-augmented generation, and AI evaluation without
-discarding the earlier work.
+expected for QA Automation and SDET roles. Later stages add CI/CD, reliability
+tooling, retrieval-augmented generation, and AI evaluation without discarding
+the earlier work.
 
 The repository's evolution is recorded in [CHANGELOG.md](CHANGELOG.md) and the
 detailed [project history](docs/PROJECT_HISTORY.md), including milestone pull
-requests, merge commits, test growth, coverage, and the planned release tags.
+requests, merge commits, test growth, coverage, and release preparation. The
+[portfolio handoff](docs/PORTFOLIO_HANDOFF.md) defines safe interview claims,
+the five-minute review path, and the maintenance policy.
 
 ## Project preview
 
@@ -69,9 +73,9 @@ flowchart LR
 
 ## AI Quality Engineering
 
-Stage 3 treats the RAG assistant as a quality system with independently
-testable retrieval, generation, safety, citation, and efficiency behavior—not
-just another API endpoint.
+The completed project treats the RAG assistant as a quality system with
+independently testable retrieval, generation, safety, citation, and efficiency
+behavior—not just another API endpoint.
 
 | AI quality area | Status | Test and evidence |
 |---|---|---|
@@ -528,11 +532,13 @@ qa-compliance-sentry/
 | **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
 | **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
 | **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
-| **Stage 4 (closeout next)** | Versioned reports, safe dashboards, three algorithm foundations, ten labelled RAG cases, repeated latency/stability evidence, and bounded human-validated semantic faithfulness implemented |
+| **Stage 4 (complete)** | Versioned reports, safe dashboards, three algorithm foundations, ten labelled RAG cases, repeated latency/stability evidence, and bounded human-validated semantic faithfulness |
 
 Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
 
-See [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) for a timed recording script.
+See the [timed demo script](docs/DEMO_SCRIPT.md) and
+[`v0.13.0` release notes](docs/RELEASE_NOTES_V0.13.0.md) for the recommended
+portfolio presentation.
 
 ## License
 

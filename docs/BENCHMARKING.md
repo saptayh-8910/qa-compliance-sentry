@@ -84,6 +84,8 @@ This benchmark does not claim:
 - cost estimates without a dated pricing source;
 - model quality from speed or consistency alone.
 
-The next Stage 4 capability is now implemented as
+Stage 4 also includes
 [human-labelled faithfulness validation](FAITHFULNESS.md): a candidate judge is
-compared against an audited dataset before its scores are trusted.
+compared against an audited dataset before its scores are trusted. Together,
+the benchmark and faithfulness artifacts complete the planned Stage 4 quality
+evidence.

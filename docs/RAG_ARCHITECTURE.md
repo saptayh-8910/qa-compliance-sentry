@@ -176,7 +176,7 @@ The six-call Sol/Medium versus Luna/High matrix remains an explicitly approved,
 optional experiment rather than a completion gate. Stage 4 has built on this
 baseline with a safe dashboard and ten-case labelled offline dataset. Repeated
 latency and reproducibility evidence and bounded human-validated faithfulness
-are now implemented; project closeout remains next.
+are implemented. The four-stage portfolio roadmap is complete.
 
 Stage 4 now exports the deterministic evidence through a versioned JSON
 contract. The v2 case record adds the reader-facing question and expected
