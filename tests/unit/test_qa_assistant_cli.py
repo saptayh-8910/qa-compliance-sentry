@@ -143,6 +143,25 @@ def test_cli_chat_ends_cleanly_on_end_of_input(tmp_path: Path) -> None:
     assert "Chat ended." in result.stdout
 
 
+def test_cli_starts_local_workspace_with_selected_options(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configuration: dict[str, object] = {}
+
+    def fake_run_workspace(**kwargs: object) -> None:
+        configuration.update(kwargs)
+
+    monkeypatch.setattr(cli, "run_workspace", fake_run_workspace)
+
+    result = runner.invoke(
+        app,
+        ["workspace", "--port", "9001", "--no-open-browser"],
+    )
+
+    assert result.exit_code == 0
+    assert configuration == {"port": 9001, "open_browser": False}
+
+
 def test_cli_chat_reports_invalid_answer_and_keeps_session_open(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

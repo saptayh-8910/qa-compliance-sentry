@@ -8,7 +8,29 @@ and the project uses semantic versioning for milestone tags.
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- Local `qa-assistant workspace` browser experience and `make workspace-rag`
+  shortcut for document upload, indexing, questions, citations, and transparent
+  per-question diagnostics.
+- Unmodified, checksum-pinned OWASP ASVS 5.0.0 English JSON with source,
+  release, retrieval date, attribution, and CC BY-SA 4.0 license metadata.
+- Runtime conversion of all 345 structured ASVS requirements into separately
+  cited, versioned retrieval sections.
+- Six starter questions with human-labelled expected ASVS evidence IDs.
+- Plain-English Hit@K, context precision/recall, reciprocal rank, citation
+  precision/recall, and local response-time results in the browser workspace.
+- In-memory Markdown, text, and official ASVS JSON uploads with filename,
+  format, count, and size boundaries.
+
+### Changed
+
+- Bumped the package and default Docker image version to `0.14.0` for the first
+  post-roadmap real-world data milestone.
+- Extended the document ingestion and knowledge-base boundaries to accept
+  structured ASVS JSON and already-loaded browser documents.
+- Expanded deterministic quality validation to 358 tests at 88.71%
+  branch-aware coverage, plus the existing chatbot and browser smoke journeys.
 
 ## [0.13.0] - 2026-08-13
 

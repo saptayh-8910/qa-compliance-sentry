@@ -2,7 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from qa_assistant.ingestion import chunk_documents, discover_documents, load_documents
+from qa_assistant.ingestion import (
+    chunk_documents,
+    discover_documents,
+    document_from_text,
+    load_documents,
+)
 from qa_assistant.models import SourceDocument
 
 
@@ -13,7 +18,7 @@ def test_discover_documents_recurses_deduplicates_and_sorts(tmp_path: Path) -> N
     text = nested / "notes.txt"
     markdown.write_text("# Guide\nUseful text", encoding="utf-8")
     text.write_text("Notes", encoding="utf-8")
-    (nested / "ignored.json").write_text("{}", encoding="utf-8")
+    (nested / "ignored.csv").write_text("ignored", encoding="utf-8")
 
     discovered = discover_documents([nested, markdown, markdown])
 
@@ -39,8 +44,8 @@ def test_discover_documents_rejects_missing_and_unsupported_sources(
     with pytest.raises(FileNotFoundError, match="does not exist"):
         discover_documents([tmp_path / "missing"])
 
-    unsupported = tmp_path / "data.json"
-    unsupported.write_text("{}", encoding="utf-8")
+    unsupported = tmp_path / "data.csv"
+    unsupported.write_text("ignored", encoding="utf-8")
     with pytest.raises(ValueError, match="unsupported document type"):
         discover_documents([unsupported])
 
@@ -48,7 +53,7 @@ def test_discover_documents_rejects_missing_and_unsupported_sources(
 def test_discover_documents_rejects_directory_without_supported_files(
     tmp_path: Path,
 ) -> None:
-    (tmp_path / "data.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "data.csv").write_text("ignored", encoding="utf-8")
     with pytest.raises(ValueError, match="no supported"):
         discover_documents([tmp_path])
 
@@ -121,3 +126,37 @@ def test_chunk_documents_preserves_lines_in_long_markdown_tables() -> None:
 def test_chunk_documents_rejects_tiny_chunk_limit() -> None:
     with pytest.raises(ValueError, match="at least 100"):
         chunk_documents([], max_chars=99)
+
+
+def test_official_asvs_json_becomes_one_cited_section_per_requirement() -> None:
+    document = document_from_text(
+        "asvs.json",
+        """{
+          "ShortName": "ASVS",
+          "Version": "5.0.0",
+          "Requirements": [{
+            "Name": "Encoding and Sanitization",
+            "Items": [{
+              "Name": "Injection Prevention",
+              "Items": [{
+                "Shortcode": "V1.2.4",
+                "Description": "Verify parameterized database queries.",
+                "L": "1"
+              }]
+            }]
+          }]
+        }""",
+    )
+
+    chunks = chunk_documents([document])
+
+    assert len(chunks) == 1
+    assert chunks[0].heading.startswith("v5.0.0-1.2.4")
+    assert "Verification level: L1" in chunks[0].text
+    assert "parameterized database queries" in chunks[0].text
+
+
+@pytest.mark.parametrize("text", ["not json", "{}", "[]"])
+def test_json_ingestion_rejects_malformed_or_unrecognized_data(text: str) -> None:
+    with pytest.raises(ValueError, match="JSON|json"):
+        document_from_text("unknown.json", text)

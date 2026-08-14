@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "source_version": "OWASP ASVS 5.0.0",
+  "cases": [
+    {
+      "id": "sql-injection",
+      "question": "What does ASVS require to protect database queries from SQL injection?",
+      "expected_evidence": ["v5.0.0-1.2.4"],
+      "why": "A direct single-requirement retrieval check."
+    },
+    {
+      "id": "password-reset-mfa",
+      "question": "What should a forgotten-password reset process do when multi-factor authentication is enabled?",
+      "expected_evidence": ["v5.0.0-6.4.3"],
+      "why": "Checks whether security language is connected to the correct requirement."
+    },
+    {
+      "id": "logging-time",
+      "question": "How should timestamps be handled across logging components?",
+      "expected_evidence": ["v5.0.0-16.2.2"],
+      "why": "Checks retrieval of a requirement in a later chapter."
+    },
+    {
+      "id": "sensitive-logs",
+      "question": "What does ASVS say about putting credentials, payment details, or session tokens into logs?",
+      "expected_evidence": ["v5.0.0-16.2.5"],
+      "why": "Checks a requirement containing several related examples."
+    },
+    {
+      "id": "authorization-failures",
+      "question": "Should failed authorization attempts be logged?",
+      "expected_evidence": ["v5.0.0-16.3.2"],
+      "why": "Checks a concise policy question against one known requirement."
+    },
+    {
+      "id": "account-change-sessions",
+      "question": "After changing or recovering an authentication factor, what option should users have for their other sessions?",
+      "expected_evidence": ["v5.0.0-7.4.3"],
+      "why": "Checks a paraphrased question whose wording differs from the source."
+    }
+  ]
+}

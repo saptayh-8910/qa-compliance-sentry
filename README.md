@@ -2,7 +2,7 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Project complete — v0.13.0 AI Quality Engineering Portfolio**
+**Core roadmap complete at v0.13.0 — v0.14.0 real-data workspace**
 
 A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
 Stage 2 makes those checks reproducible in CI and Docker while adding failure
@@ -17,7 +17,8 @@ consistency, latency percentiles, and optional token usage.
 The final capability validates a transparent claim-level faithfulness judge
 against human labels before its metrics are accepted. All four planned stages
 are complete; future work is maintenance or a separately scoped product
-milestone.
+milestone. The first post-roadmap milestone adds a local upload workspace and a
+version-pinned OWASP ASVS 5.0.0 library for hands-on retrieval testing.
 
 ## Why this project exists
 
@@ -48,6 +49,7 @@ the five-minute review path, and the maintenance policy.
 | **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
 | **Algorithm foundations** | Twelve stage-aligned interview labs with canonical and QA-oriented tests |
 | **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, a ten-case labelled suite, versioned reports, quality dashboards, stability benchmarking, and human-validated claim faithfulness |
+| **Real-data workspace** | Local browser upload, pinned OWASP ASVS 5.0.0 requirements, starter questions, retrieved evidence, and plain-English labelled retrieval and citation metrics |
 
 ```mermaid
 flowchart LR
@@ -58,6 +60,8 @@ flowchart LR
   LOG[Log Analyzer] --> Evidence[Failure Evidence]
   PIPE[Pipeline Validator] --> Repo
   DOCS[QA Documentation] --> RAG[Lexical Retriever]
+  UPLOAD[Local Upload Workspace] --> RAG
+  ASVS[OWASP ASVS 5.0.0] --> UPLOAD
   CHAT[Terminal Chat] --> RAG
   RAG --> CTX[Cited Context]
   CTX --> GEN[Answer Generator]
@@ -90,6 +94,7 @@ behavior—not just another API endpoint.
 | **Stability benchmarking** | Implemented | A separate versioned artifact reports repeated sample pass rate, pass/fail stability, exact answer-and-citation consistency, latency percentiles, and optional token summaries. Stable failures remain visibly wrong. |
 | **Semantic faithfulness** | Validated on a bounded dataset | A transparent candidate judge is compared with 15 balanced human labels. Acceptance requires at least 90% exact accuracy, at least 95% unfaithful recall, and zero false negatives. This is scoped validation, not universal language understanding. |
 | **Regression foundations** | Implemented | Literal answer changes use Edit Distance, while kth-largest and rolling-window utilities summarize bounded score history without claiming semantic equivalence or complete reliability. |
+| **Real-world data pilot** | Implemented | The local workspace indexes the checksum-pinned OWASP ASVS 5.0.0 release or uploaded Markdown/text sources. Optional expected evidence IDs turn questions into labelled retrieval and citation tests; missing labels are shown as “Not measured.” |
 
 All current grading labels are human-authored, version-controlled, and scored
 deterministically; no unvalidated LLM acts as the judge. See the
@@ -192,6 +197,32 @@ analysis all run through `make test-algorithms`. See the
 interpretations, complexity, interview prompts, and limitations. A best window
 or top-score threshold is not a full latency or reliability distribution; those
 require repeated observations later in Stage 4.
+
+### Test real documents in the browser
+
+Start the local, zero-cost workspace:
+
+```bash
+make workspace-rag
+```
+
+The browser opens at `http://127.0.0.1:8765`. OWASP ASVS 5.0.0 is already
+selected in the public library, so the first run is:
+
+1. Press **Start testing** to index all 345 versioned requirements.
+2. Choose a labelled starter test or write a question.
+3. Press **Ask question** to inspect the answer, citations, retrieval ranking,
+   response time, and plain-English evaluation criteria.
+4. Use **Add your documents** to test local `.md`, `.txt`, or official ASVS
+   `.json` files. Uploaded content stays in memory and is not saved.
+
+The default extractive provider makes no external or paid API calls. Accuracy
+metrics need expected evidence IDs: without them, the workspace reports “Not
+measured” instead of treating a plausible answer as proof. The pinned source,
+checksum, attribution, and CC BY-SA 4.0 license are recorded in
+[`data/library/catalog.json`](data/library/catalog.json). See the
+[real-world testing guide](docs/REAL_WORLD_TESTING.md) for the complete workflow
+and evidence boundaries.
 
 ### Retrieve QA documentation
 
@@ -511,6 +542,7 @@ qa-compliance-sentry/
 ├── learning_algorithms/  # Interview labs mapped to project stages
 ├── pipeline_validator/   # CI dependency graph and cycle validation
 ├── qa_assistant/         # Retrieval, grounded answers, evaluation, and dashboard
+├── data/library/         # Pinned public sources, checksums, licenses, starter cases
 ├── schemas/              # Versioned dashboard/report contracts
 ├── examples/             # runnable sample QA logs
 ├── tests/

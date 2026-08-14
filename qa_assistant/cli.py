@@ -54,6 +54,7 @@ from qa_assistant.reporting import (
     write_evaluation_report,
 )
 from qa_assistant.service import QAKnowledgeBase
+from qa_assistant.workspace import WorkspaceDataError, run_workspace
 
 DEFAULT_SOURCES = (Path("README.md"), Path("docs"))
 
@@ -323,6 +324,29 @@ def chat(
 
         typer.echo("Assistant:")
         _echo_grounded_answer(grounded_answer)
+
+
+@app.command("workspace")
+def workspace(
+    port: int = typer.Option(
+        8765,
+        "--port",
+        min=1,
+        max=65_535,
+        help="Localhost port for the real-data browser workspace",
+    ),
+    open_browser: bool = typer.Option(
+        True,
+        "--open-browser/--no-open-browser",
+        help="Open the workspace in the default browser after starting",
+    ),
+) -> None:
+    """Upload documents and inspect labelled retrieval performance locally."""
+    try:
+        run_workspace(port=port, open_browser=open_browser)
+    except (OSError, WorkspaceDataError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
 
 
 @app.command("evaluate")

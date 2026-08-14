@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QA Compliance Sentry — Real-data workspace</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17211f;
+      --muted: #5d6a67;
+      --paper: #f4f1e8;
+      --card: #fffdf8;
+      --line: #d8d2c4;
+      --green: #0d6b55;
+      --green-soft: #dff2e9;
+      --amber: #9a5a00;
+      --amber-soft: #fff1d3;
+      --blue: #245d8f;
+      --red: #9f2f2f;
+      --shadow: 0 16px 44px rgba(37, 45, 42, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(30, 131, 103, .12), transparent 26rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    main { width: min(1160px, calc(100% - 32px)); margin: 0 auto 80px; }
+    header { padding: 56px 0 30px; }
+    .eyebrow { color: var(--green); font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { max-width: 840px; margin: 10px 0 14px; font-family: Georgia, serif; font-size: clamp(2.3rem, 6vw, 4.8rem); font-weight: 500; line-height: 1; letter-spacing: -.045em; }
+    h2, h3, p { margin-top: 0; }
+    .lede { max-width: 760px; color: var(--muted); font-size: 1.08rem; }
+    .notice { padding: 13px 16px; border: 1px solid #b8d8ca; border-radius: 12px; background: var(--green-soft); color: #174d3f; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .68fr); gap: 20px; margin-top: 20px; }
+    .card { padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); box-shadow: var(--shadow); }
+    .step { display: inline-grid; width: 28px; height: 28px; margin-right: 8px; place-items: center; border-radius: 50%; background: var(--ink); color: white; font-size: .82rem; }
+    label { display: block; margin: 15px 0 7px; font-weight: 750; }
+    .help { margin: 5px 0; color: var(--muted); font-size: .9rem; }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%; padding: 11px 12px; border: 1px solid #bdb8ad; border-radius: 10px; background: white; color: var(--ink); font: inherit;
+    }
+    textarea { min-height: 104px; resize: vertical; }
+    input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px solid rgba(36, 93, 143, .25); outline-offset: 2px; }
+    .library-item { display: flex; gap: 12px; padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    .library-item input { margin-top: 5px; }
+    .tag { display: inline-block; margin: 4px 5px 0 0; padding: 3px 8px; border-radius: 999px; background: #edf0ec; color: #47534f; font-size: .75rem; font-weight: 700; }
+    .upload { display: block; margin-top: 14px; padding: 22px; border: 1.5px dashed #9ea69f; border-radius: 12px; background: #faf9f4; text-align: center; cursor: pointer; }
+    .upload:hover { border-color: var(--green); background: #f0f8f4; }
+    .file-list { margin: 10px 0 0; padding-left: 20px; color: var(--muted); font-size: .88rem; }
+    button { padding: 11px 17px; border: 0; border-radius: 10px; background: var(--green); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+    button:hover { filter: brightness(.93); }
+    button:disabled { cursor: wait; opacity: .6; }
+    .button-row { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+    .status { color: var(--muted); font-size: .9rem; }
+    .status.error { color: var(--red); font-weight: 700; }
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+    .summary div { padding: 12px; border-radius: 10px; background: #f2f0e8; }
+    .summary strong { display: block; font-size: 1.35rem; }
+    .question-card { margin-top: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 130px; gap: 12px; }
+    .metrics-intro { margin-top: 20px; }
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .metric { padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    .metric .name { color: var(--muted); font-size: .8rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .metric .value { margin: 3px 0 5px; color: var(--blue); font-family: Georgia, serif; font-size: 1.6rem; }
+    .metric .criterion { font-size: .84rem; font-weight: 700; }
+    .metric .meaning { margin: 5px 0 0; color: var(--muted); font-size: .84rem; }
+    .answer { margin-top: 20px; padding: 20px; border-left: 4px solid var(--green); border-radius: 8px 14px 14px 8px; background: white; white-space: pre-wrap; }
+    .citations { margin: 10px 0 0; padding-left: 20px; }
+    .results { display: grid; gap: 11px; margin-top: 14px; }
+    details { border: 1px solid var(--line); border-radius: 12px; background: white; }
+    summary { padding: 14px; cursor: pointer; font-weight: 800; }
+    details p { padding: 0 14px 14px; color: var(--muted); white-space: pre-wrap; }
+    .rank { color: var(--green); }
+    .hidden { display: none !important; }
+    .honesty { padding: 14px; border-radius: 12px; background: var(--amber-soft); color: #6f4608; font-size: .9rem; }
+    footer { margin-top: 26px; color: var(--muted); font-size: .85rem; }
+    @media (max-width: 780px) {
+      .grid, .form-row { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: 1fr; }
+      header { padding-top: 34px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">QA Compliance Sentry · local workspace</div>
+    <h1>Test retrieval with real documents.</h1>
+    <p class="lede">Use the pinned OWASP ASVS library, add your own Markdown, text, or official ASVS JSON, then ask questions. Expected evidence IDs turn a demonstration into a measurable retrieval test.</p>
+    <p class="notice"><strong>Private by design:</strong> this workspace runs on your computer. Uploaded files stay in memory and are not saved. The default extractive mode makes no paid API calls.</p>
+  </header>
+
+  <section class="grid" aria-label="Document setup">
+    <div class="card">
+      <h2><span class="step">1</span>Choose documents</h2>
+      <div id="library">Loading the public library…</div>
+      <label class="upload" for="files">
+        <strong>Add your documents</strong><br>
+        <span class="help">Choose up to 20 .md, .txt, or official OWASP ASVS .json files (5 MB total).</span>
+      </label>
+      <input class="hidden" id="files" type="file" accept=".md,.txt,.json" multiple>
+      <ul class="file-list" id="file-list"></ul>
+      <div class="button-row">
+        <button id="index" type="button">Start testing</button>
+        <span class="status" id="index-status" role="status"></span>
+      </div>
+    </div>
+    <aside class="card">
+      <h2>What this step proves</h2>
+      <p><strong>Indexing</strong> proves the project can read the selected source, preserve its requirement identifiers, and create searchable passages.</p>
+      <p><strong>Asking a question</strong> shows what the system retrieves and cites.</p>
+      <p><strong>Adding expected IDs</strong> lets the project score whether it found the evidence you already know is correct.</p>
+      <p class="honesty">A convincing answer alone is not proof of accuracy. When expected evidence is missing, accuracy metrics will say “Not measured” instead of inventing a score.</p>
+      <div class="summary hidden" id="index-summary">
+        <div><strong id="document-count">0</strong>documents</div>
+        <div><strong id="chunk-count">0</strong>searchable chunks</div>
+        <div><strong id="source-count">0</strong>sources ready</div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="card question-card">
+    <h2><span class="step">2</span>Ask and measure</h2>
+    <label for="starter">Starter test</label>
+    <select id="starter"><option value="">Write my own question</option></select>
+    <label for="question">Question</label>
+    <textarea id="question" placeholder="Example: What does ASVS require to protect database queries from SQL injection?"></textarea>
+    <div class="form-row">
+      <div>
+        <label for="expected">Expected evidence IDs <span class="help">(optional, comma-separated)</span></label>
+        <input id="expected" type="text" placeholder="v5.0.0-1.2.4">
+      </div>
+      <div>
+        <label for="top-k">Top results</label>
+        <input id="top-k" type="number" value="3" min="1" max="10">
+      </div>
+    </div>
+    <div class="button-row">
+      <button id="ask" type="button" disabled>Ask question</button>
+      <span class="status" id="ask-status" role="status"></span>
+    </div>
+  </section>
+
+  <section class="hidden" id="outcome" aria-live="polite">
+    <div class="answer">
+      <h2>Observed answer</h2>
+      <div id="answer-text"></div>
+      <h3>Verified citations</h3>
+      <ul class="citations" id="citations"></ul>
+    </div>
+    <div class="metrics-intro">
+      <h2>Evaluation criteria and result</h2>
+      <p class="lede">Every metric includes both its rule and a plain-English reading of this run.</p>
+    </div>
+    <div class="metrics" id="metrics"></div>
+    <h2 style="margin-top: 24px">Retrieved evidence</h2>
+    <div class="results" id="results"></div>
+  </section>
+
+  <footer>OWASP ASVS 5.0.0 is used under CC BY-SA 4.0. OWASP does not endorse this project. Source provenance and checksum are recorded in <code>data/library/catalog.json</code>.</footer>
+</main>
+<script>
+  const state = { sessionId: null, cases: [], files: [] };
+  const byId = id => document.getElementById(id);
+  const setStatus = (id, message, error = false) => {
+    const element = byId(id);
+    element.textContent = message;
+    element.classList.toggle('error', error);
+  };
+  const addText = (parent, tag, value, className = '') => {
+    const element = document.createElement(tag);
+    element.textContent = value;
+    if (className) element.className = className;
+    parent.appendChild(element);
+    return element;
+  };
+  async function api(path, options = {}) {
+    const response = await fetch(path, options);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+    return data;
+  }
+  async function loadLibrary() {
+    try {
+      const data = await api('/api/library');
+      const library = byId('library');
+      library.textContent = '';
+      data.entries.forEach(entry => {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'library-item';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox'; checkbox.value = entry.id; checkbox.checked = true;
+        checkbox.dataset.library = 'true';
+        const copy = document.createElement('div');
+        addText(copy, 'strong', `${entry.title} ${entry.version}`);
+        addText(copy, 'p', entry.description, 'help');
+        [entry.license, `${entry.requirement_count} requirements`, `SHA-256 ${entry.sha256.slice(0, 12)}…`]
+          .forEach(value => addText(copy, 'span', value, 'tag'));
+        wrapper.append(checkbox, copy); library.appendChild(wrapper);
+      });
+      state.cases = data.starter_cases;
+      const select = byId('starter');
+      state.cases.forEach((item, index) => {
+        const option = document.createElement('option');
+        option.value = String(index); option.textContent = `${item.question} — ${item.why}`;
+        select.appendChild(option);
+      });
+    } catch (error) {
+      setStatus('index-status', error.message, true);
+    }
+  }
+  byId('files').addEventListener('change', event => {
+    state.files = [...event.target.files];
+    const list = byId('file-list'); list.textContent = '';
+    state.files.forEach(file => addText(list, 'li', `${file.name} — ${(file.size / 1024).toFixed(1)} KB`));
+  });
+  byId('starter').addEventListener('change', event => {
+    if (event.target.value === '') return;
+    const item = state.cases[Number(event.target.value)];
+    byId('question').value = item.question;
+    byId('expected').value = item.expected_evidence.join(', ');
+  });
+  byId('index').addEventListener('click', async () => {
+    const button = byId('index'); button.disabled = true;
+    setStatus('index-status', 'Reading and indexing documents…');
+    try {
+      const files = await Promise.all(state.files.map(async file => ({name: file.name, text: await file.text()})));
+      const libraryIds = [...document.querySelectorAll('[data-library]:checked')].map(item => item.value);
+      const data = await api('/api/index', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({library_ids: libraryIds, files})
+      });
+      state.sessionId = data.session_id;
+      byId('document-count').textContent = data.document_count;
+      byId('chunk-count').textContent = data.chunk_count;
+      byId('source-count').textContent = data.sources.length;
+      byId('index-summary').classList.remove('hidden');
+      byId('ask').disabled = false;
+      setStatus('index-status', `Ready: ${data.chunk_count} searchable chunks.`);
+    } catch (error) {
+      setStatus('index-status', error.message, true);
+    } finally { button.disabled = false; }
+  });
+  function renderOutcome(data) {
+    byId('answer-text').textContent = data.answer;
+    const citations = byId('citations'); citations.textContent = '';
+    if (data.citations.length) data.citations.forEach(value => addText(citations, 'li', value));
+    else addText(citations, 'li', 'No citation was produced.');
+    const metrics = byId('metrics'); metrics.textContent = '';
+    data.metrics.forEach(item => {
+      const card = document.createElement('article'); card.className = 'metric';
+      addText(card, 'div', item.name, 'name');
+      addText(card, 'div', item.display, 'value');
+      addText(card, 'div', `Criterion: ${item.criterion}`, 'criterion');
+      addText(card, 'p', `This result means: ${item.meaning}`, 'meaning');
+      metrics.appendChild(card);
+    });
+    const results = byId('results'); results.textContent = '';
+    if (!data.results.length) addText(results, 'p', 'No matching evidence was retrieved.');
+    data.results.forEach(item => {
+      const details = document.createElement('details');
+      const summary = document.createElement('summary');
+      addText(summary, 'span', `#${item.rank} `, 'rank');
+      summary.append(document.createTextNode(`${item.heading} · score ${item.score}`));
+      details.appendChild(summary);
+      addText(details, 'p', `Source: ${item.source}\n\n${item.text}`);
+      results.appendChild(details);
+    });
+    byId('outcome').classList.remove('hidden');
+    byId('outcome').scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+  byId('ask').addEventListener('click', async () => {
+    if (!state.sessionId) return;
+    const button = byId('ask'); button.disabled = true;
+    setStatus('ask-status', 'Retrieving evidence and scoring the result…');
+    try {
+      const expectedIds = byId('expected').value.split(',').map(value => value.trim()).filter(Boolean);
+      const data = await api('/api/ask', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          session_id: state.sessionId,
+          question: byId('question').value,
+          expected_ids: expectedIds,
+          top_k: Number(byId('top-k').value)
+        })
+      });
+      renderOutcome(data); setStatus('ask-status', 'Evaluation complete.');
+    } catch (error) {
+      setStatus('ask-status', error.message, true);
+    } finally { button.disabled = false; }
+  });
+  loadLibrary();
+</script>
+</body>
+</html>

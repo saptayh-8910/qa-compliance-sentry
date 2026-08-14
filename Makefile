@@ -1,6 +1,7 @@
 .PHONY: install test test-local test-unit test-algorithms test-api test-db \
 	test-e2e test-chatbot-e2e test-ai-external validate validate-pipeline \
 	retrieve-docs answer-docs chat-docs evaluate-rag dashboard-rag \
+	workspace-rag \
 	benchmark-rag dashboard-benchmark-rag \
 	faithfulness-rag dashboard-faithfulness-rag \
 	answer-docs-openai report \
@@ -8,7 +9,7 @@
 	lint format format-check coverage quality docker-build docker-test \
 	docker-quality docker-external
 
-DOCKER_IMAGE ?= qa-compliance-sentry:0.13.0
+DOCKER_IMAGE ?= qa-compliance-sentry:0.14.0
 DOCKER_RUN = docker run --rm --init --ipc=host
 DOCKER_REPORTS = -v "$(CURDIR)/reports:/app/reports"
 DOCKER_ENV_ARGS ?=
@@ -129,6 +130,9 @@ answer-docs:
 
 chat-docs:
 	.venv/bin/qa-assistant chat --source docs --top 3
+
+workspace-rag:
+	.venv/bin/qa-assistant workspace
 
 evaluate-rag:
 	mkdir -p reports
