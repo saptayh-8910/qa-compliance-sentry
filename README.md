@@ -211,21 +211,28 @@ selected in the public library, so the first run is:
 
 1. Press **Start testing** to index all 345 versioned requirements.
 2. Choose a labelled starter test or write a question.
-3. Press **Ask question** to inspect the answer, citations, retrieval ranking,
+3. Choose **Direct evidence — free** or **Plain-English AI — paid**. The paid
+   option requires an API key and an explicit confirmation for each question.
+4. Press **Ask question** to inspect the answer, citations, retrieval ranking,
    response time, and plain-English evaluation criteria.
-4. Use **Add your documents** to test local `.md`, `.txt`, or official ASVS
+5. Use **Add your documents** to test local `.md`, `.txt`, or official ASVS
    `.json` files. Uploaded content stays in memory and is not saved.
 
-The default extractive provider makes no external or paid API calls. Accuracy
-metrics need expected evidence IDs: without them, the workspace reports “Not
+The default direct-evidence provider makes no external or paid API calls. Its
+source excerpt remains separate from the optional grounded AI explanation, so
+the UI never presents copied source syntax as human reasoning. The AI mode uses
+the configured model, retains verified citations, reports available token
+usage, and cannot run until its per-question paid-request box is checked. Accuracy
+metrics need expected evidence IDs. Without them, the workspace reports “Not
 measured” instead of treating a plausible answer as proof. The pinned source,
 checksum, attribution, and CC BY-SA 4.0 license are recorded in
 [`data/library/catalog.json`](data/library/catalog.json). See the
 [real-world testing guide](docs/REAL_WORLD_TESTING.md) for the complete workflow
 and evidence boundaries.
 
-The workspace labels this answer mode as an **extractive baseline**: it returns
-a bounded passage from the first result and does not combine several passages.
+The workspace labels direct-evidence mode as an **extractive baseline**. It
+returns a bounded passage from the first result and does not combine several
+passages.
 A narrow overview-intent rule prefers Overview, Introduction, Purpose, Problem,
 Summary, or the first document section for questions such as “What is the
 project?” Specific questions continue through ordinary BM25 ranking.

@@ -24,15 +24,24 @@ The command starts a local server at `http://127.0.0.1:8765` and opens it in the
 default browser. It binds only to localhost. Press `Ctrl+C` in the terminal to
 stop it.
 
-No API key is required. The workspace deliberately uses the deterministic
-extractive generator, so it makes no paid OpenAI calls.
+No API key is required for the default direct-evidence mode. It deliberately
+uses the deterministic extractive generator, so it makes no paid OpenAI calls.
+It removes UI boilerplate but does not rewrite the underlying source passage.
 
-The page labels that mode explicitly. It returns text from the first retrieved
-passage; it does not combine multiple passages or reason over the complete
-document. Broad overview requests receive a bounded retrieval adjustment that
-prefers headings such as Overview, Introduction, Purpose, Problem, and Summary,
-or the document's first section. Specific questions still use normal BM25
-ranking.
+The optional **Plain-English AI — paid** mode uses the model and reasoning
+effort configured in `.env`. The UI requires an explicit confirmation for each
+question before it can make one paid request. It sends only the question,
+grounding instructions, and retrieved passages through the existing OpenAI
+adapter, disables response storage, validates numeric citations, and reports
+token usage when the provider supplies it. Deterministic tests use a fake
+generator and never make this request.
+
+The page labels each mode explicitly. Direct evidence returns text from the
+first retrieved passage. It does not combine multiple passages or reason over
+the complete document. Broad overview requests receive a bounded retrieval
+adjustment that prefers headings such as Overview, Introduction, Purpose,
+Problem, and Summary, or the document's first section. Specific questions still
+use normal BM25 ranking.
 
 ## First ASVS test
 
@@ -91,7 +100,7 @@ This is intentional: a plausible answer is not automatically a correct answer.
 | Reciprocal rank | The first correct passage appeared near the top; 1.00 means first place. |
 | Citation precision | The answer did not cite unrelated retrieved passages. |
 | Citation recall | The answer cited every expected evidence ID. |
-| Local response time | Retrieval and extractive answering completed in the displayed time on this machine. |
+| Response time | Retrieval and answering completed in the displayed time on this machine. |
 
 Each result card repeats its criterion and explains the observed value for a
 non-technical reader.
@@ -112,6 +121,9 @@ attribution, transformation, and license. OWASP does not endorse this project.
 - The six starter cases are a learning seed, not comprehensive ASVS coverage.
 - The extractive baseline quotes the best passage; it does not synthesize a
   professional security assessment.
+- Plain-English AI can synthesize retrieved evidence, but a fluent answer can
+  still be wrong; retrieval, citation, and human-labelled evaluation remain
+  necessary.
 - Overview-aware ranking handles a small class of introductory questions; it is
   not general semantic understanding.
 - Expected IDs test retrieval and citations, not full semantic correctness.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import webbrowser
 from collections import OrderedDict
@@ -16,14 +17,27 @@ from typing import Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
+from dotenv import load_dotenv
+
 from qa_assistant.assistant import QAAssistant
-from qa_assistant.generation import ExtractiveGenerator
+from qa_assistant.generation import (
+    EXTRACTIVE_PREFIX,
+    AnswerGenerator,
+    ExtractiveGenerator,
+)
 from qa_assistant.ingestion import (
     SUPPORTED_SUFFIXES,
     document_from_text,
     load_documents,
 )
 from qa_assistant.models import GroundedAnswer, SearchResult, SourceDocument
+from qa_assistant.openai_generator import (
+    DEFAULT_OPENAI_MODEL,
+    DEFAULT_REASONING_EFFORT,
+    OpenAIAdapterError,
+    OpenAIResponsesGenerator,
+    ResponseUsage,
+)
 from qa_assistant.service import QAKnowledgeBase
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +50,8 @@ MAX_UPLOAD_FILES = 20
 MAX_UPLOAD_CHARS = 5_000_000
 MAX_SESSIONS = 10
 _EVIDENCE_ID = re.compile(r"v\d+\.\d+\.\d+-\d+\.\d+\.\d+", re.IGNORECASE)
+EVIDENCE_MODE = "evidence"
+PLAIN_ENGLISH_MODE = "plain_english"
 
 
 class WorkspaceDataError(ValueError):
@@ -93,7 +109,22 @@ def load_catalog() -> dict[str, Any]:
     starter_cases = cases.get("cases")
     if not isinstance(entries, list) or not isinstance(starter_cases, list):
         raise WorkspaceDataError("library catalog is missing entries or starter cases")
-    return {"entries": entries, "starter_cases": starter_cases}
+    load_dotenv()
+    return {
+        "entries": entries,
+        "starter_cases": starter_cases,
+        "answer_modes": {
+            EVIDENCE_MODE: {
+                "available": True,
+                "label": "Direct evidence — free",
+            },
+            PLAIN_ENGLISH_MODE: {
+                "available": bool(os.getenv("OPENAI_API_KEY")),
+                "label": "Plain-English AI — paid",
+                "model": os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
+            },
+        },
+    }
 
 
 def _safe_library_path(relative_path: str) -> Path:
@@ -231,10 +262,35 @@ def _metric(
     }
 
 
+def _answer_generator(answer_mode: str, *, confirm_paid: bool) -> AnswerGenerator:
+    if answer_mode == EVIDENCE_MODE:
+        return ExtractiveGenerator()
+    if answer_mode != PLAIN_ENGLISH_MODE:
+        raise WorkspaceDataError(f"unknown answer mode: {answer_mode}")
+    if not confirm_paid:
+        raise WorkspaceDataError(
+            "plain-English AI mode requires confirmation for this paid request"
+        )
+
+    load_dotenv()
+    try:
+        return OpenAIResponsesGenerator(
+            model=os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
+            reasoning_effort=os.getenv(
+                "OPENAI_REASONING_EFFORT", DEFAULT_REASONING_EFFORT.value
+            ),
+            max_output_tokens=600,
+        )
+    except (OpenAIAdapterError, ValueError) as exc:
+        raise WorkspaceDataError(str(exc)) from exc
+
+
 def _labelled_metrics(
     answer: GroundedAnswer,
     expected_ids: list[str],
     duration_ms: float,
+    *,
+    answer_mode: str,
 ) -> list[dict[str, object]]:
     results = answer.context.results
     if not expected_ids:
@@ -373,11 +429,15 @@ def _labelled_metrics(
 
     metrics.append(
         _metric(
-            "Local response time",
+            "Response time",
             duration_ms,
             f"{duration_ms:.2f} ms",
             "Lower is faster; this is one local run, not a production service-level promise.",
-            "Time used to retrieve passages and produce the deterministic extractive answer.",
+            (
+                "Time used for local retrieval and the paid grounded AI response."
+                if answer_mode == PLAIN_ENGLISH_MODE
+                else "Time used for local retrieval and the direct evidence excerpt."
+            ),
         )
     )
     return metrics
@@ -389,6 +449,8 @@ def evaluate_question(
     question: str,
     expected_ids: object,
     top_k: int,
+    answer_mode: object = EVIDENCE_MODE,
+    confirm_paid: object = False,
 ) -> dict[str, object]:
     """Answer one question and return transparent labelled diagnostics."""
     question = question.strip()
@@ -400,22 +462,72 @@ def evaluate_question(
         isinstance(value, str) for value in expected_ids
     ):
         raise WorkspaceDataError("expected_ids must be a list of strings")
+    if not isinstance(answer_mode, str):
+        raise WorkspaceDataError("answer_mode must be a string")
+    if not isinstance(confirm_paid, bool):
+        raise WorkspaceDataError("confirm_paid must be true or false")
     normalized_ids = list(
         dict.fromkeys(
             value.strip().casefold() for value in expected_ids if value.strip()
         )
     )
 
+    generator = _answer_generator(answer_mode, confirm_paid=confirm_paid)
+    assistant = QAAssistant(session.assistant.knowledge_base, generator)
     started = perf_counter()
-    answer = session.assistant.answer(question, top_k=top_k)
+    try:
+        answer = assistant.answer(question, top_k=top_k)
+    except OpenAIAdapterError as exc:
+        raise WorkspaceDataError(str(exc)) from exc
     duration_ms = (perf_counter() - started) * 1000
+    usage = getattr(generator, "last_usage", None)
+    answer_text = answer.text
+    if answer_mode == EVIDENCE_MODE:
+        answer_text = answer_text.removeprefix(EXTRACTIVE_PREFIX)
     return {
         "question": question,
-        "answer": answer.text,
+        "answer": answer_text,
+        "answer_mode": answer_mode,
+        "answer_heading": (
+            "Plain-English grounded answer"
+            if answer_mode == PLAIN_ENGLISH_MODE
+            else "Direct source excerpt"
+        ),
+        "mode_explanation": (
+            "Generated from retrieved evidence through a paid OpenAI request."
+            if answer_mode == PLAIN_ENGLISH_MODE
+            else "Copied from the first retrieved passage without AI rewriting."
+        ),
         "supported": answer.is_supported,
-        "citations": [citation.label for citation in answer.citations],
+        "citations": [
+            {
+                "identifier": citation.identifier,
+                "source": citation.source,
+                "section": citation.heading,
+                "display": (
+                    f"[{citation.identifier}] {citation.source}, section "
+                    f"“{citation.heading}”"
+                ),
+            }
+            for citation in answer.citations
+        ],
+        "usage": (
+            {
+                "input_tokens": usage.input_tokens,
+                "output_tokens": usage.output_tokens,
+                "total_tokens": usage.total_tokens,
+                "reasoning_tokens": usage.reasoning_tokens,
+            }
+            if isinstance(usage, ResponseUsage)
+            else None
+        ),
         "expected_ids": normalized_ids,
-        "metrics": _labelled_metrics(answer, normalized_ids, duration_ms),
+        "metrics": _labelled_metrics(
+            answer,
+            normalized_ids,
+            duration_ms,
+            answer_mode=answer_mode,
+        ),
         "results": [
             _result_data(result, rank)
             for rank, result in enumerate(answer.context.results, start=1)
@@ -514,6 +626,8 @@ class WorkspaceRequestHandler(BaseHTTPRequestHandler):
                     question=question,
                     expected_ids=payload.get("expected_ids", []),
                     top_k=top_k,
+                    answer_mode=payload.get("answer_mode", EVIDENCE_MODE),
+                    confirm_paid=payload.get("confirm_paid", False),
                 )
                 self._json_response(HTTPStatus.OK, result)
                 return

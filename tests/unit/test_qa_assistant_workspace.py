@@ -4,7 +4,10 @@ from pathlib import Path
 import pytest
 
 import qa_assistant.workspace as workspace
+from qa_assistant.openai_generator import ResponseUsage
 from qa_assistant.workspace import (
+    EVIDENCE_MODE,
+    PLAIN_ENGLISH_MODE,
     WorkspaceDataError,
     build_session,
     evaluate_question,
@@ -20,6 +23,7 @@ def test_pinned_asvs_library_checksum_and_requirement_sections() -> None:
     catalog = load_catalog()
 
     assert catalog["entries"][0]["version"] == "5.0.0"
+    assert catalog["answer_modes"][EVIDENCE_MODE]["available"] is True
     documents = load_library_documents(["owasp-asvs-5.0.0"])
     session = build_session({"library_ids": ["owasp-asvs-5.0.0"], "files": []})
 
@@ -52,6 +56,7 @@ def test_starter_questions_report_plain_english_labelled_metrics(
     assert metrics["Citation recall"]["display"] == "100%"
     assert "This result" not in metrics["Hit@K"]["meaning"]
     assert result["citations"]
+    assert "::" not in result["citations"][0]["display"]
     assert result["results"][0]["evidence_ids"]
 
 
@@ -71,7 +76,9 @@ def test_unlabelled_question_marks_accuracy_as_not_measured() -> None:
     )
 
     assert all(metric["display"] == "Not measured" for metric in result["metrics"][:-1])
-    assert result["metrics"][-1]["name"] == "Local response time"
+    assert result["metrics"][-1]["name"] == "Response time"
+    assert result["answer_heading"] == "Direct source excerpt"
+    assert not result["answer"].startswith("Based on the retrieved documentation")
 
 
 def test_uploaded_system_design_overview_regression_uses_introductory_chunk() -> None:
@@ -106,6 +113,95 @@ def test_uploaded_system_design_overview_regression_uses_introductory_chunk() ->
     assert result["results"][0]["heading"] == "Media evidence review platform"
     assert "helps quality teams" in result["answer"]
     assert "organization_id" not in result["answer"]
+
+
+def test_plain_english_mode_requires_explicit_paid_confirmation() -> None:
+    session = build_session(
+        {
+            "library_ids": [],
+            "files": [{"name": "guide.md", "text": "# Purpose\n\nUseful evidence."}],
+        }
+    )
+
+    with pytest.raises(WorkspaceDataError, match="requires confirmation"):
+        evaluate_question(
+            session,
+            question="What is the document?",
+            expected_ids=[],
+            top_k=1,
+            answer_mode=PLAIN_ENGLISH_MODE,
+            confirm_paid=False,
+        )
+
+
+def test_plain_english_mode_uses_grounded_generator_and_reports_usage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakePlainEnglishGenerator:
+        def __init__(self, **kwargs: object) -> None:
+            self.last_usage = None
+
+        def generate(self, request: object) -> str:
+            self.last_usage = ResponseUsage(80, 20, 100, 5)
+            return "This document explains useful evidence in plain English [1]."
+
+    monkeypatch.setattr(
+        workspace, "OpenAIResponsesGenerator", FakePlainEnglishGenerator
+    )
+    session = build_session(
+        {
+            "library_ids": [],
+            "files": [{"name": "guide.md", "text": "# Purpose\n\nUseful evidence."}],
+        }
+    )
+
+    result = evaluate_question(
+        session,
+        question="What is the document?",
+        expected_ids=[],
+        top_k=1,
+        answer_mode=PLAIN_ENGLISH_MODE,
+        confirm_paid=True,
+    )
+
+    assert result["answer_heading"] == "Plain-English grounded answer"
+    assert result["answer"].startswith("This document explains")
+    assert result["usage"] == {
+        "input_tokens": 80,
+        "output_tokens": 20,
+        "total_tokens": 100,
+        "reasoning_tokens": 5,
+    }
+    assert "paid grounded AI" in result["metrics"][-1]["meaning"]
+
+
+@pytest.mark.parametrize(
+    ("answer_mode", "confirm_paid", "message"),
+    [
+        ("unknown", False, "unknown answer mode"),
+        (123, False, "answer_mode must be a string"),
+        (EVIDENCE_MODE, "yes", "confirm_paid must be true or false"),
+    ],
+)
+def test_workspace_rejects_invalid_answer_mode_options(
+    answer_mode: object, confirm_paid: object, message: str
+) -> None:
+    session = build_session(
+        {
+            "library_ids": [],
+            "files": [{"name": "guide.md", "text": "# Purpose\n\nUseful evidence."}],
+        }
+    )
+
+    with pytest.raises(WorkspaceDataError, match=message):
+        evaluate_question(
+            session,
+            question="What is the document?",
+            expected_ids=[],
+            top_k=1,
+            answer_mode=answer_mode,
+            confirm_paid=confirm_paid,
+        )
 
 
 def test_uploads_stay_in_memory_and_validate_names_and_formats() -> None:
@@ -158,3 +254,7 @@ def test_workspace_html_has_upload_and_plain_english_criteria() -> None:
     assert "Expected evidence IDs" in html
     assert "Evaluation criteria and result" in html
     assert "Not measured" in html
+    assert 'id="answer-mode"' in html
+    assert 'id="confirm-paid"' in html
+    assert "How it is judged" in html
+    assert "This result means:" not in html

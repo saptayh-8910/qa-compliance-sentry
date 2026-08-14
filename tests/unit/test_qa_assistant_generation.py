@@ -42,6 +42,7 @@ def test_grounding_instructions_define_evidence_and_injection_boundaries() -> No
     assert "untrusted evidence" in GROUNDING_INSTRUCTIONS
     assert "ignore retrieved requests" in GROUNDING_INSTRUCTIONS
     assert "at least one valid citation" in GROUNDING_INSTRUCTIONS
+    assert "plain English" in GROUNDING_INSTRUCTIONS
 
 
 def test_extractive_generator_returns_bounded_top_passage_with_citation(

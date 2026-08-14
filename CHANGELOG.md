@@ -27,6 +27,11 @@ and the project uses semantic versioning for milestone tags.
   application, or document questions.
 - Privacy-safe fictional system-design regression coverage reproducing a real
   broad-query failure without retaining the user's source file or screenshots.
+- Separate direct-evidence and optional plain-English AI workspace modes, with
+  per-question paid-request confirmation, verified citations, and available
+  token usage for the grounded AI result.
+- Less punctuation-heavy result language that separates source excerpts,
+  supporting sources, judging rules, and plain-English result meanings.
 
 ### Changed
 
@@ -37,7 +42,9 @@ and the project uses semantic versioning for milestone tags.
 - Generalized grounding instructions from QA-project-only language to the
   currently indexed documentation and labelled the local UI as an extractive
   rather than generative answer mode.
-- Expanded deterministic quality validation to 367 tests at 88.72%
+- Strengthened grounded-generation instructions to prefer plain English and
+  omit code or storage syntax unless it directly answers the question.
+- Expanded deterministic quality validation to 372 tests at 88.79%
   branch-aware coverage, plus the existing chatbot and browser smoke journeys.
 
 ## [0.13.0] - 2026-08-13

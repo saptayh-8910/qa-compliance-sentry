@@ -80,6 +80,11 @@
     .rank { color: var(--green); }
     .hidden { display: none !important; }
     .honesty { padding: 14px; border-radius: 12px; background: var(--amber-soft); color: #6f4608; font-size: .9rem; }
+    .mode-box { margin: 15px 0; padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: #faf9f4; }
+    .inline-check { display: flex; gap: 9px; align-items: flex-start; margin: 12px 0 0; font-weight: 700; }
+    .inline-check input { margin-top: 5px; }
+    .metric-label { margin-top: 9px; color: var(--muted); font-size: .72rem; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+    .source-label { display: block; margin-bottom: 5px; color: var(--muted); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
     footer { margin-top: 26px; color: var(--muted); font-size: .85rem; }
     @media (max-width: 780px) {
       .grid, .form-row { grid-template-columns: 1fr; }
@@ -95,8 +100,7 @@
     <div class="eyebrow">QA Compliance Sentry · local workspace</div>
     <h1>Test retrieval with real documents.</h1>
     <p class="lede">Use the pinned OWASP ASVS library, add your own Markdown, text, or official ASVS JSON, then ask questions. Expected evidence IDs turn a demonstration into a measurable retrieval test.</p>
-    <p class="notice"><strong>Private by design:</strong> this workspace runs on your computer. Uploaded files stay in memory and are not saved. The default extractive mode makes no paid API calls.</p>
-    <p class="honesty"><strong>Answer mode: Extractive baseline.</strong> It returns a bounded passage from the first search result. It does not combine several passages or provide semantic reasoning like a generative model.</p>
+    <p class="notice"><strong>Private by design.</strong> This workspace runs on your computer. Uploaded files stay in memory and are not saved. Direct-evidence mode makes no paid API calls.</p>
   </header>
 
   <section class="grid" aria-label="Document setup">
@@ -132,6 +136,18 @@
     <h2><span class="step">2</span>Ask and measure</h2>
     <label for="starter">Starter test</label>
     <select id="starter"><option value="">Write my own question</option></select>
+    <div class="mode-box">
+      <label for="answer-mode" style="margin-top: 0">Answer style</label>
+      <select id="answer-mode">
+        <option value="evidence">Direct evidence — free</option>
+        <option value="plain_english">Plain-English AI — paid</option>
+      </select>
+      <p class="help" id="mode-help">Copies a bounded passage from the first search result without AI rewriting.</p>
+      <label class="inline-check hidden" id="paid-confirm-row" for="confirm-paid">
+        <input id="confirm-paid" type="checkbox">
+        <span id="paid-confirm-text">I approve one paid OpenAI request for this question.</span>
+      </label>
+    </div>
     <label for="question">Question</label>
     <textarea id="question" placeholder="Example: What does ASVS require to protect database queries from SQL injection?"></textarea>
     <div class="form-row">
@@ -152,10 +168,12 @@
 
   <section class="hidden" id="outcome" aria-live="polite">
     <div class="answer">
-      <h2>Observed answer · Extractive baseline</h2>
+      <h2 id="answer-heading">Direct source excerpt</h2>
+      <p class="help" id="mode-explanation"></p>
       <div id="answer-text"></div>
-      <h3>Verified citations</h3>
+      <h3>Supporting sources</h3>
       <ul class="citations" id="citations"></ul>
+      <p class="help hidden" id="usage"></p>
     </div>
     <div class="metrics-intro">
       <h2>Evaluation criteria and result</h2>
@@ -169,7 +187,7 @@
   <footer>OWASP ASVS 5.0.0 is used under CC BY-SA 4.0. OWASP does not endorse this project. Source provenance and checksum are recorded in <code>data/library/catalog.json</code>.</footer>
 </main>
 <script>
-  const state = { sessionId: null, cases: [], files: [] };
+  const state = { sessionId: null, cases: [], files: [], aiMode: null };
   const byId = id => document.getElementById(id);
   const setStatus = (id, message, error = false) => {
     const element = byId(id);
@@ -208,6 +226,11 @@
         wrapper.append(checkbox, copy); library.appendChild(wrapper);
       });
       state.cases = data.starter_cases;
+      state.aiMode = data.answer_modes.plain_english;
+      const aiOption = byId('answer-mode').querySelector('option[value="plain_english"]');
+      aiOption.disabled = !state.aiMode.available;
+      if (!state.aiMode.available) aiOption.textContent = 'Plain-English AI — add OPENAI_API_KEY to .env';
+      byId('paid-confirm-text').textContent = `I approve one paid OpenAI request using ${state.aiMode.model} for this question.`;
       const select = byId('starter');
       state.cases.forEach((item, index) => {
         const option = document.createElement('option');
@@ -228,6 +251,14 @@
     const item = state.cases[Number(event.target.value)];
     byId('question').value = item.question;
     byId('expected').value = item.expected_evidence.join(', ');
+  });
+  byId('answer-mode').addEventListener('change', event => {
+    const paid = event.target.value === 'plain_english';
+    byId('paid-confirm-row').classList.toggle('hidden', !paid);
+    byId('mode-help').textContent = paid
+      ? 'Writes a natural explanation from the retrieved evidence. This makes one paid request and still requires verified citations.'
+      : 'Copies a bounded passage from the first search result without AI rewriting.';
+    if (!paid) byId('confirm-paid').checked = false;
   });
   byId('index').addEventListener('click', async () => {
     const button = byId('index'); button.disabled = true;
@@ -251,17 +282,26 @@
     } finally { button.disabled = false; }
   });
   function renderOutcome(data) {
+    byId('answer-heading').textContent = data.answer_heading;
+    byId('mode-explanation').textContent = data.mode_explanation;
     byId('answer-text').textContent = data.answer;
     const citations = byId('citations'); citations.textContent = '';
-    if (data.citations.length) data.citations.forEach(value => addText(citations, 'li', value));
+    if (data.citations.length) data.citations.forEach(value => addText(citations, 'li', value.display));
     else addText(citations, 'li', 'No citation was produced.');
+    const usage = byId('usage');
+    usage.classList.toggle('hidden', !data.usage);
+    usage.textContent = data.usage
+      ? `Model usage — ${data.usage.input_tokens} input tokens, ${data.usage.output_tokens} output tokens, ${data.usage.total_tokens} total tokens.`
+      : '';
     const metrics = byId('metrics'); metrics.textContent = '';
     data.metrics.forEach(item => {
       const card = document.createElement('article'); card.className = 'metric';
       addText(card, 'div', item.name, 'name');
       addText(card, 'div', item.display, 'value');
-      addText(card, 'div', `Criterion: ${item.criterion}`, 'criterion');
-      addText(card, 'p', `This result means: ${item.meaning}`, 'meaning');
+      addText(card, 'div', 'How it is judged', 'metric-label');
+      addText(card, 'div', item.criterion, 'criterion');
+      addText(card, 'div', 'What this result means', 'metric-label');
+      addText(card, 'p', item.meaning, 'meaning');
       metrics.appendChild(card);
     });
     const results = byId('results'); results.textContent = '';
@@ -272,7 +312,10 @@
       addText(summary, 'span', `#${item.rank} `, 'rank');
       summary.append(document.createTextNode(`${item.heading} · score ${item.score}`));
       details.appendChild(summary);
-      addText(details, 'p', `Source: ${item.source}\n\n${item.text}`);
+      const evidence = document.createElement('p');
+      addText(evidence, 'span', 'Source', 'source-label');
+      evidence.append(document.createTextNode(`${item.source}\n\n${item.text}`));
+      details.appendChild(evidence);
       results.appendChild(details);
     });
     byId('outcome').classList.remove('hidden');
@@ -283,6 +326,11 @@
     const button = byId('ask'); button.disabled = true;
     setStatus('ask-status', 'Retrieving evidence and scoring the result…');
     try {
+      const answerMode = byId('answer-mode').value;
+      const confirmPaid = byId('confirm-paid').checked;
+      if (answerMode === 'plain_english' && !confirmPaid) {
+        throw new Error('Confirm the paid OpenAI request before asking.');
+      }
       const expectedIds = byId('expected').value.split(',').map(value => value.trim()).filter(Boolean);
       const data = await api('/api/ask', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -290,10 +338,13 @@
           session_id: state.sessionId,
           question: byId('question').value,
           expected_ids: expectedIds,
-          top_k: Number(byId('top-k').value)
+          top_k: Number(byId('top-k').value),
+          answer_mode: answerMode,
+          confirm_paid: confirmPaid
         })
       });
       renderOutcome(data); setStatus('ask-status', 'Evaluation complete.');
+      if (answerMode === 'plain_english') byId('confirm-paid').checked = false;
     } catch (error) {
       setStatus('ask-status', error.message, true);
     } finally { button.disabled = false; }
