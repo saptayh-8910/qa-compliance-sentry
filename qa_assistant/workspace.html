@@ -140,7 +140,8 @@
       <label for="answer-mode" style="margin-top: 0">Answer style</label>
       <select id="answer-mode">
         <option value="evidence">Direct evidence — free</option>
-        <option value="plain_english">Plain-English AI — paid</option>
+        <option value="local_ai">Local AI — no API fee</option>
+        <option value="plain_english">Cloud AI — paid</option>
       </select>
       <p class="help" id="mode-help">Copies a bounded passage from the first search result without AI rewriting.</p>
       <label class="inline-check hidden" id="paid-confirm-row" for="confirm-paid">
@@ -187,7 +188,7 @@
   <footer>OWASP ASVS 5.0.0 is used under CC BY-SA 4.0. OWASP does not endorse this project. Source provenance and checksum are recorded in <code>data/library/catalog.json</code>.</footer>
 </main>
 <script>
-  const state = { sessionId: null, cases: [], files: [], aiMode: null };
+  const state = { sessionId: null, cases: [], files: [], localMode: null, cloudMode: null };
   const byId = id => document.getElementById(id);
   const setStatus = (id, message, error = false) => {
     const element = byId(id);
@@ -226,11 +227,16 @@
         wrapper.append(checkbox, copy); library.appendChild(wrapper);
       });
       state.cases = data.starter_cases;
-      state.aiMode = data.answer_modes.plain_english;
-      const aiOption = byId('answer-mode').querySelector('option[value="plain_english"]');
-      aiOption.disabled = !state.aiMode.available;
-      if (!state.aiMode.available) aiOption.textContent = 'Plain-English AI — add OPENAI_API_KEY to .env';
-      byId('paid-confirm-text').textContent = `I approve one paid OpenAI request using ${state.aiMode.model} for this question.`;
+      state.localMode = data.answer_modes.local_ai;
+      state.cloudMode = data.answer_modes.plain_english;
+      const localOption = byId('answer-mode').querySelector('option[value="local_ai"]');
+      localOption.disabled = !state.localMode.available;
+      if (!state.localMode.available) localOption.textContent = 'Local AI — install Ollama first';
+      else localOption.textContent = `Local AI — no API fee (${state.localMode.model})`;
+      const cloudOption = byId('answer-mode').querySelector('option[value="plain_english"]');
+      cloudOption.disabled = !state.cloudMode.available;
+      if (!state.cloudMode.available) cloudOption.textContent = 'Cloud AI — add OPENAI_API_KEY to .env';
+      byId('paid-confirm-text').textContent = `I approve one paid OpenAI request using ${state.cloudMode.model} for this question.`;
       const select = byId('starter');
       state.cases.forEach((item, index) => {
         const option = document.createElement('option');
@@ -254,10 +260,13 @@
   });
   byId('answer-mode').addEventListener('change', event => {
     const paid = event.target.value === 'plain_english';
+    const local = event.target.value === 'local_ai';
     byId('paid-confirm-row').classList.toggle('hidden', !paid);
     byId('mode-help').textContent = paid
-      ? 'Writes a natural explanation from the retrieved evidence. This makes one paid request and still requires verified citations.'
-      : 'Copies a bounded passage from the first search result without AI rewriting.';
+      ? 'Writes a natural explanation using the cloud model. This makes one paid request and still requires verified citations.'
+      : (local
+        ? `Writes a natural explanation on this computer using ${state.localMode.model}. No document text is sent to a cloud model. Review the evidence because a small model can still misread it.`
+        : 'Copies a bounded passage from the first search result without AI rewriting.');
     if (!paid) byId('confirm-paid').checked = false;
   });
   byId('index').addEventListener('click', async () => {

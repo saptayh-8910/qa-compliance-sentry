@@ -27,9 +27,15 @@ and the project uses semantic versioning for milestone tags.
   application, or document questions.
 - Privacy-safe fictional system-design regression coverage reproducing a real
   broad-query failure without retaining the user's source file or screenshots.
-- Separate direct-evidence and optional plain-English AI workspace modes, with
-  per-question paid-request confirmation, verified citations, and available
-  token usage for the grounded AI result.
+- Separate direct-evidence, local Gemma 3 1B, and cloud OpenAI workspace modes,
+  with per-question paid-request confirmation, verified citations, and
+  available token usage for generated results.
+- Loopback-only Ollama adapter with deterministic temperature, bounded context
+  and output, disabled model thinking, structured answer-and-citation output,
+  local error guidance, and mocked tests.
+- First controlled Gemma 3 1B ASVS observation: the answer was concise, but it
+  selected the wrong retrieved citations, which the workspace exposes as a
+  citation precision and recall failure instead of a false pass.
 - Less punctuation-heavy result language that separates source excerpts,
   supporting sources, judging rules, and plain-English result meanings.
 
@@ -44,7 +50,7 @@ and the project uses semantic versioning for milestone tags.
   rather than generative answer mode.
 - Strengthened grounded-generation instructions to prefer plain English and
   omit code or storage syntax unless it directly answers the question.
-- Expanded deterministic quality validation to 372 tests at 88.79%
+- Expanded deterministic quality validation to 385 tests at 88.80%
   branch-aware coverage, plus the existing chatbot and browser smoke journeys.
 
 ## [0.13.0] - 2026-08-13

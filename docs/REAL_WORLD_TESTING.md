@@ -25,10 +25,28 @@ default browser. It binds only to localhost. Press `Ctrl+C` in the terminal to
 stop it.
 
 No API key is required for the default direct-evidence mode. It deliberately
-uses the deterministic extractive generator, so it makes no paid OpenAI calls.
-It removes UI boilerplate but does not rewrite the underlying source passage.
+uses the deterministic extractive generator, so it makes no model request. It
+removes UI boilerplate but does not rewrite the underlying source passage.
 
-The optional **Plain-English AI — paid** mode uses the model and reasoning
+The optional **Local AI — no API fee** mode uses Gemma 3 1B through Ollama. It
+runs the retrieved question and passages on this computer, with temperature
+zero, a 4,096-token context, and a bounded answer. The model must still produce
+valid numeric citations; local generation does not bypass the groundedness
+contract. Because a small model can blend neighboring passages, the interface
+also warns that a valid citation is not proof that every generated claim is
+supported. Install it with `brew install ollama`, start it with
+`brew services start ollama`, and download the model with
+`ollama pull gemma3:1b`.
+
+In the first controlled ASVS run on the project's 8 GB M1 test machine, Gemma
+3 1B produced a concise answer in about 7.4 seconds. Retrieval ranked the
+expected requirement first, but the model selected citations 2 and 3 instead
+of expected citation 1. The workspace therefore reports failed citation
+precision and recall for that run. This is one observation, not a universal
+model benchmark, but it demonstrates why readable output and valid-looking
+citations are evaluated separately.
+
+The optional **Cloud AI — paid** mode uses the model and reasoning
 effort configured in `.env`. The UI requires an explicit confirmation for each
 question before it can make one paid request. It sends only the question,
 grounding instructions, and retrieved passages through the existing OpenAI
@@ -37,11 +55,12 @@ token usage when the provider supplies it. Deterministic tests use a fake
 generator and never make this request.
 
 The page labels each mode explicitly. Direct evidence returns text from the
-first retrieved passage. It does not combine multiple passages or reason over
-the complete document. Broad overview requests receive a bounded retrieval
-adjustment that prefers headings such as Overview, Introduction, Purpose,
-Problem, and Summary, or the document's first section. Specific questions still
-use normal BM25 ranking.
+first retrieved passage. Local and cloud modes explain retrieved evidence in
+plain English but differ in model size, privacy boundary, cost, and expected
+quality. None of the modes reasons over passages that retrieval did not provide.
+Broad overview requests receive a bounded retrieval adjustment that prefers
+headings such as Overview, Introduction, Purpose, Problem, and Summary, or the
+document's first section. Specific questions still use normal BM25 ranking.
 
 ## First ASVS test
 

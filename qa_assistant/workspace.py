@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import webbrowser
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -30,13 +31,23 @@ from qa_assistant.ingestion import (
     document_from_text,
     load_documents,
 )
-from qa_assistant.models import GroundedAnswer, SearchResult, SourceDocument
+from qa_assistant.models import (
+    GenerationUsage,
+    GroundedAnswer,
+    SearchResult,
+    SourceDocument,
+)
+from qa_assistant.ollama_generator import (
+    DEFAULT_OLLAMA_BASE_URL,
+    DEFAULT_OLLAMA_MODEL,
+    OllamaAdapterError,
+    OllamaGenerator,
+)
 from qa_assistant.openai_generator import (
     DEFAULT_OPENAI_MODEL,
     DEFAULT_REASONING_EFFORT,
     OpenAIAdapterError,
     OpenAIResponsesGenerator,
-    ResponseUsage,
 )
 from qa_assistant.service import QAKnowledgeBase
 
@@ -51,6 +62,7 @@ MAX_UPLOAD_CHARS = 5_000_000
 MAX_SESSIONS = 10
 _EVIDENCE_ID = re.compile(r"v\d+\.\d+\.\d+-\d+\.\d+\.\d+", re.IGNORECASE)
 EVIDENCE_MODE = "evidence"
+LOCAL_AI_MODE = "local_ai"
 PLAIN_ENGLISH_MODE = "plain_english"
 
 
@@ -117,6 +129,11 @@ def load_catalog() -> dict[str, Any]:
             EVIDENCE_MODE: {
                 "available": True,
                 "label": "Direct evidence — free",
+            },
+            LOCAL_AI_MODE: {
+                "available": shutil.which("ollama") is not None,
+                "label": "Local AI — no API fee",
+                "model": os.getenv("OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL),
             },
             PLAIN_ENGLISH_MODE: {
                 "available": bool(os.getenv("OPENAI_API_KEY")),
@@ -265,6 +282,15 @@ def _metric(
 def _answer_generator(answer_mode: str, *, confirm_paid: bool) -> AnswerGenerator:
     if answer_mode == EVIDENCE_MODE:
         return ExtractiveGenerator()
+    if answer_mode == LOCAL_AI_MODE:
+        load_dotenv()
+        try:
+            return OllamaGenerator(
+                model=os.getenv("OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL),
+                base_url=os.getenv("OLLAMA_BASE_URL", DEFAULT_OLLAMA_BASE_URL),
+            )
+        except (OllamaAdapterError, ValueError) as exc:
+            raise WorkspaceDataError(str(exc)) from exc
     if answer_mode != PLAIN_ENGLISH_MODE:
         raise WorkspaceDataError(f"unknown answer mode: {answer_mode}")
     if not confirm_paid:
@@ -436,7 +462,11 @@ def _labelled_metrics(
             (
                 "Time used for local retrieval and the paid grounded AI response."
                 if answer_mode == PLAIN_ENGLISH_MODE
-                else "Time used for local retrieval and the direct evidence excerpt."
+                else (
+                    "Time used for retrieval and local model generation on this computer."
+                    if answer_mode == LOCAL_AI_MODE
+                    else "Time used for local retrieval and the direct evidence excerpt."
+                )
             ),
         )
     )
@@ -477,7 +507,7 @@ def evaluate_question(
     started = perf_counter()
     try:
         answer = assistant.answer(question, top_k=top_k)
-    except OpenAIAdapterError as exc:
+    except (OllamaAdapterError, OpenAIAdapterError) as exc:
         raise WorkspaceDataError(str(exc)) from exc
     duration_ms = (perf_counter() - started) * 1000
     usage = getattr(generator, "last_usage", None)
@@ -489,14 +519,24 @@ def evaluate_question(
         "answer": answer_text,
         "answer_mode": answer_mode,
         "answer_heading": (
-            "Plain-English grounded answer"
+            "Cloud plain-English answer"
             if answer_mode == PLAIN_ENGLISH_MODE
-            else "Direct source excerpt"
+            else (
+                "Local plain-English answer"
+                if answer_mode == LOCAL_AI_MODE
+                else "Direct source excerpt"
+            )
         ),
         "mode_explanation": (
             "Generated from retrieved evidence through a paid OpenAI request."
             if answer_mode == PLAIN_ENGLISH_MODE
-            else "Copied from the first retrieved passage without AI rewriting."
+            else (
+                "Generated from retrieved evidence by the local model on this computer. "
+                "Review the evidence because valid citations do not prove every "
+                "claim is supported."
+                if answer_mode == LOCAL_AI_MODE
+                else "Copied from the first retrieved passage without AI rewriting."
+            )
         ),
         "supported": answer.is_supported,
         "citations": [
@@ -518,7 +558,7 @@ def evaluate_question(
                 "total_tokens": usage.total_tokens,
                 "reasoning_tokens": usage.reasoning_tokens,
             }
-            if isinstance(usage, ResponseUsage)
+            if isinstance(usage, GenerationUsage)
             else None
         ),
         "expected_ids": normalized_ids,

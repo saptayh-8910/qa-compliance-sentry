@@ -7,6 +7,7 @@ import qa_assistant.workspace as workspace
 from qa_assistant.openai_generator import ResponseUsage
 from qa_assistant.workspace import (
     EVIDENCE_MODE,
+    LOCAL_AI_MODE,
     PLAIN_ENGLISH_MODE,
     WorkspaceDataError,
     build_session,
@@ -164,7 +165,7 @@ def test_plain_english_mode_uses_grounded_generator_and_reports_usage(
         confirm_paid=True,
     )
 
-    assert result["answer_heading"] == "Plain-English grounded answer"
+    assert result["answer_heading"] == "Cloud plain-English answer"
     assert result["answer"].startswith("This document explains")
     assert result["usage"] == {
         "input_tokens": 80,
@@ -173,6 +174,41 @@ def test_plain_english_mode_uses_grounded_generator_and_reports_usage(
         "reasoning_tokens": 5,
     }
     assert "paid grounded AI" in result["metrics"][-1]["meaning"]
+
+
+def test_local_ai_mode_uses_gemma_without_paid_confirmation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeLocalGenerator:
+        def __init__(self, **kwargs: object) -> None:
+            self.last_usage = None
+
+        def generate(self, request: object) -> str:
+            self.last_usage = ResponseUsage(70, 18, 88)
+            return "This document explains useful evidence locally [1]."
+
+    monkeypatch.setattr(workspace, "OllamaGenerator", FakeLocalGenerator)
+    session = build_session(
+        {
+            "library_ids": [],
+            "files": [{"name": "guide.md", "text": "# Purpose\n\nUseful evidence."}],
+        }
+    )
+
+    result = evaluate_question(
+        session,
+        question="What is the document?",
+        expected_ids=[],
+        top_k=1,
+        answer_mode=LOCAL_AI_MODE,
+        confirm_paid=False,
+    )
+
+    assert result["answer_heading"] == "Local plain-English answer"
+    assert "on this computer" in result["mode_explanation"]
+    assert "do not prove every claim" in result["mode_explanation"]
+    assert result["usage"]["total_tokens"] == 88
+    assert "local model generation" in result["metrics"][-1]["meaning"]
 
 
 @pytest.mark.parametrize(
@@ -255,6 +291,7 @@ def test_workspace_html_has_upload_and_plain_english_criteria() -> None:
     assert "Evaluation criteria and result" in html
     assert "Not measured" in html
     assert 'id="answer-mode"' in html
+    assert 'value="local_ai"' in html
     assert 'id="confirm-paid"' in html
     assert "How it is judged" in html
     assert "This result means:" not in html

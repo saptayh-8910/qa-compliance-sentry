@@ -211,21 +211,24 @@ selected in the public library, so the first run is:
 
 1. Press **Start testing** to index all 345 versioned requirements.
 2. Choose a labelled starter test or write a question.
-3. Choose **Direct evidence — free** or **Plain-English AI — paid**. The paid
-   option requires an API key and an explicit confirmation for each question.
+3. Choose **Direct evidence — free**, **Local AI — no API fee**, or
+   **Cloud AI — paid**. The paid option requires an API key and an explicit
+   confirmation for each question.
 4. Press **Ask question** to inspect the answer, citations, retrieval ranking,
    response time, and plain-English evaluation criteria.
 5. Use **Add your documents** to test local `.md`, `.txt`, or official ASVS
    `.json` files. Uploaded content stays in memory and is not saved.
 
 The default direct-evidence provider makes no external or paid API calls. Its
-source excerpt remains separate from the optional grounded AI explanation, so
-the UI never presents copied source syntax as human reasoning. The AI mode uses
-the configured model, retains verified citations, reports available token
-usage, and cannot run until its per-question paid-request box is checked. Accuracy
-metrics need expected evidence IDs. Without them, the workspace reports “Not
-measured” instead of treating a plausible answer as proof. The pinned source,
-checksum, attribution, and CC BY-SA 4.0 license are recorded in
+source excerpt remains separate from the grounded AI explanations, so the UI
+never presents copied source syntax as human reasoning. Local AI runs Gemma 3
+1B through Ollama on this computer without an API fee. Cloud AI uses the
+configured OpenAI model and cannot run until its per-question paid-request box
+is checked. Both generated modes retain verified citations and report available
+token usage. Accuracy metrics need expected evidence IDs. Without them, the
+workspace reports “Not measured” instead of treating a plausible answer as
+proof. The pinned source, checksum, attribution, and CC BY-SA 4.0 license are
+recorded in
 [`data/library/catalog.json`](data/library/catalog.json). See the
 [real-world testing guide](docs/REAL_WORLD_TESTING.md) for the complete workflow
 and evidence boundaries.
@@ -270,8 +273,23 @@ make answer-docs
 
 The default extractive generator returns bounded text from the best retrieved
 passage and a verified source list. It remains the fast, zero-cost CI baseline.
-The OpenAI adapter implements the same provider-neutral contract through the
-Responses API and is enabled only when explicitly selected.
+The local Ollama and OpenAI adapters implement the same provider-neutral
+contract and are enabled only when explicitly selected.
+
+For locally generated plain-English answers on an 8 GB Apple Silicon laptop,
+install Ollama and the bounded Gemma 3 1B model:
+
+```bash
+brew install ollama
+brew services start ollama
+ollama pull gemma3:1b
+```
+
+The workspace uses a 4,096-token context, temperature zero, a 160-token answer
+limit, and a structured answer-and-citation schema. Set `OLLAMA_MODEL` or
+`OLLAMA_BASE_URL` in `.env` to override the local defaults. The adapter accepts
+loopback HTTP addresses only, so the UI's local privacy claim cannot silently
+point to a remote server.
 
 Run a multi-question terminal session over one reusable index with:
 
