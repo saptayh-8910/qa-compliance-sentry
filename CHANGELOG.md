@@ -22,6 +22,11 @@ and the project uses semantic versioning for milestone tags.
   precision/recall, and local response-time results in the browser workspace.
 - In-memory Markdown, text, and official ASVS JSON uploads with filename,
   format, count, and size boundaries.
+- Bounded overview-intent reranking that prefers introductory headings or the
+  first document section for broad project, product, service, platform, system,
+  application, or document questions.
+- Privacy-safe fictional system-design regression coverage reproducing a real
+  broad-query failure without retaining the user's source file or screenshots.
 
 ### Changed
 
@@ -29,7 +34,10 @@ and the project uses semantic versioning for milestone tags.
   post-roadmap real-world data milestone.
 - Extended the document ingestion and knowledge-base boundaries to accept
   structured ASVS JSON and already-loaded browser documents.
-- Expanded deterministic quality validation to 358 tests at 88.71%
+- Generalized grounding instructions from QA-project-only language to the
+  currently indexed documentation and labelled the local UI as an extractive
+  rather than generative answer mode.
+- Expanded deterministic quality validation to 367 tests at 88.72%
   branch-aware coverage, plus the existing chatbot and browser smoke journeys.
 
 ## [0.13.0] - 2026-08-13

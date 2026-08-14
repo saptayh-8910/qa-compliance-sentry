@@ -27,6 +27,13 @@ stop it.
 No API key is required. The workspace deliberately uses the deterministic
 extractive generator, so it makes no paid OpenAI calls.
 
+The page labels that mode explicitly. It returns text from the first retrieved
+passage; it does not combine multiple passages or reason over the complete
+document. Broad overview requests receive a bounded retrieval adjustment that
+prefers headings such as Overview, Introduction, Purpose, Problem, and Summary,
+or the document's first section. Specific questions still use normal BM25
+ranking.
+
 ## First ASVS test
 
 1. Leave **OWASP Application Security Verification Standard 5.0.0** checked.
@@ -105,6 +112,8 @@ attribution, transformation, and license. OWASP does not endorse this project.
 - The six starter cases are a learning seed, not comprehensive ASVS coverage.
 - The extractive baseline quotes the best passage; it does not synthesize a
   professional security assessment.
+- Overview-aware ranking handles a small class of introductory questions; it is
+  not general semantic understanding.
 - Expected IDs test retrieval and citations, not full semantic correctness.
 - The system does not replace an application-security reviewer.
 - A stronger case study should add 60–100 independently reviewed questions,

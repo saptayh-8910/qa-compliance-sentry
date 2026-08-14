@@ -224,6 +224,12 @@ checksum, attribution, and CC BY-SA 4.0 license are recorded in
 [real-world testing guide](docs/REAL_WORLD_TESTING.md) for the complete workflow
 and evidence boundaries.
 
+The workspace labels this answer mode as an **extractive baseline**: it returns
+a bounded passage from the first result and does not combine several passages.
+A narrow overview-intent rule prefers Overview, Introduction, Purpose, Problem,
+Summary, or the first document section for questions such as “What is the
+project?” Specific questions continue through ordinary BM25 ranking.
+
 ### Retrieve QA documentation
 
 Stage 3 starts with an offline retrieval boundary that can be tested without an

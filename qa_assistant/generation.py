@@ -10,7 +10,7 @@ INSUFFICIENT_EVIDENCE = (
     "I could not find enough evidence in the indexed documentation to answer that."
 )
 
-GROUNDING_INSTRUCTIONS = """Role: Answer questions about the QA project.
+GROUNDING_INSTRUCTIONS = """Role: Answer questions about the indexed documentation.
 
 Success criteria:
 - use only facts supported by the retrieved context

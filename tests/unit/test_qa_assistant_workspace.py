@@ -74,6 +74,40 @@ def test_unlabelled_question_marks_accuracy_as_not_measured() -> None:
     assert result["metrics"][-1]["name"] == "Local response time"
 
 
+def test_uploaded_system_design_overview_regression_uses_introductory_chunk() -> None:
+    session = build_session(
+        {
+            "library_ids": [],
+            "files": [
+                {
+                    "name": "fictional-system-design.md",
+                    "text": (
+                        "# Media evidence review platform\n\n"
+                        "This platform helps quality teams evaluate generated media, "
+                        "retain provenance, and review automated scoring evidence.\n\n"
+                        "## Asset storage key convention\n\n"
+                        "`org/{organization_id}/project/{project_id}/"
+                        "source/{asset_id}` "
+                        "and `generated/{project_id}/{asset_id}`. The database stores "
+                        "keys, hashes, dimensions, MIME types, and provenance."
+                    ),
+                }
+            ],
+        }
+    )
+
+    result = evaluate_question(
+        session,
+        question="What is the project?",
+        expected_ids=[],
+        top_k=2,
+    )
+
+    assert result["results"][0]["heading"] == "Media evidence review platform"
+    assert "helps quality teams" in result["answer"]
+    assert "organization_id" not in result["answer"]
+
+
 def test_uploads_stay_in_memory_and_validate_names_and_formats() -> None:
     documents = uploaded_documents(
         [{"name": "policy.txt", "text": "Retain logs for thirty days."}]

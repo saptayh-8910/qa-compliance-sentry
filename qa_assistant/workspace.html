@@ -96,6 +96,7 @@
     <h1>Test retrieval with real documents.</h1>
     <p class="lede">Use the pinned OWASP ASVS library, add your own Markdown, text, or official ASVS JSON, then ask questions. Expected evidence IDs turn a demonstration into a measurable retrieval test.</p>
     <p class="notice"><strong>Private by design:</strong> this workspace runs on your computer. Uploaded files stay in memory and are not saved. The default extractive mode makes no paid API calls.</p>
+    <p class="honesty"><strong>Answer mode: Extractive baseline.</strong> It returns a bounded passage from the first search result. It does not combine several passages or provide semantic reasoning like a generative model.</p>
   </header>
 
   <section class="grid" aria-label="Document setup">
@@ -151,7 +152,7 @@
 
   <section class="hidden" id="outcome" aria-live="polite">
     <div class="answer">
-      <h2>Observed answer</h2>
+      <h2>Observed answer · Extractive baseline</h2>
       <div id="answer-text"></div>
       <h3>Verified citations</h3>
       <ul class="citations" id="citations"></ul>
