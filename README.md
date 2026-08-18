@@ -2,545 +2,270 @@
 
 [![Deterministic CI](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml/badge.svg)](https://github.com/saptayh-8910/qa-compliance-sentry/actions/workflows/ci.yml)
 
-**Project complete — v0.13.0 AI Quality Engineering Portfolio**
+**A QA portfolio for testing normal software and AI answers.**
 
-A portfolio platform that evolves from classic QA automation into AI-powered auditing and reliability engineering. Stage 1 delivers a bug-tracker CLI, Playwright UI framework against [Sauce Demo](https://www.saucedemo.com/), REST API checks, and SQLite data-consistency validation.
-Stage 2 makes those checks reproducible in CI and Docker while adding failure
-intelligence. Stage 3 now connects deterministic document retrieval to a
-provider-neutral grounded-answer boundary with fail-closed citation validation,
-an interactive terminal chatbot, and retained end-to-end test evidence. Stage 4
-now exports that evidence through a stable JSON contract, turns it into a safe
-metric dashboard, adds interview-algorithm foundations, and exercises ten
-human-labelled scenarios that isolate retrieval, generation, citation, and
-safety failures. Repeated offline runs now separate correctness, response
-consistency, latency percentiles, and optional token usage.
-The final capability validates a transparent claim-level faithfulness judge
-against human labels before its metrics are accepted. All four planned stages
-are complete; future work is maintenance or a separately scoped product
-milestone.
+QA Compliance Sentry started with unit tests, API tests, database checks, and
+browser tests. It later grew into a workspace for testing RAG systems. RAG means
+that an AI searches documents before it answers a question.
 
-## Why this project exists
+The project checks more than the final answer. It also checks whether search
+found the right source, whether the answer cited that source, and whether the
+answer stayed close to the source text.
 
-This project turns a Manual→AI Tester learning roadmap into one evolving,
-runnable portfolio instead of a collection of disconnected tutorials. Stage 1
-builds the Python, browser automation, API testing, pytest, and SQL foundation
-expected for QA Automation and SDET roles. Later stages add CI/CD, reliability
-tooling, retrieval-augmented generation, and AI evaluation without discarding
-the earlier work.
+The goal is not to show a perfect chatbot. The goal is to find failures, explain
+them clearly, and make them easy to test again.
 
-The repository's evolution is recorded in [CHANGELOG.md](CHANGELOG.md) and the
-detailed [project history](docs/PROJECT_HISTORY.md), including milestone pull
-requests, merge commits, test growth, coverage, and release preparation. The
-[portfolio handoff](docs/PORTFOLIO_HANDOFF.md) defines safe interview claims,
-the five-minute review path, and the maintenance policy.
+**Current version:** The four-stage learning plan finished at `v0.13.0`. The
+`v0.14.0` work adds a browser workspace, real OWASP ASVS data, document upload,
+and a small local AI model.
 
-## Project preview
+## Main results
 
-| Component | Description |
-|-----------|-------------|
-| **Bug Tracker CLI** | Python CLI with JSON persistence — add, update status, search, list |
-| **E2E Framework** | Playwright + pytest Page Object Model (login → cart → checkout) |
-| **API validation** | HTTP contract checks via a thin `requests` client |
-| **DB validation** | Seeded SQLite DB + SQL scripts for duplicates, orphans, API↔DB alignment |
-| **Continuous integration** | Ruff, coverage gates, Python compatibility, reports, scheduled external tests |
-| **Containerized testing** | Pinned Playwright image, non-root execution, reproducible local/CI commands |
-| **Failure intelligence** | JSONL log analysis, recurring-failure ranking, incident-window consolidation |
-| **Pipeline validation** | Graph-based cycle detection for named CI job dependencies |
-| **Algorithm foundations** | Twelve stage-aligned interview labs with canonical and QA-oriented tests |
-| **QA documentation assistant** | Deterministic retrieval, multi-question terminal chat, verified citations, a ten-case labelled suite, versioned reports, quality dashboards, stability benchmarking, and human-validated claim faithfulness |
+| Area | Current result | What it means |
+| --- | ---: | --- |
+| Automated tests | **385** | The main parts of the project have repeatable tests |
+| Code coverage | **88.80%** | The project is above its 85% minimum target |
+| Real OWASP data | **345 requirements** | The workspace can search a real public security standard |
+| RAG test set | **5 of 10 cases pass** | Five known problems are still shown instead of hidden |
+| Repeated RAG test | **15 of 30 runs pass** | The same five problems happen in each of three runs |
+| Faithfulness test | **15 of 15 labels matched** | The rule works on this small reviewed test set only |
+
+## Try the main feature
+
+You need Python 3.11 or newer and Git. Docker, Ollama, and an OpenAI API key are
+optional.
+
+```bash
+git clone https://github.com/saptayh-8910/qa-compliance-sentry.git
+cd qa-compliance-sentry
+make install
+make workspace-rag
+```
+
+The workspace opens at `http://127.0.0.1:8765`. It runs only on your computer.
+
+1. Press **Start testing** to load 345 OWASP ASVS 5.0.0 requirements.
+2. Choose a starter question or write your own question.
+3. Choose an answer mode.
+4. Press **Ask question**.
+5. Review the answer, sources, citations, response time, and test result.
+
+You can also upload up to 20 Markdown or text files, with a total limit of 5 MB.
+The files stay in memory while the workspace is running. The project does not
+save them. Official OWASP ASVS JSON files are also supported.
+
+The default mode does not need an API key and does not call an AI model. See the
+[real-world testing guide](docs/REAL_WORLD_TESTING.md) for the full process.
+
+## Three ways to answer
+
+| Mode | Cost | What it does | Main limit |
+| --- | --- | --- | --- |
+| **Direct evidence** | No API fee | Shows the best source passage | Fast and clear, but it does not write a natural explanation |
+| **Local AI** | No API fee | Uses Gemma 3 1B through Ollama on your computer | More natural, but slower and more likely to make mistakes |
+| **Cloud AI** | Paid | Uses the OpenAI model set in `.env` | May give a stronger answer, but it sends the question and selected sources to an outside service |
+
+Local and cloud AI answers must include valid source numbers. The project checks
+each number and links it to a passage that search already found. Cloud AI needs
+an API key and clear approval for each paid question in the browser. Paid calls
+never run in the normal GitHub checks.
+
+## Why the checks matter
+
+An AI answer can sound correct even when it uses the wrong source.
+
+In the first controlled Gemma 3 1B test, search placed the expected OWASP
+requirement first. Gemma wrote a short answer in about 7.4 seconds, but it cited
+sources 2 and 3 instead of source 1.
+
+The project showed the difference clearly:
+
+- search found the expected source;
+- the AI chose the wrong citations;
+- the citation tests failed;
+- the natural writing did not receive a false pass.
+
+This was one test on an 8 GB M1 computer. It does not prove that Gemma always
+behaves this way. It shows why search and AI writing should be tested separately.
+
+## What each result means
+
+| Result | Plain English meaning |
+| --- | --- |
+| **Hit@K** | Did search find at least one source that we expected? |
+| **Context precision** | How much of the search result was useful? |
+| **Context recall** | Did search find all the sources that were needed? |
+| **Reciprocal rank** | How close to the top was the first correct source? |
+| **Citation precision** | Of the sources cited by the answer, how many were expected? |
+| **Citation recall** | Did the answer cite every source it should use? |
+| **Faithfulness** | Does the answer stay supported by the source text? |
+| **Response time** | How long did this test take on this computer? |
+| **Stability** | Did repeated tests keep the same result? |
+
+Some tests include expected source IDs. These IDs act as the correct answer for
+the search test. If a user does not provide them, the workspace says
+**Not measured**. It does not guess an accuracy score.
+
+## How the RAG feature works
 
 ```mermaid
 flowchart LR
-  CLI[BugTrackerCLI] --> Repo[GitHub Repo]
-  PW[Playwright POM] --> Sauce[Sauce Demo]
-  API[REST Client] --> JSON[JSONPlaceholder API]
-  DB[SQLite Validator] --> Seed[Seed DB]
-  LOG[Log Analyzer] --> Evidence[Failure Evidence]
-  PIPE[Pipeline Validator] --> Repo
-  DOCS[QA Documentation] --> RAG[Lexical Retriever]
-  CHAT[Terminal Chat] --> RAG
-  RAG --> CTX[Cited Context]
-  CTX --> GEN[Answer Generator]
-  GEN --> VERIFY[Citation Validator]
-  VERIFY --> EVAL[Deterministic Evaluation]
-  EVAL --> EVIDENCE[Versioned JSON Evidence]
-  EVIDENCE --> DASH[Local Metric Dashboard]
-  EVIDENCE --> FAITH[Human-labelled Faithfulness Validation]
-  PW --> Repo
-  API --> Repo
-  DB --> Repo
+  FILES["Your documents or OWASP ASVS"] --> SECTIONS["Small sections with source IDs"]
+  SECTIONS --> SEARCH["BM25-style word search"]
+  SEARCH --> SOURCES["Top source passages"]
+  SOURCES --> ANSWER["Direct, local AI, or cloud AI answer"]
+  ANSWER --> CHECK["Citation and safety checks"]
+  LABELS["Expected sources written by a person"] --> SCORE["Quality results"]
+  CHECK --> SCORE
+  SCORE --> REPORT["JSON reports and HTML dashboards"]
 ```
 
-## AI Quality Engineering
+The current search system uses a method called BM25. In simple terms, it looks
+for important words from the question and gives each document section a score.
+The same question and documents produce the same search order.
 
-The completed project treats the RAG assistant as a quality system with
-independently testable retrieval, generation, safety, citation, and efficiency
-behavior—not just another API endpoint.
+This project is **not Hybrid RAG or Graph RAG**. It does not use vector search,
+an AI ranking model, or a knowledge graph. BM25 is the simple starting point.
+A future test can compare BM25 with vector and hybrid search by using the same
+questions and expected sources.
 
-| AI quality area | Status | Test and evidence |
-|---|---|---|
-| **Hallucination detection** | Implemented with explicit boundaries | Unsupported questions and unresolved conflicts must return the exact abstention response. Required and forbidden terms detect known missing or invented claims; a separate human-labelled dataset validates claim-level supported, contradicted, and unsupported decisions. |
-| **Prompt injection** | Implemented | Retrieved text contains a malicious instruction, while the answer must follow the system grounding contract, omit the injected response, and retain a valid citation. |
-| **Context recall** | Implemented | Ten human-labelled scenarios produce context precision/recall, Hit@K, and reciprocal rank/MRR so retrieval failures are separated from generation failures. |
-| **Citation verification** | Implemented | Numeric citations fail closed, map to canonical sources, and produce citation precision/recall plus an exact-source gate for curated cases. |
-| **Latency benchmarking** | Implemented | Three deterministic repetitions across ten cases produce p50 typical latency and p95 slower-end latency. The dashboard states that this small local learning sample is not a production SLA. |
-| **Regression across models** | Ready as an opt-in test | A stable four-case subset compares Sol/Medium with Luna/High. Eight result rows require exactly six paid calls because retrieval misses skip generation; the larger offline suite does not silently increase that cost. |
-| **Evaluation reporting** | Implemented | The v2 JSON contract exports each question and expected behavior alongside run metadata, aggregate and per-case metrics, checks, failures, duration, and optional token usage. |
-| **Evaluation dashboard** | Implemented | A responsive standalone HTML view presents aggregate and per-case diagnostics, filters failures, escapes untrusted model output, and is retained with CI evidence. |
-| **Stability benchmarking** | Implemented | A separate versioned artifact reports repeated sample pass rate, pass/fail stability, exact answer-and-citation consistency, latency percentiles, and optional token summaries. Stable failures remain visibly wrong. |
-| **Semantic faithfulness** | Validated on a bounded dataset | A transparent candidate judge is compared with 15 balanced human labels. Acceptance requires at least 90% exact accuracy, at least 95% unfaithful recall, and zero false negatives. This is scoped validation, not universal language understanding. |
-| **Regression foundations** | Implemented | Literal answer changes use Edit Distance, while kth-largest and rolling-window utilities summarize bounded score history without claiming semantic equivalence or complete reliability. |
+For more detail, read the [RAG design guide](docs/RAG_ARCHITECTURE.md).
 
-All current grading labels are human-authored, version-controlled, and scored
-deterministically; no unvalidated LLM acts as the judge. See the
-[RAG evaluation methodology](docs/RAG_ARCHITECTURE.md#evaluation-metrics-and-grading)
-and [model comparison record](docs/MODEL_COMPARISON.md) for metric definitions,
-experiment boundaries, and limitations.
-The dedicated [faithfulness validation guide](docs/FAITHFULNESS.md) explains
-every acceptance criterion and the limits of the result in plain English.
+## Known failures
 
-## Goals (Stage 1)
+The free offline RAG test passes 5 of 10 reviewed cases. The five failed cases
+show where the current system needs more work:
 
-**Learning:** Python, Git, Playwright, pytest, REST APIs, SQL consistency patterns.
+- two sources disagree with each other;
+- a document contains text that tries to control the AI;
+- the answer needs information from more than one source;
+- the question and source mean the same thing but use different words;
+- the source does not safely support an answer.
 
-**Portfolio:** One repo with README, HTML reports, failure screenshots, runnable validation script, and a short demo video.
+These failures are useful. For example, the different-word problem may improve
+with vector or hybrid search. A conflict needs rules for deciding which source
+is newer or more trusted. These are different problems and should not receive
+one unclear score.
 
-**Career path:** Foundation for QA Automation / SDET roles before Stages 2–4 (CI/CD, AI RAG, LLM evaluation).
-
-## Quick start
-
-### Prerequisites
-
-- Python 3.11+
-- Docker Desktop or Docker Engine (for container commands)
-- Network access (Sauce Demo + API tests)
-
-### Setup
+Create the three local dashboards with:
 
 ```bash
-git clone <your-repo-url> qa-compliance-sentry
-cd qa-compliance-sentry
-make install
-cp .env.example .env   # optional — defaults work for Sauce Demo
-```
-
-### Bug Tracker CLI (Milestone 1A)
-
-```bash
-.venv/bin/bug-tracker add "Cart total incorrect" --severity high
-.venv/bin/bug-tracker list
-.venv/bin/bug-tracker search cart
-.venv/bin/bug-tracker update <BUG_ID> --status in_progress
-```
-
-Data is stored in `data/bugs.json` by default.
-
-### Stage 1 algorithm foundations
-
-The retrospective foundation lab covers three common interview patterns:
-
-- **Two Sum:** hash-map complement lookup, applied to paired test metrics.
-- **Contains Duplicate:** set-based duplicate test-case ID detection.
-- **Binary Search:** logarithmic lookup in sorted bug or test identifiers.
-
-Run all implemented algorithm lessons with:
-
-```bash
-make test-algorithms
-```
-
-These implementations teach the underlying data structures. Production code
-should still use database uniqueness constraints, Python built-ins, or indexed
-queries when those tools better fit the requirement.
-
-### Stage 3 algorithm foundations
-
-The RAG milestone adds three interview patterns and uses each through the
-production QA-assistant path:
-
-- **Valid Parentheses:** a stack checks generated `()`, `[]`, and `{}` before
-  citation parsing accepts an answer.
-- **LRU Cache:** a hash map plus doubly linked list caches ranked retrieval
-  results with O(1) lookup, refresh, and eviction.
-- **Trie:** a prefix tree indexes canonical document source paths and returns
-  deterministic prefix matches.
-
-Canonical LeetCode-style examples, edge cases, and QA-oriented applications all
-run through `make test-algorithms`. See the
-[algorithm learning track](docs/ALGORITHM_LEARNING.md) for complexity analysis,
-interview questions, and production boundaries. Bracket balancing is a shallow
-structural guard rather than JSON Schema validation, and the in-memory cache is
-not a distributed persistence layer.
-
-### Stage 4 algorithm foundations
-
-The evaluation milestone completes the twelve-problem learning track with
-three more interview patterns and practical QA adapters:
-
-- **Edit Distance:** dynamic programming measures the minimum character edits
-  between reference and candidate answers. The project normalizes this into a
-  literal similarity ratio, but never treats spelling similarity as semantic
-  correctness or groundedness.
-- **Kth Largest Element in a Stream:** a size-k min-heap maintains a live
-  quality-score threshold in O(log k) time per new score and O(k) space.
-- **Maximum Average Subarray:** a sliding window finds the strongest contiguous
-  evaluation period in O(n) time without re-summing each window.
-
-Canonical examples, edge cases, invalid inputs, and practical answer/score
-analysis all run through `make test-algorithms`. See the
-[algorithm learning track](docs/ALGORITHM_LEARNING.md) for plain-English
-interpretations, complexity, interview prompts, and limitations. A best window
-or top-score threshold is not a full latency or reliability distribution; those
-require repeated observations later in Stage 4.
-
-### Retrieve QA documentation
-
-Stage 3 starts with an offline retrieval boundary that can be tested without an
-API key:
-
-```bash
-make retrieve-docs
-
-# Or query selected Markdown/text sources:
-.venv/bin/qa-assistant retrieve \
-  "Why separate scheduled external checks from merge-blocking tests?" \
-  --source docs --top 3
-```
-
-The command discovers `.md` and `.txt` files, splits Markdown at real headings,
-ranks chunks with deterministic BM25-style lexical scoring, and prints bounded
-context labelled with source and heading citations. It does **not** generate an
-LLM answer yet; keeping retrieval separate makes ranking and citation failures
-observable before model behavior is introduced. See
-[the Stage 3 RAG architecture](docs/RAG_ARCHITECTURE.md).
-
-Run the complete offline question-answer flow with:
-
-```bash
-make answer-docs
-
-.venv/bin/qa-assistant answer \
-  "Why separate scheduled external checks from merge-blocking tests?" \
-  --source docs --top 3
-```
-
-The default extractive generator returns bounded text from the best retrieved
-passage and a verified source list. It remains the fast, zero-cost CI baseline.
-The OpenAI adapter implements the same provider-neutral contract through the
-Responses API and is enabled only when explicitly selected.
-
-Run a multi-question terminal session over one reusable index with:
-
-```bash
-make chat-docs
-
-# Equivalent direct command:
-.venv/bin/qa-assistant chat --source docs --top 3
-```
-
-Type `exit` or `quit` to end the session. Chat uses the deterministic extractive
-provider by default, so the local demonstration and merge-blocking E2E journey
-make no network requests. Selecting `--provider openai` is explicit and makes a
-paid request for every supported question in the session.
-
-To use the external provider, put your API key in the ignored local `.env` file:
-
-```dotenv
-OPENAI_API_KEY=your-key-here
-OPENAI_MODEL=gpt-5.6-sol
-OPENAI_REASONING_EFFORT=medium
-```
-
-Then run:
-
-```bash
-.venv/bin/qa-assistant answer \
-  "Why separate scheduled external checks from merge-blocking tests?" \
-  --source docs --top 3 --provider openai
-```
-
-This command makes a paid external API request. The adapter sends grounding
-instructions separately from the question and retrieved evidence, requests no
-response storage, limits output size, and passes the result through the same
-numeric citation validator as the offline generator.
-
-The model and reasoning effort can be changed independently. For example, this
-runs the same answer flow with Luna at high reasoning:
-
-```bash
-.venv/bin/qa-assistant answer \
-  "Why separate scheduled external checks from merge-blocking tests?" \
-  --source docs --provider openai \
-  --model gpt-5.6-luna --reasoning-effort high
-```
-
-`make test-ai-external` performs a controlled comparison of Sol/Medium and
-Luna/High across a fixed four-case dataset: supported evidence, no evidence,
-conflicting evidence, and prompt injection inside a retrieved document. The
-no-evidence path must skip generation, so the matrix makes exactly six paid API
-calls rather than eight. It checks required and forbidden terms, expected
-behavior, and exact citation sources. Human-labelled relevant chunks also
-produce context precision/recall, Hit@K, reciprocal rank, and citation
-precision/recall. Each live result records those metrics plus latency and API
-token usage in HTML and JUnit evidence under `reports/`. The experiment design,
-first baseline result, and remaining limitations are recorded in
-[docs/MODEL_COMPARISON.md](docs/MODEL_COMPARISON.md).
-
-The same evaluation runner is covered by deterministic fake-model tests in
-ordinary CI. This is a transparent rule-based rubric, not an LLM-as-judge or a
-claim that keyword checks prove full semantic entailment. It can aggregate case
-pass rate and the applicable retrieval and citation metrics while leaving
-no-answer metrics explicitly not applicable.
-
-### Generate the evaluation report and dashboard
-
-```bash
-make evaluate-rag
 make dashboard-rag
-
-.venv/bin/qa-assistant evaluate \
-  --output reports/rag-evaluation.json
-
-.venv/bin/qa-assistant dashboard \
-  --report reports/rag-evaluation.json \
-  --output reports/rag-dashboard.html
-```
-
-The offline extractive baseline requires no API key or network access. It passes
-5 of the 10 labelled scenarios. The five visible failures diagnose conflicting
-evidence, retrieved prompt injection, multi-source synthesis, a lexical
-paraphrase miss, and unsafe unsupported context. They remain visible instead of
-being converted into a false green result. Add `--fail-on-failure` when any
-failed case should make the command return exit code 1. The tracked
-[v2 JSON schema](schemas/evaluation-report-v2.schema.json) adds the question and
-plain expected behavior to every case while preserving non-applicable metrics
-as `null`. The dashboard still accepts
-[legacy v1 reports](schemas/evaluation-report-v1.schema.json); see the
-[Stage 4 reporting design](docs/EVALUATION_REPORTING.md) for dashboard fields,
-safe rendering, and the future framework boundary.
-
-`make dashboard-rag` regenerates that same zero-cost report and writes
-`reports/rag-dashboard.html`. The responsive page works directly from disk,
-requires no hosted service or remote assets, and filters All, Passed, or Failed
-cases. An always-visible guide explains every metric in plain English, and each
-case translates its result—for example, Hit@K “Hit” means the needed evidence
-appeared in the retrieved results. It keeps the extractive baseline's five known
-failures visible so the portfolio demonstrates diagnosis rather than hiding
-imperfect model behavior. Each card also states the original question and
-whether a reader should expect a cited answer or a safe refusal.
-
-### Benchmark latency and stability
-
-```bash
-make benchmark-rag
 make dashboard-benchmark-rag
-
-.venv/bin/qa-assistant benchmark \
-  --repetitions 3 \
-  --output reports/rag-benchmark.json
-
-.venv/bin/qa-assistant benchmark-dashboard \
-  --report reports/rag-benchmark.json \
-  --output reports/rag-benchmark.html
-```
-
-The default benchmark repeats all ten cases three times without an API key or
-network access. It answers four separate questions in plain English:
-
-- **Correctness:** how many repeated case runs passed every quality check?
-- **Verdict stability:** did each case keep the same pass/fail result?
-- **Response consistency:** did its exact answer text and verified citations
-  remain unchanged?
-- **Performance:** what were the typical p50 and slower-end p95 completion
-  times, and—when a provider reports them—the token totals?
-
-The current extractive baseline passes 15 of 30 samples and is fully consistent.
-That does **not** make its five repeatable failures correct. The dashboard labels
-them “consistently failed” to prevent that interpretation. Local timing is useful
-for regression learning but is not a production service-level objective.
-
-OpenAI benchmarking is never enabled by CI and is blocked unless
-`--confirm-paid` is supplied. Three repetitions can make 24 paid calls because
-two retrieval-miss cases per repetition skip generation. Do not run it without
-an explicit cost decision. See the
-[benchmark methodology](docs/BENCHMARKING.md).
-
-### Validate claim-level faithfulness
-
-```bash
-make faithfulness-rag
 make dashboard-faithfulness-rag
 ```
 
-This compares a deterministic candidate judge with 15 human-labelled evidence
-and claim pairs: five supported, five contradicted, and five unsupported. The
-judge is accepted only when exact three-label accuracy is at least 90%, recall
-of contradicted or unsupported claims is at least 95%, and no unfaithful claim
-is wrongly accepted as supported. The current bounded baseline scores 15 of 15
-with zero dangerous misses.
+The HTML files appear in `reports/`. Each result card explains its rule and its
+meaning in plain English.
 
-The result means the judge handles this small, audited dataset; it does not
-prove general semantic understanding. Open
-`reports/rag-faithfulness.html` after running the dashboard command to inspect
-every claim, label, human explanation, metric definition, and acceptance
-threshold. See the [faithfulness methodology](docs/FAITHFULNESS.md).
+## Testing approach
 
-### Run tests
+The project uses many small, fast tests and fewer full user tests.
 
-```bash
-make test-unit    # deterministic component/unit tests
-make test-algorithms # interview algorithms mapped to QA features
-make test-api     # REST API tests
-make test-db      # SQLite validation tests
-make test-e2e     # Sauce Demo smoke (Playwright)
-make test-ai-external # opt-in six-call adversarial Sol/Luna comparison
-make evaluate-rag # offline v2 JSON evaluation report
-make dashboard-rag # offline report + standalone metric dashboard
-make benchmark-rag # 30-sample offline latency and stability evidence
-make dashboard-benchmark-rag # standalone benchmark dashboard
-make faithfulness-rag # human-labelled candidate-judge validation
-make dashboard-faithfulness-rag # standalone faithfulness evidence dashboard
-make test-local   # deterministic unit + DB tests, no network
-make test         # unit + api + db + e2e smoke
-make quality      # lint + format check + coverage gate
-make validate     # seed the demo DB, then run read-only SQL checks
-make validate-pipeline # detect circular CI job dependencies
-make report       # full suite + HTML report in reports/
-```
+| Test level | Examples | Why it is used |
+| --- | --- | --- |
+| **Unit tests** | document sections, search scores, citations, quality scores, safety rules | Check one small part quickly |
+| **Integration tests** | API data, SQLite data, search with answers, report files | Check that parts work together |
+| **End-to-end tests** | Playwright checkout, terminal chatbot, browser workspace | Check an important user process from start to finish |
+| **Optional outside tests** | Sauce Demo, public APIs, paid OpenAI tests | Test real services without making normal GitHub checks slow or costly |
 
-### Analyze QA logs
+Useful commands are:
 
 ```bash
-make analyze-sample
-
-# Or analyze another newline-delimited JSON file:
-.venv/bin/log-analyzer analyze path/to/test-run.jsonl \
-  --top 5 --incident-gap-seconds 300 \
-  --output reports/log-analysis.json
+make test-local       # tests that do not need public services
+make quality          # code style, coverage, and chatbot test
+make test             # unit, API, database, and browser tests
 ```
 
-Each input line contains an ISO-8601 `timestamp`, `level`, and `message`, with
-an optional `test_name`. The analyzer ranks exact recurring failure signatures
-and merges nearby failures into incident windows. See
-[the algorithm learning track](docs/ALGORITHM_LEARNING.md) for the interview
-problems, complexity analysis, and practical tradeoffs behind this feature.
+GitHub checks test several Python versions, code style, coverage, Docker, report
+creation, and the terminal chatbot. Public websites and paid AI tests run
+separately because outside services can be slow, unavailable, or costly.
 
-### Validate CI dependencies
+The [command reference](docs/COMMAND_REFERENCE.md) contains every main command,
+Docker instructions, local AI setup, and paid-test warnings.
 
-```bash
-make validate-pipeline
+## How the project grew
 
-# Or validate another pipeline definition:
-.venv/bin/pipeline-validator validate path/to/pipeline.json
-```
+The project follows one learning path from manual QA skills to AI quality work.
 
-Pipeline JSON declares a list of unique job names and dependency pairs in
-`[job, prerequisite]` order. The validator uses topological sorting to confirm
-that every job can run without a circular dependency.
+| Stage | What was built |
+| --- | --- |
+| **Stage 1** | Python bug tracker, pytest, API tests, SQLite checks, Playwright browser tests |
+| **Stage 2** | GitHub Actions, Docker, test-log analysis, and CI job checks |
+| **Stage 3** | document reading, BM25 search, AI answer support, citation checks, and chatbot tests |
+| **Stage 4** | saved results, dashboards, RAG quality scores, speed tests, repeated tests, and faithfulness checks |
+| **Real-data step** | document upload, OWASP ASVS 5.0.0, and local Gemma testing |
 
-### Run with Docker
+The project also contains 12 LeetCode-style lessons, with three lessons for each
+stage. They connect common interview problems to real QA tasks. Read the
+[algorithm learning guide](docs/ALGORITHM_LEARNING.md) for the examples and
+their limits.
 
-```bash
-make docker-test      # build image + deterministic tests
-make docker-quality   # Ruff + coverage gate + reports
-make docker-external  # public API + Playwright tests
-```
+## Other QA features
 
-The image pins Playwright 1.61.0 in both Python and the official Noble-based
-browser image. Containers run as the unprivileged `pwuser` account. Chromium
-runs use Docker's recommended `--init` and `--ipc=host` options, and generated
-evidence is written to the local `reports/` directory.
+The RAG workspace is the main feature, but the earlier work remains part of the
+testing story.
 
-To load custom Sauce Demo settings from `.env`, pass Docker arguments explicitly:
+| Feature | Purpose |
+| --- | --- |
+| Bug tracker | Practice Python classes, command-line tools, and saved JSON data |
+| API tests | Check response status and data shape |
+| Database tests | Find duplicates, missing links, and API-to-database differences |
+| Playwright tests | Test login, cart, and checkout through a real browser |
+| Log analysis | Group repeated failures and nearby incidents |
+| Pipeline checks | Find circular links between CI jobs |
+| Docker | Run the test setup in a repeatable container |
 
-```bash
-make docker-external DOCKER_ENV_ARGS="--env-file .env"
-```
+## Project folders
 
-### E2E with HTML report
-
-```bash
-.venv/bin/pytest tests/e2e -m smoke \
-  --html=reports/e2e-report.html --self-contained-html
-```
-
-Failure screenshots are saved under `reports/`.
-
-## Test strategy
-
-| Layer | Tool | Target |
-|-------|------|--------|
-| Unit | pytest | Components, isolated API client, ingestion, retrieval, citations, and evaluation rubrics |
-| Algorithms | pytest | Interview fundamentals reused by QA features |
-| API | pytest + requests | REST shape & status (JSONPlaceholder stand-in) |
-| DB | pytest + sqlite3 | Seed DB duplicates, FK integrity, API↔DB mapping |
-| E2E | pytest-playwright | Sauce Demo checkout happy path |
-| Chatbot E2E | pytest + subprocess | Offline supported-answer → abstention → exit journey |
-| External AI E2E | pytest + OpenAI Responses API | Opt-in grounding and prompt-injection model comparison |
-
-**Markers:** `smoke`, `regression`, `api`, `db`, `chatbot`, `external`, `ai`
-
-Tests marked `external` require public network access. Database tests use local
-fixtures only, and `DataValidator` opens its target in read-only mode so a
-validation run cannot silently create or repair the database under inspection.
-
-## Continuous integration
-
-The deterministic workflow runs Ruff, enforces at least 85% branch-aware test
-coverage, and tests supported Python versions on pull requests and updates to
-`main`. It also builds the Docker image, verifies that it runs as a non-root
-user, and executes the deterministic suite inside the container. HTML, XML,
-and JUnit reports are uploaded for inspection. The chatbot journey has dedicated
-HTML and JUnit evidence retained with each quality run. CI also generates and
-retains the deterministic RAG JSON report and its standalone metric dashboard.
-
-Public API and Playwright checks run in a separate workflow every Monday at
-03:00 UTC or on demand from the GitHub Actions page. Keeping that workflow
-separate prevents temporary public-service failures from blocking code changes.
-
-Sauce Demo has no public candidate API/DB. The SQLite seed DB demonstrates the **data validation pattern** from the roadmap; swap in a real API+DB later without changing the POM structure.
-
-## Repository layout
-
-```
+```text
 qa-compliance-sentry/
-├── bug_tracker/          # CLI + JSON storage
-├── api/                  # HTTP client
-├── db/                   # schema, seed, validation.py
-├── log_analyzer/         # JSONL parsing, failure ranking, incident grouping
-├── learning_algorithms/  # Interview labs mapped to project stages
-├── pipeline_validator/   # CI dependency graph and cycle validation
-├── qa_assistant/         # Retrieval, grounded answers, evaluation, and dashboard
-├── schemas/              # Versioned dashboard/report contracts
-├── examples/             # runnable sample QA logs
-├── tests/
-│   ├── unit/
-│   ├── algorithms/
-│   ├── api/
-│   ├── db/
-│   └── e2e/pages/        # Page Object Model
-├── scripts/run_validations.py
-└── reports/              # HTML + screenshots (gitignored)
+├── qa_assistant/         # document search, answers, tests, and dashboards
+├── data/library/         # public documents, checksums, licences, and starter tests
+├── schemas/              # rules for saved result files
+├── bug_tracker/          # learning command-line tool
+├── api/                  # API client
+├── db/                   # database setup and checks
+├── log_analyzer/         # repeated failure and incident analysis
+├── pipeline_validator/   # CI job relationship checks
+├── learning_algorithms/  # 12 interview lessons
+├── tests/                # unit, algorithm, API, database, and browser tests
+└── docs/                 # guides, history, and publication drafts
 ```
 
+## Read more
 
+- [Test real documents](docs/REAL_WORLD_TESTING.md)
+- [Understand the RAG design](docs/RAG_ARCHITECTURE.md)
+- [Find all commands](docs/COMMAND_REFERENCE.md)
+- [Understand evaluation reports](docs/EVALUATION_REPORTING.md)
+- [Understand speed and repeated tests](docs/BENCHMARKING.md)
+- [Review the faithfulness test](docs/FAITHFULNESS.md)
+- [Review the model comparison](docs/MODEL_COMPARISON.md)
+- [Study the algorithm lessons](docs/ALGORITHM_LEARNING.md)
+- [Follow the five-minute demo](docs/DEMO_SCRIPT.md)
+- [See the full project history](docs/PROJECT_HISTORY.md)
+- [Read the changelog](CHANGELOG.md)
+- [Read the Medium article draft](docs/MEDIUM_ARTICLE.md)
 
-## Roadmap alignment
+## Limits
 
-| Stage | This repo |
-|-------|-----------|
-| **Stage 1 (complete)** | CLI, Playwright, API/DB validation, algorithm foundations |
-| **Stage 2 (complete)** | GitHub Actions, Docker, log analysis, algorithm foundations |
-| **Stage 3 (complete)** | Retrieval, grounded answers, OpenAI adapter, adversarial evaluation, algorithm foundations, and chatbot E2E |
-| **Stage 4 (complete)** | Versioned reports, safe dashboards, three algorithm foundations, ten labelled RAG cases, repeated latency/stability evidence, and bounded human-validated semantic faithfulness |
+This is a learning and portfolio project. It is not:
 
-Based on the Manual→AI Tester roadmap (Phases 1, 3, 4) and the *Autonomous QA & Compliance Sentry* portfolio doc.
+- a compliance certificate;
+- a large production document service;
+- Hybrid RAG or Graph RAG;
+- a tool that can find every AI hallucination;
+- a production speed promise;
+- proof that one AI model is always better than another.
 
-See the [timed demo script](docs/DEMO_SCRIPT.md) and
-[`v0.13.0` release notes](docs/RELEASE_NOTES_V0.13.0.md) for the recommended
-portfolio presentation.
+Future changes should be tested against the same reviewed questions and sources.
+More complex technology should be added only when the results show a clear
+benefit.
 
-## License
+## Licence and OWASP data
 
-MIT — portfolio use.
-# qa-compliance-sentry
+The project code is described as MIT licensed for portfolio use. The included
+OWASP ASVS file keeps its own CC BY-SA 4.0 terms. Its version, checksum, source
+link, and licence details are stored in
+[`data/library/catalog.json`](data/library/catalog.json).

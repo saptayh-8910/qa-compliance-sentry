@@ -23,15 +23,18 @@ _STOP_WORDS = frozenset(
         "does",
         "for",
         "from",
+        "give",
         "how",
         "in",
         "into",
         "is",
         "it",
+        "me",
         "of",
         "on",
         "or",
         "that",
+        "tell",
         "the",
         "this",
         "to",
@@ -46,6 +49,38 @@ _STOP_WORDS = frozenset(
         "with",
     }
 )
+_OVERVIEW_SUBJECT_TERMS = frozenset(
+    {"application", "document", "platform", "product", "project", "service", "system"}
+)
+_OVERVIEW_INTENT_TERMS = frozenset(
+    {
+        "about",
+        "describe",
+        "description",
+        "do",
+        "goals",
+        "introduction",
+        "overview",
+        "problem",
+        "purpose",
+        "solve",
+        "summarize",
+        "summary",
+    }
+)
+_OVERVIEW_HEADING_TERMS = frozenset(
+    {
+        "about",
+        "background",
+        "description",
+        "goals",
+        "introduction",
+        "overview",
+        "problem",
+        "purpose",
+        "summary",
+    }
+)
 
 
 def tokenize(text: str) -> tuple[str, ...]:
@@ -53,6 +88,15 @@ def tokenize(text: str) -> tuple[str, ...]:
     return tuple(
         token for token in _TOKEN.findall(text.lower()) if token not in _STOP_WORDS
     )
+
+
+def is_overview_query(query: str) -> bool:
+    """Identify bounded requests for a whole-document introduction or purpose."""
+    terms = set(tokenize(query))
+    if not terms.intersection(_OVERVIEW_SUBJECT_TERMS):
+        return False
+    allowed = _OVERVIEW_SUBJECT_TERMS | _OVERVIEW_INTENT_TERMS
+    return len(terms) <= 5 and terms.issubset(allowed)
 
 
 class LexicalRetriever:
@@ -94,8 +138,8 @@ class LexicalRetriever:
             raise ValueError("query must include at least one searchable term")
 
         total_chunks = len(self.chunks)
-        scored: list[SearchResult] = []
-        for chunk, counts, length in zip(
+        base_scores: list[float] = []
+        for _chunk, counts, length in zip(
             self.chunks, self._term_counts, self._lengths, strict=True
         ):
             score = 0.0
@@ -119,8 +163,28 @@ class LexicalRetriever:
                     * (self.k1 + 1)
                     / normalization
                 )
-            if score > 0:
-                scored.append(SearchResult(chunk=chunk, score=score))
+            base_scores.append(score)
+
+        scored: list[SearchResult] = []
+        if is_overview_query(query):
+            highest_base = max(base_scores, default=0.0) or 1.0
+            for chunk, score in zip(self.chunks, base_scores, strict=True):
+                heading_terms = set(tokenize(chunk.heading))
+                heading_matches = len(
+                    heading_terms.intersection(_OVERVIEW_HEADING_TERMS)
+                )
+                if heading_matches:
+                    score += highest_base * 3 + heading_matches
+                if chunk.position == 0:
+                    score += highest_base * 2
+                if score > 0:
+                    scored.append(SearchResult(chunk=chunk, score=score))
+        else:
+            scored = [
+                SearchResult(chunk=chunk, score=score)
+                for chunk, score in zip(self.chunks, base_scores, strict=True)
+                if score > 0
+            ]
 
         scored.sort(
             key=lambda result: (

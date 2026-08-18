@@ -11,6 +11,8 @@
 *.egg-info
 **/__pycache__
 *.py[cod]
-data
+data/*
+!data/library/
+!data/library/**
 db/*.db
 reports

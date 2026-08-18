@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol, cast
 
-from qa_assistant.models import GenerationRequest
+from qa_assistant.models import GenerationRequest, GenerationUsage
 
 DEFAULT_OPENAI_MODEL = "gpt-5.6-sol"
 
@@ -42,14 +41,7 @@ class OpenAIResponseError(OpenAIAdapterError):
     """Raised when the Responses API returns no usable answer text."""
 
 
-@dataclass(frozen=True, slots=True)
-class ResponseUsage:
-    """Token counts returned by the Responses API when available."""
-
-    input_tokens: int
-    output_tokens: int
-    total_tokens: int
-    reasoning_tokens: int | None = None
+ResponseUsage = GenerationUsage
 
 
 class _ResponsesEndpoint(Protocol):

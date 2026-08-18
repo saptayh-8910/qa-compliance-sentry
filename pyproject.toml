@@ -1,6 +1,6 @@
 [project]
 name = "qa-compliance-sentry"
-version = "0.13.0"
+version = "0.14.0"
 description = "Autonomous QA & Compliance Sentry — AI evaluation and regression"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -43,6 +43,9 @@ include = [
     "qa_assistant*",
 ]
 
+[tool.setuptools.package-data]
+qa_assistant = ["workspace.html"]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 88
@@ -58,6 +61,7 @@ select = ["E", "F", "I", "B", "UP"]
 "qa_assistant/dashboard.py" = ["E501"]
 "qa_assistant/benchmark_dashboard.py" = ["E501"]
 "qa_assistant/faithfulness_dashboard.py" = ["E501"]
+"qa_assistant/workspace.py" = ["E501"]
 
 [tool.coverage.run]
 branch = true

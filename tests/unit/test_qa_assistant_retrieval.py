@@ -7,6 +7,7 @@ from qa_assistant.retrieval import (
     LexicalRetriever,
     build_context,
     build_context_from_results,
+    is_overview_query,
     tokenize,
 )
 from qa_assistant.service import QAKnowledgeBase
@@ -82,6 +83,63 @@ def test_retriever_ignores_common_words_in_natural_questions() -> None:
     )
 
     assert results[0].chunk.source == "ci.md"
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "What is the project?",
+        "Summarize this system",
+        "What problem does this platform solve?",
+        "Give me a project overview",
+    ],
+)
+def test_overview_query_detection_accepts_bounded_summary_requests(query: str) -> None:
+    assert is_overview_query(query)
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "What is the project retention policy?",
+        "How does the system store assets?",
+        "Which service validates citations?",
+    ],
+)
+def test_overview_query_detection_rejects_specific_questions(query: str) -> None:
+    assert not is_overview_query(query)
+
+
+def test_overview_question_prefers_document_introduction_over_keyword_frequency() -> (
+    None
+):
+    chunks = (
+        DocumentChunk(
+            "system-design.md",
+            "Media evidence review platform",
+            (
+                "This platform helps quality teams evaluate generated media, "
+                "retain provenance, and review automated scoring evidence."
+            ),
+            0,
+        ),
+        DocumentChunk(
+            "system-design.md",
+            "Asset storage key convention",
+            (
+                "org/{organization_id}/project/{project_id}/source/{asset_id}; "
+                "generated/{project_id}/{asset_id}. The database stores keys."
+            ),
+            1,
+        ),
+    )
+    retriever = LexicalRetriever(chunks)
+
+    overview = retriever.search("What is the project?", top_k=2)
+    storage = retriever.search("What is the asset storage key convention?", top_k=2)
+
+    assert overview[0].chunk.heading == "Media evidence review platform"
+    assert storage[0].chunk.heading == "Asset storage key convention"
 
 
 def test_retriever_uses_stable_source_order_for_score_ties() -> None:

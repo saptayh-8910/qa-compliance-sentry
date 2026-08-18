@@ -25,6 +25,7 @@ db/*.db
 reports/
 !reports/.gitkeep
 *.html
+!qa_assistant/workspace.html
 *.log
 
 # OS & System Files

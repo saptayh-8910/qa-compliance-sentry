@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 from qa_assistant.models import DocumentChunk, SourceDocument
 
-SUPPORTED_SUFFIXES = frozenset({".md", ".txt"})
+SUPPORTED_SUFFIXES = frozenset({".json", ".md", ".txt"})
 _HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
 _FENCE = re.compile(r"^\s*(```|~~~)")
 
@@ -47,9 +48,78 @@ def load_documents(
         except ValueError:
             display_path = path.as_posix()
         documents.append(
-            SourceDocument(source=display_path, text=path.read_text(encoding="utf-8"))
+            document_from_text(display_path, path.read_text(encoding="utf-8"))
         )
     return tuple(documents)
+
+
+def document_from_text(source: str, text: str) -> SourceDocument:
+    """Create a searchable document, adapting supported structured sources."""
+    suffix = Path(source).suffix.lower()
+    if suffix not in SUPPORTED_SUFFIXES:
+        raise ValueError(f"unsupported document type: {source}")
+    if suffix == ".json":
+        text = _asvs_json_to_markdown(text, source=source)
+    return SourceDocument(source=source, text=text)
+
+
+def _asvs_json_to_markdown(text: str, *, source: str) -> str:
+    """Convert the official OWASP ASVS JSON structure into cited requirements."""
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid JSON document: {source}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(f"unsupported JSON document structure: {source}")
+
+    version = data.get("Version")
+    chapters = data.get("Requirements")
+    if data.get("ShortName") != "ASVS" or not isinstance(version, str):
+        raise ValueError(
+            f"unsupported JSON document: {source}; only official OWASP ASVS JSON "
+            "is currently accepted"
+        )
+    if not isinstance(chapters, list):
+        raise ValueError(f"invalid OWASP ASVS requirements: {source}")
+
+    sections: list[str] = []
+    for chapter in chapters:
+        if not isinstance(chapter, dict):
+            raise ValueError(f"invalid OWASP ASVS chapter: {source}")
+        chapter_name = chapter.get("Name")
+        chapter_sections = chapter.get("Items")
+        if not isinstance(chapter_name, str) or not isinstance(chapter_sections, list):
+            raise ValueError(f"invalid OWASP ASVS chapter: {source}")
+        for section in chapter_sections:
+            if not isinstance(section, dict):
+                raise ValueError(f"invalid OWASP ASVS section: {source}")
+            section_name = section.get("Name")
+            requirements = section.get("Items")
+            if not isinstance(section_name, str) or not isinstance(requirements, list):
+                raise ValueError(f"invalid OWASP ASVS section: {source}")
+            for requirement in requirements:
+                if not isinstance(requirement, dict):
+                    raise ValueError(f"invalid OWASP ASVS requirement: {source}")
+                shortcode = requirement.get("Shortcode")
+                description = requirement.get("Description")
+                level = requirement.get("L")
+                if not all(
+                    isinstance(value, str) for value in (shortcode, description, level)
+                ):
+                    raise ValueError(f"invalid OWASP ASVS requirement: {source}")
+                number = shortcode.removeprefix("V")
+                identifier = f"v{version}-{number}"
+                sections.append(
+                    f"## {identifier} — {chapter_name} > {section_name}\n\n"
+                    f"Requirement ID: {identifier}\n\n"
+                    f"ASVS shortcode: {shortcode}\n\n"
+                    f"Verification level: L{level}\n\n"
+                    f"Requirement: {description.strip()}"
+                )
+
+    if not sections:
+        raise ValueError(f"OWASP ASVS document contains no requirements: {source}")
+    return "\n\n".join(sections)
 
 
 def _markdown_sections(document: SourceDocument) -> list[tuple[str, str]]:
@@ -167,7 +237,7 @@ def chunk_documents(
     for document in documents:
         sections = (
             _markdown_sections(document)
-            if Path(document.source).suffix.lower() == ".md"
+            if Path(document.source).suffix.lower() in {".json", ".md"}
             else [(Path(document.source).stem, document.text.strip())]
         )
         position = 0

@@ -8,7 +8,50 @@ and the project uses semantic versioning for milestone tags.
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- Local `qa-assistant workspace` browser experience and `make workspace-rag`
+  shortcut for document upload, indexing, questions, citations, and transparent
+  per-question diagnostics.
+- Unmodified, checksum-pinned OWASP ASVS 5.0.0 English JSON with source,
+  release, retrieval date, attribution, and CC BY-SA 4.0 license metadata.
+- Runtime conversion of all 345 structured ASVS requirements into separately
+  cited, versioned retrieval sections.
+- Six starter questions with human-labelled expected ASVS evidence IDs.
+- Plain-English Hit@K, context precision/recall, reciprocal rank, citation
+  precision/recall, and local response-time results in the browser workspace.
+- In-memory Markdown, text, and official ASVS JSON uploads with filename,
+  format, count, and size boundaries.
+- Bounded overview-intent reranking that prefers introductory headings or the
+  first document section for broad project, product, service, platform, system,
+  application, or document questions.
+- Privacy-safe fictional system-design regression coverage reproducing a real
+  broad-query failure without retaining the user's source file or screenshots.
+- Separate direct-evidence, local Gemma 3 1B, and cloud OpenAI workspace modes,
+  with per-question paid-request confirmation, verified citations, and
+  available token usage for generated results.
+- Loopback-only Ollama adapter with deterministic temperature, bounded context
+  and output, disabled model thinking, structured answer-and-citation output,
+  local error guidance, and mocked tests.
+- First controlled Gemma 3 1B ASVS observation: the answer was concise, but it
+  selected the wrong retrieved citations, which the workspace exposes as a
+  citation precision and recall failure instead of a false pass.
+- Less punctuation-heavy result language that separates source excerpts,
+  supporting sources, judging rules, and plain-English result meanings.
+
+### Changed
+
+- Bumped the package and default Docker image version to `0.14.0` for the first
+  post-roadmap real-world data milestone.
+- Extended the document ingestion and knowledge-base boundaries to accept
+  structured ASVS JSON and already-loaded browser documents.
+- Generalized grounding instructions from QA-project-only language to the
+  currently indexed documentation and labelled the local UI as an extractive
+  rather than generative answer mode.
+- Strengthened grounded-generation instructions to prefer plain English and
+  omit code or storage syntax unless it directly answers the question.
+- Expanded deterministic quality validation to 385 tests at 88.80%
+  branch-aware coverage, plus the existing chatbot and browser smoke journeys.
 
 ## [0.13.0] - 2026-08-13
 

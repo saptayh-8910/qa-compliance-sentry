@@ -54,6 +54,16 @@ class GenerationRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class GenerationUsage:
+    """Provider-neutral token counts when an answer service reports them."""
+
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    reasoning_tokens: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class AnswerCitation:
     """One validated citation used by a grounded answer."""
 

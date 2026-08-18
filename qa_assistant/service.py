@@ -7,7 +7,12 @@ from pathlib import Path
 
 from learning_algorithms.stage3 import LRUCache, Trie
 from qa_assistant.ingestion import chunk_documents, load_documents
-from qa_assistant.models import DocumentChunk, RetrievalContext, SearchResult
+from qa_assistant.models import (
+    DocumentChunk,
+    RetrievalContext,
+    SearchResult,
+    SourceDocument,
+)
 from qa_assistant.retrieval import LexicalRetriever, build_context_from_results
 
 
@@ -41,12 +46,30 @@ class QAKnowledgeBase:
         search_cache_capacity: int = 128,
     ) -> QAKnowledgeBase:
         documents = load_documents(sources, base_dir=base_dir)
-        chunks = chunk_documents(documents, max_chars=max_chunk_chars)
+        return cls.from_documents(
+            documents,
+            max_chunk_chars=max_chunk_chars,
+            search_cache_capacity=search_cache_capacity,
+        )
+
+    @classmethod
+    def from_documents(
+        cls,
+        documents: Iterable[SourceDocument],
+        *,
+        max_chunk_chars: int = 1_200,
+        search_cache_capacity: int = 128,
+    ) -> QAKnowledgeBase:
+        """Build an index from already-loaded or browser-uploaded documents."""
+        loaded_documents = tuple(documents)
+        if not loaded_documents:
+            raise ValueError("at least one document is required")
+        chunks = chunk_documents(loaded_documents, max_chars=max_chunk_chars)
         if not chunks:
             raise ValueError("document sources did not contain searchable text")
         return cls(
             chunks,
-            document_count=len(documents),
+            document_count=len(loaded_documents),
             search_cache_capacity=search_cache_capacity,
         )
 

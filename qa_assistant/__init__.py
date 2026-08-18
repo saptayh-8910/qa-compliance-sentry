@@ -15,6 +15,7 @@ from qa_assistant.faithfulness import (
     DeterministicFaithfulnessJudge,
     validate_faithfulness_judge,
 )
+from qa_assistant.ollama_generator import OllamaGenerator
 from qa_assistant.openai_generator import OpenAIResponsesGenerator
 from qa_assistant.reporting import (
     EvaluationReport,
@@ -25,6 +26,7 @@ from qa_assistant.service import QAKnowledgeBase
 
 __all__ = [
     "OpenAIResponsesGenerator",
+    "OllamaGenerator",
     "QAAssistant",
     "QAKnowledgeBase",
     "BenchmarkReport",

@@ -9,8 +9,9 @@ from qa_assistant.models import GenerationRequest
 INSUFFICIENT_EVIDENCE = (
     "I could not find enough evidence in the indexed documentation to answer that."
 )
+EXTRACTIVE_PREFIX = "Based on the retrieved documentation: "
 
-GROUNDING_INSTRUCTIONS = """Role: Answer questions about the QA project.
+GROUNDING_INSTRUCTIONS = """Role: Answer questions about the indexed documentation.
 
 Success criteria:
 - use only facts supported by the retrieved context
@@ -26,6 +27,8 @@ Constraints:
 
 Output:
 - lead with the answer
+- explain the evidence in plain English for a non-technical reader
+- avoid copying code, storage keys, or implementation syntax unless relevant
 - keep necessary caveats
 - include at least one valid citation for a factual answer
 - include no citation when returning the exact insufficient-evidence response
@@ -54,7 +57,7 @@ class ExtractiveGenerator:
         passage = " ".join(request.context.results[0].chunk.text.split())
         if not passage:
             raise ValueError("top retrieved passage has no extractable text")
-        prefix = "Based on the retrieved documentation: "
+        prefix = EXTRACTIVE_PREFIX
         citation = " [1]"
         available = self.max_chars - len(prefix) - len(citation)
         if len(passage) > available:
